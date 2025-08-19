@@ -1,0 +1,252 @@
+# .cursorrules
+# Project: tei-ji.com — one codebase, two sections: /art (white) and /design (black).
+# Stack: Next.js (App Router, TS) + Sanity v3 + Tailwind + MUX video (HTML5 <video>), Vercel deploy.
+# Goals: tiny bundle, minimal deps, accessible UX, URL-driven state, no bloat.
+
+###############################################################################
+# 0) GLOBAL CONTEXT
+###############################################################################
+You are an expert Next.js + Sanity + Tailwind engineer. Generate compact, production-ready code.
+Primary UX:
+- Two sections sharing the same components; theme differs only by tokens: /art (white), /design (black).
+- Root `/` permanently redirects to `/art`.
+- Project pages: hero, summary, Portable Text with a few custom block layouts (minimal).
+- Section index: flattened feed of assets across works -> click opens lightbox; deep linkable; tag filtering via URL.
+- Video is hosted on MUX, rendered with a standard HTML5 <video> (not Mux Player). Use playbackId → HLS/MP4 URLs.
+
+Non-negotiable:
+- One codebase; no duplicate components per section.
+- Tailwind for layout/spacing/typography. Colors come from CSS variables (tokens).
+- Accessible lightbox: ArrowLeft/ArrowRight, Escape, focus trap, click backdrop to close.
+
+###############################################################################
+# 1) FILE/ROUTE ARCHITECTURE
+###############################################################################
+app/
+  page.tsx                       # server redirect to /art
+  (site)/
+    [section]/                   # "art" | "design"
+      layout.tsx                 # sets data-theme on <html>
+      page.tsx                   # index grid (feed + filters + lightbox)
+      [slug]/page.tsx            # project page (hero + summary + portable content)
+components/
+  Header.tsx
+  Grid.tsx                       # client: grid + URL-synced lightbox launcher
+  Lightbox.tsx                   # client: accessible, URL-synced, keyboard controls
+  RichComponents.tsx             # portable text renderers (image, video, imageRow, imageBleed, textAside)
+  Prose.tsx                      # Tailwind typography wrapper for content
+lib/
+  sanity.client.ts
+  image.ts                       # sanity image urlBuilder helpers
+  mux.ts                         # playbackId -> HLS/MP4 URL helpers, feature detection for HLS
+  queries.ts
+  utils.ts                       # tiny URL & a11y helpers
+sanity/
+  schema.ts
+  schemas/
+    work.ts
+    objects/
+      imageRow.ts
+      imageBleed.ts
+      textAside.ts
+styles/
+  globals.css                    # Tailwind + CSS variables mapped to small utilities
+.env.example                     # SANITY_*, NEXT_PUBLIC_*, MUX_* placeholders
+
+Use path aliases: "@/components", "@/lib", "@/sanity", "@/styles".
+
+###############################################################################
+# 2) ROUTING & DEFAULTS
+###############################################################################
+- `/` → 308 redirect to `/art`.
+- `[section]` param must be "art" | "design"; unknown → 404.
+- Keep `generateMetadata` per route; set `themeColor` based on section.
+
+###############################################################################
+# 3) THEMING (TAILWIND-FIRST)
+###############################################################################
+- In `(site)/[section]/layout.tsx`, set `<html data-theme={section}>`.
+- `globals.css`:
+  @tailwind base; @tailwind components; @tailwind utilities;
+  :root { --bg:#fff; --fg:#000; --muted:#666; --border:#e5e5e5; }
+  html[data-theme="design"] { --bg:#000; --fg:#fff; --muted:#aaa; --border:#222; }
+  .bg-var { background-color: var(--bg); }
+  .text-var { color: var(--fg); }
+  .border-var { border-color: var(--border); }
+- Use Tailwind utilities for layout, spacing, typography. Use the above tiny utilities for colors. Avoid inline styles.
+
+###############################################################################
+# 4) SANITY CONTENT MODEL
+###############################################################################
+Document: work
+- discipline: "art" | "design" (required)
+- title: string (required)
+- slug: slug (source: title, required, unique per discipline)
+- kind: "project" | "single" (default "project")
+- year: number?
+- tags: array<string>
+- hero: image { hotspot }
+- summary: text
+- content: array of:
+  - block (styles: normal, blockquote, caption, small)
+  - image { alt, hotspot }
+  - videoMux { playbackId: string; poster?: image; captions?: file (VTT); autoplay?: boolean; loop?: boolean; muted?: boolean; controls?: boolean }
+  - imageRow { images[2..3] of image }
+  - imageBleed { image }
+  - textAside { body: blocks[]; aside: text }
+- gallery: array<image> { alt, hotspot }  # assets for the index feed
+- featured: boolean
+- order: number
+
+Add minimal preview/select; keep schema terse.
+
+###############################################################################
+# 5) GROQ QUERIES (CANONICAL)
+###############################################################################
+- workSlugParams: `*[_type=="work"]{ "section": discipline, "slug": slug.current }`
+- workBySlug(section, slug):
+  Return: _id, title, slug, discipline, year, tags, hero(+lqip), summary,
+  content[] with inlined lqip for images and required fields for videoMux,
+  gallery[] with lqip.
+- indexFeed(section):
+  List works in section ordered by featured/order/year; flatten gallery into feed items, carrying parent metadata (slug/title/tags/lqip).
+- indexFeedByTags(section, tags[]):
+  Same, but filter works where `count(array::intersect(tags, $tags)) > 0`.
+
+Always include `"lqip": asset->metadata.lqip` for images.
+
+###############################################################################
+# 6) MUX VIA STANDARD HTML5 <video>
+###############################################################################
+Goal: Use MUX playbackId with native `<video>` (no Mux Player). Prefer MP4 renditions for widest compatibility; HLS when supported.
+
+lib/mux.ts must export:
+- `muxHlsUrl(id: string) => https://stream.mux.com/{id}.m3u8`
+- `muxMp4Url(id: string, quality: 'low'|'medium'|'high'='medium') => https://stream.mux.com/{id}/{quality}.mp4`  # assumes MP4 renditions enabled in Mux
+- `canPlayHlsNatively(): boolean` — feature-detect `video.canPlayType('application/vnd.apple.mpegurl')`
+- `shouldUseHls(): boolean` — returns true if native HLS supported. (Do NOT import hls.js by default.)
+- `posterFromSanity(image)`: small helper to get poster URL if provided.
+
+Renderer rule (in RichComponents.tsx, type: videoMux):
+- Use `<video controls playsInline preload="metadata">`.
+- If `shouldUseHls()` true, set `src=muxHlsUrl(playbackId)` and `type="application/vnd.apple.mpegurl"`.
+- Else, set `src=muxMp4Url(playbackId, 'medium')` and `type="video/mp4"`.
+- Apply attributes from content (autoplay, loop, muted, controls) but default to `controls={true}`.
+- If captions provided, add `<track kind="captions" src={...} default />`.
+- Use poster image if present.
+- No extra libs. If MP4 renditions are not enabled in your Mux account, you may optionally (later) add a **tiny conditional dynamic import of hls.js** for non-Safari — but DO NOT add it unless explicitly requested.
+
+###############################################################################
+# 7) INDEX + LIGHTBOX (URL-SYNC + A11Y)
+###############################################################################
+URL state:
+- `?tags=tag1,tag2` — comma-separated.
+- `?item=parentSlug:idx` — deep link to specific asset in flattened feed.
+
+Grid behavior:
+- Client component reads `useSearchParams()`, mutates with `router.replace(..., {scroll:false})`.
+- Clicking a tile sets `?item=...` to open `Lightbox`.
+- Tag pills toggle inclusion in `?tags=`; modifying tags clears `?item`.
+
+Lightbox behavior (client):
+- `role="dialog"`, `aria-modal="true"`, focus trap: focus initially on close button; keep tab order inside dialog.
+- Keyboard:
+  - Escape → close (clear `?item`)
+  - ArrowLeft → previous (wrap)
+  - ArrowRight → next (wrap)
+- Backdrop click closes.
+- Buttons for Prev/Next/Close, and a link to open the parent project `/{section}/{parentSlug}`.
+- Preload next/prev images on open (createImageBitmap or hidden Image elements with decoding=async).
+- If the current item represents a video in future (if you decide to surface videos in the feed), pause video on navigation/close.
+
+###############################################################################
+# 8) PROJECT PAGE
+###############################################################################
+- Server fetch via `client.fetch(workBySlug, {section, slug})`.
+- Hero: responsive container (`relative w-full aspect-[16/9]` unless you have intrinsic sizing), `next/image` with `placeholder="blur"`.
+- Tags render as links to `/{section}?tags=Tag`.
+- Content via PortableText with components:
+  - image → `<figure>` + optional `<figcaption>`
+  - videoMux → HTML5 `<video>` as per MUX rules
+  - imageRow → grid (2–3 cols)
+  - imageBleed → full-bleed (stretch container; respect paddings)
+  - textAside → grid md:[2fr,1fr]
+
+###############################################################################
+# 9) DATA, CACHING, PERF
+###############################################################################
+- Use server components for data; client only for interactive index/lightbox.
+- Revalidate content at 60s by default; enable draft preview later if needed.
+- `next/image` with `sizes` and LQIP everywhere.
+- Keep components small; avoid unnecessary context/state.
+
+###############################################################################
+# 10) DEPENDENCIES
+###############################################################################
+Allowed:
+- next, react, react-dom
+- tailwindcss, autoprefixer, postcss
+- @sanity/*, next-sanity, groq
+- @sanity/image-url
+- zod (for env parsing only, if used)
+
+Disallowed unless explicitly requested:
+- Mux Player, large UI kits, lodash, moment/dayjs, masonry libs, modal libs, framer-motion/gsap.
+- hls.js (ONLY add later if MP4 renditions are unavailable and we explicitly opt-in to a conditional dynamic import).
+
+###############################################################################
+# 11) TS/ESLINT/PRETTIER
+###############################################################################
+- TypeScript strict.
+- ESLint: next/core-web-vitals minimal config.
+- Prettier defaults (2 spaces, semicolons, single quotes).
+
+###############################################################################
+# 12) ENV & CONFIG
+###############################################################################
+`.env.local` (document placeholders in `.env.example`):
+- SANITY_PROJECT_ID
+- SANITY_DATASET
+- SANITY_API_VERSION=2024-01-01
+- NEXT_PUBLIC_SANITY_PROJECT_ID
+- NEXT_PUBLIC_SANITY_DATASET
+- (Optional) MUX_TOKEN_ID / MUX_TOKEN_SECRET — only if you plan uploads from Studio; not required for playbackId usage.
+`sanity.client.ts` exports a configured client + image urlBuilder.
+
+###############################################################################
+# 13) ACCESSIBILITY & SEO
+###############################################################################
+- All images: alt text. If decorative (grid tiles), keep `alt=""` and provide accessible names on buttons.
+- Lightbox: label with project title where possible (`aria-label` on dialog).
+- Keyboard: Esc/Left/Right support required.
+- `generateMetadata`: include `themeColor` (#fff for art, #000 for design) and meaningful titles; project OG image from hero.
+
+###############################################################################
+# 14) IMPLEMENTATION ORDER
+###############################################################################
+A) Base: Next + Tailwind; globals.css tokens/utilities; `/` → `/art`; Header.
+B) Sanity: work + objects (imageRow, imageBleed, textAside, videoMux).
+C) Queries & clients: sanity.client, queries.ts, image.ts, mux.ts.
+D) Project page + PortableText renderers.
+E) Index server page + Grid client + Lightbox client with URL sync.
+F) Tag UX + deep links; ensure replace() with {scroll:false}.
+G) Polish: preload next/prev, focus trap, pausing media on close.
+
+###############################################################################
+# 15) WHAT NOT TO DO
+###############################################################################
+- Don’t add extra libraries for video or modals by default.
+- Don’t hardcode colors; always use tokens.
+- Don’t over-abstract; keep components lean and local unless reused.
+- Don’t add animations or analytics unless requested.
+
+###############################################################################
+# 16) ACCEPTANCE CHECK
+###############################################################################
+- `/` 308 → `/art`.
+- `/art` and `/design` render identical UI with different theme tokens.
+- Index supports `?tags=` filter and `?item=` deep link; shareable and restorable.
+- Lightbox: arrows & Esc work; focus is trapped; backdrop closes; “Open project” link present.
+- Project page renders hero, summary, rich content including MUX video in plain HTML5 `<video>`.
+- No disallowed dependencies introduced.
+# End
