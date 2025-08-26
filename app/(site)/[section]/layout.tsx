@@ -42,20 +42,22 @@ export async function generateMetadata({
   };
 }
 
-export default function SectionLayout({
+export default async function SectionLayout({
   children,
   params,
 }: {
   children: React.ReactNode;
-  params: { section: string };
+  params?: Promise<{ section: string }>;
 }) {
-  if (!isValidSection(params.section)) {
+  const resolved = params ? await params : { section: 'art' } as const;
+
+  if (!isValidSection(resolved.section)) {
     notFound();
   }
 
   return (
-    <div data-theme={params.section} className="bg-var text-var min-h-screen">
-      <Header currentSection={params.section} />
+    <div data-theme={resolved.section} className="bg-var text-var min-h-screen">
+      <Header currentSection={resolved.section} />
       <main>{children}</main>
     </div>
   );
