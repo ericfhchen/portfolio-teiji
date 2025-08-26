@@ -41,6 +41,14 @@ export function createItemParam(parentSlug: string, index: number): string {
   return `${parentSlug}:${index}`;
 }
 
+// Ensure tag value is a string for UI rendering
+export function getTagName(tag: any): string {
+  if (typeof tag === 'string') return tag;
+  if (tag && typeof tag.name === 'string') return tag.name;
+  if (tag && typeof tag.title === 'string') return tag.title;
+  return '';
+}
+
 // Simple focus trap utility
 export function trapFocus(element: HTMLElement) {
   const focusableElements = element.querySelectorAll(

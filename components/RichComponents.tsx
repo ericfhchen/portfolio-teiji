@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { PortableTextComponents } from 'next-sanity';
+import { PortableText, PortableTextComponents } from 'next-sanity';
 import { getImageProps } from '@/lib/image';
 import { getVideoSource, posterFromSanity } from '@/lib/mux';
 import { client } from '@/lib/sanity.client';
@@ -82,24 +82,26 @@ const RichComponents: PortableTextComponents = {
       return (
         <figure className="my-8 w-full max-w-[60%] mx-auto">
           <div className="grid grid-cols-2 gap-4">
-            {images.map((image: any, index: number) => {
-              const imageProps = getImageProps(image, 400);
-              if (!imageProps) return null;
+            {images
+              .map((image: any, index: number) => {
+                const imageProps = getImageProps(image, 400);
+                if (!imageProps) return null;
 
-              return (
-                <div key={index} className="relative aspect-[4/3] overflow-hidden rounded-lg">
-                  <Image
-                    src={imageProps.src}
-                    alt={imageProps.alt}
-                    fill
-                    className="object-cover"
-                    placeholder="blur"
-                    blurDataURL={imageProps.blurDataURL}
-                    sizes="(max-width: 768px) 40vw, 30vw"
-                  />
-                </div>
-              );
-            })}
+                return (
+                  <div key={image._key || image.asset?._ref || `dual-image-${index}`} className="relative aspect-[4/3] overflow-hidden rounded-lg">
+                    <Image
+                      src={imageProps.src}
+                      alt={imageProps.alt}
+                      fill
+                      className="object-cover"
+                      placeholder="blur"
+                      blurDataURL={imageProps.blurDataURL}
+                      sizes="(max-width: 768px) 40vw, 30vw"
+                    />
+                  </div>
+                );
+              })
+              .filter(Boolean)}
           </div>
           {caption && (
             <figcaption className="mt-2 text-sm text-muted text-center">
@@ -165,24 +167,26 @@ const RichComponents: PortableTextComponents = {
 
       return (
         <div className={`my-8 grid gap-4 ${images.length === 2 ? 'grid-cols-2' : 'grid-cols-3'}`}>
-          {images.map((image: any, index: number) => {
-            const imageProps = getImageProps(image, 600);
-            if (!imageProps) return null;
+          {images
+            .map((image: any, index: number) => {
+              const imageProps = getImageProps(image, 600);
+              if (!imageProps) return null;
 
-            return (
-              <div key={index} className="relative aspect-[4/3] overflow-hidden rounded-lg">
-                <Image
-                  src={imageProps.src}
-                  alt={imageProps.alt}
-                  fill
-                  className="object-cover"
-                  placeholder="blur"
-                  blurDataURL={imageProps.blurDataURL}
-                  sizes="(max-width: 768px) 50vw, 33vw"
-                />
-              </div>
-            );
-          })}
+              return (
+                <div key={image._key || image.asset?._ref || `row-image-${index}`} className="relative aspect-[4/3] overflow-hidden rounded-lg">
+                  <Image
+                    src={imageProps.src}
+                    alt={imageProps.alt}
+                    fill
+                    className="object-cover"
+                    placeholder="blur"
+                    blurDataURL={imageProps.blurDataURL}
+                    sizes="(max-width: 768px) 50vw, 33vw"
+                  />
+                </div>
+              );
+            })
+            .filter(Boolean)}
         </div>
       );
     },
@@ -215,11 +219,29 @@ const RichComponents: PortableTextComponents = {
       return (
         <div className="my-8 grid gap-8 md:grid-cols-[2fr,1fr]">
           <div className="space-y-4">
-            {body?.map((block: any, index: number) => (
-              <p key={index} className="text-var">
-                {block.children?.map((child: any) => child.text).join('')}
-              </p>
-            ))}
+            <PortableText 
+              value={body || []} 
+              components={{
+                block: {
+                  normal: ({ children }) => <p className="text-var">{children}</p>,
+                  blockquote: ({ children }) => (
+                    <blockquote className="border-l-4 border-var pl-6 text-muted italic">
+                      {children}
+                    </blockquote>
+                  ),
+                  caption: ({ children }) => (
+                    <p className="text-sm text-muted text-center">{children}</p>
+                  ),
+                  small: ({ children }) => (
+                    <p className="text-xs text-muted">{children}</p>
+                  ),
+                },
+                marks: {
+                  strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
+                  em: ({ children }) => <em className="italic">{children}</em>,
+                },
+              }}
+            />
           </div>
           <aside className="text-sm text-muted">
             {aside}

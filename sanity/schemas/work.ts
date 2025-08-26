@@ -106,6 +106,21 @@ export default defineType({
       ],
     }),
     defineField({
+      name: 'tags',
+      title: 'Tags',
+      type: 'array',
+      of: [
+        {
+          type: 'reference',
+          to: [{ type: 'tag' }],
+          options: {
+            disableNew: false,
+          },
+        },
+      ],
+      description: 'Select existing tags or create new ones. Tags are shared across all items.',
+    }),
+    defineField({
       name: 'discipline',
       title: 'Discipline',
       type: 'string',

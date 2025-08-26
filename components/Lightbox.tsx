@@ -43,7 +43,7 @@ export default function Lightbox({ items, section }: LightboxProps) {
 
   const close = useCallback(() => {
     const newParams = createSearchParams(activeTags);
-    router.replace(`/${section}?${newParams}`, { scroll: false });
+    router.replace(`/${section}/index?${newParams}`, { scroll: false });
   }, [activeTags, router, section]);
 
   const navigate = useCallback((direction: 'prev' | 'next') => {
@@ -60,7 +60,7 @@ export default function Lightbox({ items, section }: LightboxProps) {
     const itemParam = createItemParam(newItem.parentSlug, newItem.index);
     const newParams = createSearchParams(activeTags, itemParam);
     
-    router.replace(`/${section}?${newParams}`, { scroll: false });
+    router.replace(`/${section}/index?${newParams}`, { scroll: false });
   }, [activeTags, currentIndex, items, router, section]);
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
@@ -183,9 +183,9 @@ export default function Lightbox({ items, section }: LightboxProps) {
             <h3 className="font-medium mb-2">{currentItem.parentTitle}</h3>
             {currentItem.parentTags.length > 0 && (
               <div className="flex flex-wrap gap-1 mb-3">
-                {currentItem.parentTags.map(tag => (
+                {currentItem.parentTags.map((tag, index) => (
                   <span
-                    key={tag}
+                    key={`${tag}-${index}`}
                     className="px-2 py-1 text-xs bg-white bg-opacity-20 rounded"
                   >
                     {tag}

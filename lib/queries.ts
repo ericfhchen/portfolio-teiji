@@ -14,8 +14,8 @@ export const workBySlugQuery = groq`
     slug,
     discipline,
     year,
-    tags,
-    hero {
+    "tags": tags[]->name,
+    coverImage {
       ...,
       "lqip": asset->metadata.lqip,
       alt
@@ -38,7 +38,17 @@ export const workBySlugQuery = groq`
       _type == "imageRow" => {
         ...,
         images[] {
-          ...,
+          _key,
+          asset,
+          "lqip": asset->metadata.lqip,
+          alt
+        }
+      },
+      _type == "imageDual" => {
+        ...,
+        images[] {
+          _key,
+          asset,
           "lqip": asset->metadata.lqip,
           alt
         }
@@ -46,9 +56,22 @@ export const workBySlugQuery = groq`
       _type == "imageBleed" => {
         ...,
         image {
-          ...,
+          _key,
+          asset,
           "lqip": asset->metadata.lqip,
           alt
+        }
+      },
+      _type == "textAside" => {
+        ...,
+        body[] {
+          _key,
+          _type,
+          children[] {
+            _key,
+            _type,
+            text
+          }
         }
       }
     },
@@ -65,7 +88,7 @@ export const indexFeedQuery = groq`
     _id,
     title,
     "slug": slug.current,
-    tags,
+    "tags": tags[]->name,
     gallery[] {
       ...,
       "lqip": asset->metadata.lqip,
@@ -79,7 +102,7 @@ export const indexFeedByTagsQuery = groq`
     _id,
     title,
     "slug": slug.current,
-    tags,
+    "tags": tags[]->name,
     gallery[] {
       ...,
       "lqip": asset->metadata.lqip,
@@ -89,5 +112,38 @@ export const indexFeedByTagsQuery = groq`
 `;
 
 export const allTagsQuery = groq`
-  array::unique(*[_type == "work" && discipline == $section].tags[])
+  array::unique(*[_type == "work" && discipline == $section].tags[]->name)
+`;
+
+export const siteSettingsQuery = groq`
+  *[_type == "siteSettings" && _id == "siteSettings"][0] {
+    title,
+    description,
+    keywords,
+    favicon {
+      ...,
+      "url": asset->url,
+      alt
+    },
+    ogImage {
+      ...,
+      "url": asset->url,
+      alt
+    },
+    themeColors,
+    seo
+  }
+`;
+
+export const featuredWorksQuery = groq`
+  *[_type == "work" && discipline == $section && featured == true] | order(order asc, year desc) {
+    _id,
+    title,
+    "slug": slug.current,
+    featuredImage {
+      ...,
+      "lqip": asset->metadata.lqip,
+      alt
+    }
+  }
 `;

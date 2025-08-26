@@ -1,46 +1,18 @@
 import { client } from '@/lib/sanity.client';
-import { indexFeedQuery, indexFeedByTagsQuery, allTagsQuery } from '@/lib/queries';
+import { featuredWorksQuery } from '@/lib/queries';
 import { getImageUrl } from '@/lib/image';
-import { FeedItem } from '@/sanity/schema';
+import Link from 'next/link';
 import Grid from '@/components/Grid';
-import Lightbox from '@/components/Lightbox';
+import { FeedItem } from '@/sanity/schema';
 import GridLines from '@/components/GridLines';
 
 interface PageProps {
   params: { section: string };
-  searchParams: { tags?: string; item?: string };
 }
 
-async function getFeedData(section: string, tags?: string[]) {
-  const query = tags && tags.length > 0 ? indexFeedByTagsQuery : indexFeedQuery;
-  const params = { section, ...(tags && { tags }) };
-  
-  const [works, allTags] = await Promise.all([
-    client.fetch(query, params),
-    client.fetch(allTagsQuery, { section }),
-  ]);
-
-  // Flatten gallery items into feed items
-  const feedItems: FeedItem[] = [];
-  
-  works.forEach((work: any) => {
-    if (work.gallery && work.gallery.length > 0) {
-      work.gallery.forEach((image: any, index: number) => {
-        feedItems.push({
-          _id: `${work._id}-${index}`,
-          src: getImageUrl(image, 800),
-          alt: image.alt || '',
-          lqip: image.lqip || '',
-          parentSlug: work.slug,
-          parentTitle: work.title,
-          parentTags: work.tags || [],
-          index,
-        });
-      });
-    }
-  });
-
-  return { feedItems, allTags: allTags || [] };
+async function getFeaturedData(section: string) {
+  const works = await client.fetch(featuredWorksQuery, { section });
+  return works;
 }
 
 export async function generateMetadata({ params }: { params: { section: string } }) {
@@ -49,18 +21,32 @@ export async function generateMetadata({ params }: { params: { section: string }
   };
 }
 
-export default async function SectionPage({ params, searchParams }: PageProps) {
-  const tags = searchParams.tags?.split(',').filter(Boolean) || [];
-  const { feedItems, allTags } = await getFeedData(params.section, tags.length > 0 ? tags : undefined);
+export default async function SectionPage({ params }: PageProps) {
+  const featured = await getFeaturedData(params.section);
+
+  // Transform featured works into FeedItem[] compatible with Grid
+  const feedItems: FeedItem[] = featured.map((work: any, idx: number) => ({
+    _id: work._id,
+    src: getImageUrl(work.featuredImage, 800),
+    alt: work.featuredImage?.alt || '',
+    lqip: work.featuredImage?.lqip || '',
+    parentSlug: work.slug,
+    parentTitle: work.title,
+    parentTags: work.tags || [],
+    index: idx,
+  }));
 
   return (
     <>
       <GridLines type="home" />
-      <div className="relative z-10">
-        <Grid items={feedItems} allTags={allTags} section={params.section} />
-        {searchParams.item && (
-          <Lightbox items={feedItems} section={params.section} />
+      <div className="relative z-10 mx-auto max-h-screen">
+        <h1 className="sr-only">{params.section}</h1>
+
+        {feedItems.length > 0 && (
+          <Grid items={feedItems} allTags={[]} section={params.section} variant="home" />
         )}
+
+        
       </div>
     </>
   );

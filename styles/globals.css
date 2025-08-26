@@ -10,7 +10,7 @@
   --font: 'Gerstner Programm', sans-serif;
 }
 
-html[data-theme="design"] {
+[data-theme="design"] {
   --bg: #000;
   --fg: #fff;
   --muted: #808080;
@@ -26,8 +26,15 @@ html[data-theme="design"] {
   color: var(--fg);
 }
 
+/* Hover variant for custom text-var (Tailwind won't generate this automatically) */
+
 .text-muted {
   color: var(--muted);
+}
+
+/* Hover variant for custom text-var (placed after .text-muted to ensure precedence) */
+.hover\:text-var:hover {
+  color: var(--fg) !important;
 }
 
 .border-var {
@@ -95,6 +102,6 @@ a {
   background-color: rgba(0, 0, 0, 0.8);
 }
 
-html[data-theme="design"] .lightbox-backdrop {
+[data-theme="design"] .lightbox-backdrop {
   background-color: rgba(255, 255, 255, 0.1);
 }

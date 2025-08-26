@@ -7,8 +7,8 @@ import { deskStructure } from './sanity/deskStructure';
 import { projectId, dataset } from './sanity/env';
 
 export default defineConfig({
-  name: 'tei-ji-portfolio',
-  title: 'Tei-ji Portfolio',
+  name: 'teiji-portfolio',
+  title: 'Teiji Portfolio',
   projectId,
   dataset,
   plugins: [

@@ -22,7 +22,7 @@ export function getImageProps(
   return {
     src: builder.url(),
     blurDataURL: image.asset.metadata?.lqip || '',
-    alt: image.alt || '',
+    alt: typeof image.alt === 'string' ? image.alt : '',
   };
 }
 

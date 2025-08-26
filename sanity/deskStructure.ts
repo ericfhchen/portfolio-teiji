@@ -3,6 +3,15 @@ export const deskStructure = (S: any) =>
     .title('Content')
     .items([
       S.listItem()
+        .title('Site Settings')
+        .child(
+          S.editor()
+            .schemaType('siteSettings')
+            .documentId('siteSettings')
+        )
+        .icon(() => '⚙️'),
+      S.divider(),
+      S.listItem()
         .title('Work (Art)')
         .child(
           S.documentList()

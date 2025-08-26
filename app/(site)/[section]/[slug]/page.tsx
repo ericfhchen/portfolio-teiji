@@ -28,7 +28,7 @@ export async function generateMetadata({ params }: PageProps) {
     return {};
   }
 
-  const heroImage = getImageProps(work.hero, 1200, 630);
+  const coverImage = getImageProps(work.coverImage, 1200, 630);
   
   return {
     title: `${work.title} - Tei-ji`,
@@ -36,7 +36,7 @@ export async function generateMetadata({ params }: PageProps) {
     openGraph: {
       title: work.title,
       description: work.summary || `${work.title} - ${work.discipline} work`,
-      images: heroImage ? [{ url: heroImage.src, width: 1200, height: 630 }] : [],
+      images: coverImage ? [{ url: coverImage.src, width: 1200, height: 630 }] : [],
     },
   };
 }
@@ -48,22 +48,22 @@ export default async function WorkPage({ params }: PageProps) {
     notFound();
   }
 
-  const heroImage = getImageProps(work.hero, 1600, 900);
+  const coverImage = getImageProps(work.coverImage, 1600, 900);
 
   return (
     <>
       <GridLines type="project" />
       <article className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Hero Image */}
-      {heroImage && (
+      {coverImage && (
         <div className="relative aspect-[16/9] w-full overflow-hidden rounded-lg mb-8">
           <Image
-            src={heroImage.src}
-            alt={heroImage.alt}
+            src={coverImage.src}
+            alt={coverImage.alt}
             fill
             className="object-cover"
             placeholder="blur"
-            blurDataURL={heroImage.blurDataURL}
+            blurDataURL={coverImage.blurDataURL}
             sizes="(max-width: 1024px) 100vw, 1024px"
             priority
           />
@@ -86,7 +86,7 @@ export default async function WorkPage({ params }: PageProps) {
             {work.tags.map((tag: string) => (
               <Link
                 key={tag}
-                href={`/${params.section}?tags=${encodeURIComponent(tag)}`}
+                href={`/${params.section}/index?tags=${encodeURIComponent(tag)}`}
                 className="px-3 py-1 text-sm rounded-full border border-var text-muted hover:text-var transition-colors"
               >
                 {tag}
@@ -112,7 +112,7 @@ export default async function WorkPage({ params }: PageProps) {
       {/* Back Link */}
       <div className="mt-12 pt-8 border-t border-var">
         <Link
-          href={`/${params.section}`}
+          href={`/${params.section}/index`}
           className="inline-flex items-center text-sm text-muted hover:text-var transition-colors"
         >
           <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
