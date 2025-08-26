@@ -6,11 +6,6 @@ import Grid from '@/components/Grid';
 import Lightbox from '@/components/Lightbox';
 import GridLines from '@/components/GridLines';
 
-interface PageProps {
-  params: { section: string };
-  searchParams: { tags?: string; item?: string };
-}
-
 async function getFeedData(section: string, tags?: string[]) {
   const query = tags && tags.length > 0 ? indexFeedByTagsQuery : indexFeedQuery;
   const params = { section, ...(tags && { tags }) };
@@ -43,13 +38,13 @@ async function getFeedData(section: string, tags?: string[]) {
   return { feedItems, allTags: allTags || [] };
 }
 
-export async function generateMetadata({ params }: { params: { section: string } }) {
+export async function generateMetadata({ params }: any) {
   return {
     title: `${params.section.charAt(0).toUpperCase() + params.section.slice(1)} — Index — Tei-ji`,
   };
 }
 
-export default async function SectionIndexPage({ params, searchParams }: PageProps) {
+export default async function SectionIndexPage({ params, searchParams }: any) {
   const tags = searchParams.tags?.split(',').filter(Boolean) || [];
   const { feedItems, allTags } = await getFeedData(params.section, tags.length > 0 ? tags : undefined);
 

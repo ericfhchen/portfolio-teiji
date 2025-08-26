@@ -6,22 +6,17 @@ import Grid from '@/components/Grid';
 import { FeedItem } from '@/sanity/schema';
 import GridLines from '@/components/GridLines';
 
-interface PageProps {
-  params: { section: string };
-}
-
 async function getFeaturedData(section: string) {
-  const works = await client.fetch(featuredWorksQuery, { section });
-  return works;
+  return client.fetch(featuredWorksQuery, { section });
 }
 
-export async function generateMetadata({ params }: { params: { section: string } }) {
+export async function generateMetadata({ params }: any) {
   return {
     title: `${params.section.charAt(0).toUpperCase() + params.section.slice(1)} - Tei-ji`,
   };
 }
 
-export default async function SectionPage({ params }: PageProps) {
+export default async function SectionPage({ params }: any) {
   const featured = await getFeaturedData(params.section);
 
   // Transform featured works into FeedItem[] compatible with Grid

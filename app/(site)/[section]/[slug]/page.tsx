@@ -9,10 +9,6 @@ import RichComponents from '@/components/RichComponents';
 import Prose from '@/components/Prose';
 import GridLines from '@/components/GridLines';
 
-interface PageProps {
-  params: { section: string; slug: string };
-}
-
 export async function generateStaticParams() {
   const slugs = await client.fetch(workSlugParamsQuery);
   return slugs.map((item: any) => ({
@@ -21,7 +17,7 @@ export async function generateStaticParams() {
   }));
 }
 
-export async function generateMetadata({ params }: PageProps) {
+export async function generateMetadata({ params }: any) {
   const work = await client.fetch(workBySlugQuery, params);
   
   if (!work) {
@@ -41,7 +37,7 @@ export async function generateMetadata({ params }: PageProps) {
   };
 }
 
-export default async function WorkPage({ params }: PageProps) {
+export default async function WorkPage({ params }: any) {
   const work = await client.fetch(workBySlugQuery, params);
   
   if (!work) {
