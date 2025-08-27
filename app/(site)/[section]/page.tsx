@@ -10,14 +10,24 @@ async function getFeaturedData(section: string) {
   return client.fetch(featuredWorksQuery, { section });
 }
 
-export async function generateMetadata({ params }: any) {
+export async function generateMetadata({ 
+  params 
+}: { 
+  params: Promise<{ section: string }> 
+}) {
+  const { section } = await params;
   return {
-    title: `${params.section.charAt(0).toUpperCase() + params.section.slice(1)} - Tei-ji`,
+    title: `${section.charAt(0).toUpperCase() + section.slice(1)} - Tei-ji`,
   };
 }
 
-export default async function SectionPage({ params }: any) {
-  const featured = await getFeaturedData(params.section);
+export default async function SectionPage({ 
+  params 
+}: { 
+  params: Promise<{ section: string }> 
+}) {
+  const { section } = await params;
+  const featured = await getFeaturedData(section);
 
   // Transform featured works into FeedItem[] compatible with Grid
   const feedItems: FeedItem[] = featured.map((work: any, idx: number) => ({
@@ -35,10 +45,10 @@ export default async function SectionPage({ params }: any) {
     <>
       <GridLines type="home" />
       <div className="relative z-10 mx-auto max-h-screen">
-        <h1 className="sr-only">{params.section}</h1>
+        <h1 className="sr-only">{section}</h1>
 
         {feedItems.length > 0 && (
-          <Grid items={feedItems} allTags={[]} section={params.section} variant="home" />
+          <Grid items={feedItems} allTags={[]} section={section} variant="home" />
         )}
 
         

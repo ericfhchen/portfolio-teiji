@@ -3,7 +3,6 @@ import Header from '@/components/Header';
 import { client } from '@/lib/sanity.client';
 import { siteSettingsQuery } from '@/lib/queries';
 import { SiteSettings } from '@/lib/types';
-import type { LayoutProps } from 'next';
 
 const validSections = ['art', 'design'] as const;
 type Section = typeof validSections[number];
@@ -24,19 +23,21 @@ async function getSiteSettings(): Promise<SiteSettings | null> {
 export async function generateMetadata({
   params,
 }: {
-  params: { section: string };
+  params: Promise<{ section: string }>;
 }) {
-  if (!isValidSection(params.section)) {
+  const { section } = await params;
+  
+  if (!isValidSection(section)) {
     return {};
   }
 
   const settings = await getSiteSettings();
   const siteTitle = settings?.title || 'Teiji';
-  const defaultThemeColor = params.section === 'art' ? '#ffffff' : '#000000';
-  const themeColor = settings?.themeColors?.[params.section] || defaultThemeColor;
+  const defaultThemeColor = section === 'art' ? '#ffffff' : '#000000';
+  const themeColor = settings?.themeColors?.[section] || defaultThemeColor;
   
   return {
-    title: `${params.section.charAt(0).toUpperCase() + params.section.slice(1)} - ${siteTitle}`,
+    title: `${section.charAt(0).toUpperCase() + section.slice(1)} - ${siteTitle}`,
     other: {
       'theme-color': themeColor,
     },
@@ -48,17 +49,18 @@ export default async function SectionLayout({
   params,
 }: {
   children: React.ReactNode;
-  params: { section: string };
+  params: Promise<{ section: string }>;
 }) {
-  const section = isValidSection(params.section) ? params.section : 'art';
+  const { section } = await params;
+  const validatedSection = isValidSection(section) ? section : 'art';
 
-  if (!isValidSection(section)) {
+  if (!isValidSection(validatedSection)) {
     notFound();
   }
 
   return (
-    <div data-theme={section} className="bg-var text-var min-h-screen">
-      <Header currentSection={section} />
+    <div data-theme={validatedSection} className="bg-var text-var min-h-screen">
+      <Header currentSection={validatedSection} />
       <main>{children}</main>
     </div>
   );

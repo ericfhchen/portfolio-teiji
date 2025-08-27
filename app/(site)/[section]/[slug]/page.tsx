@@ -17,8 +17,13 @@ export async function generateStaticParams() {
   }));
 }
 
-export async function generateMetadata({ params }: any) {
-  const work = await client.fetch(workBySlugQuery, params);
+export async function generateMetadata({ 
+  params 
+}: { 
+  params: Promise<{ section: string; slug: string }> 
+}) {
+  const { section, slug } = await params;
+  const work = await client.fetch(workBySlugQuery, { section, slug });
   
   if (!work) {
     return {};
@@ -37,8 +42,13 @@ export async function generateMetadata({ params }: any) {
   };
 }
 
-export default async function WorkPage({ params }: any) {
-  const work = await client.fetch(workBySlugQuery, params);
+export default async function WorkPage({ 
+  params 
+}: { 
+  params: Promise<{ section: string; slug: string }> 
+}) {
+  const { section, slug } = await params;
+  const work = await client.fetch(workBySlugQuery, { section, slug });
   
   if (!work) {
     notFound();
@@ -82,7 +92,7 @@ export default async function WorkPage({ params }: any) {
             {work.tags.map((tag: string) => (
               <Link
                 key={tag}
-                href={`/${params.section}/index?tags=${encodeURIComponent(tag)}`}
+                href={`/${section}/index?tags=${encodeURIComponent(tag)}`}
                 className="px-3 py-1 text-sm rounded-full border border-var text-muted hover:text-var transition-colors"
               >
                 {tag}
@@ -108,13 +118,13 @@ export default async function WorkPage({ params }: any) {
       {/* Back Link */}
       <div className="mt-12 pt-8 border-t border-var">
         <Link
-          href={`/${params.section}/index`}
+          href={`/${section}/index`}
           className="inline-flex items-center text-sm text-muted hover:text-var transition-colors"
         >
           <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
-          Back to {params.section}
+          Back to {section}
         </Link>
       </div>
       </article>
