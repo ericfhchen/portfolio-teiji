@@ -38,6 +38,7 @@ export default async function SectionPage({
     parentSlug: work.slug,
     parentTitle: work.title,
     parentTags: work.tags || [],
+    description: work.description,
     index: idx,
   }));
 

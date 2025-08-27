@@ -84,12 +84,15 @@ export const workBySlugQuery = groq`
 `;
 
 export const indexFeedQuery = groq`
-  *[_type == "work" && discipline == $section] | order(featured desc, order asc, year desc) {
+  *[_type == "indexItem" && discipline == $section] | order(orderRank asc, year desc) {
     _id,
     title,
     "slug": slug.current,
+    year,
+    medium,
+    description,
     "tags": tags[]->name,
-    gallery[] {
+    image {
       ...,
       "lqip": asset->metadata.lqip,
       alt
@@ -98,12 +101,15 @@ export const indexFeedQuery = groq`
 `;
 
 export const indexFeedByTagsQuery = groq`
-  *[_type == "work" && discipline == $section && count(array::intersect(tags, $tags)) > 0] | order(featured desc, order asc, year desc) {
+  *[_type == "indexItem" && discipline == $section && count(tags[]->name[@ in $tags]) > 0] | order(orderRank asc, year desc) {
     _id,
     title,
     "slug": slug.current,
+    year,
+    medium,
+    description,
     "tags": tags[]->name,
-    gallery[] {
+    image {
       ...,
       "lqip": asset->metadata.lqip,
       alt
@@ -112,7 +118,7 @@ export const indexFeedByTagsQuery = groq`
 `;
 
 export const allTagsQuery = groq`
-  array::unique(*[_type == "work" && discipline == $section].tags[]->name)
+  *[_type == "tag" && _id in *[_type == "indexItem" && discipline == $section].tags[]._ref].name
 `;
 
 export const siteSettingsQuery = groq`
@@ -140,7 +146,24 @@ export const featuredWorksQuery = groq`
     _id,
     title,
     "slug": slug.current,
+    description,
     featuredImage {
+      ...,
+      "lqip": asset->metadata.lqip,
+      alt
+    }
+  }
+`;
+
+export const workPageQuery = groq`
+  *[_type == "work" && discipline == $section && featured == true] | order(order asc, year desc) {
+    _id,
+    title,
+    "slug": slug.current,
+    year,
+    medium,
+    description,
+    coverImage {
       ...,
       "lqip": asset->metadata.lqip,
       alt

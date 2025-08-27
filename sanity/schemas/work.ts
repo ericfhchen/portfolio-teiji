@@ -1,4 +1,5 @@
 import { defineType, defineField } from 'sanity'
+import { orderRankField, orderRankOrdering } from '@sanity/orderable-document-list'
 
 export default defineType({
   name: 'work',
@@ -64,8 +65,8 @@ export default defineType({
       type: 'text',
     }),
     defineField({
-      name: 'rich',
-      title: 'Rich Content',
+      name: 'content',
+      title: 'Content',
       type: 'array',
       of: [
         {
@@ -106,6 +107,28 @@ export default defineType({
       ],
     }),
     defineField({
+      name: 'gallery',
+      title: 'Gallery',
+      type: 'array',
+      of: [
+        {
+          type: 'image',
+          options: {
+            hotspot: true,
+          },
+          fields: [
+            {
+              name: 'alt',
+              title: 'Alt text',
+              type: 'string',
+              description: 'Alternative text for screen readers',
+            },
+          ],
+        },
+      ],
+      description: 'Images that will appear in the index feed for this work',
+    }),
+    defineField({
       name: 'tags',
       title: 'Tags',
       type: 'array',
@@ -140,6 +163,7 @@ export default defineType({
       description: 'Toggle to appear on section pages',
       initialValue: false,
     }),
+    orderRankField({ type: 'work' }),
     defineField({
       name: 'slug',
       title: 'Slug',
@@ -168,6 +192,7 @@ export default defineType({
     },
   },
   orderings: [
+    orderRankOrdering,
     {
       title: 'Year, Newest',
       name: 'yearDesc',

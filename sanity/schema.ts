@@ -20,6 +20,9 @@ export interface FeedItem {
   parentTitle: string;
   parentTags: string[];
   index: number;
+  year?: number;
+  medium?: string;
+  description?: string;
 }
 
 export const schema: { types: SchemaTypeDefinition[] } = {

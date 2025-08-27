@@ -1,9 +1,8 @@
 'use client';
 
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import Image from 'next/image';
-import Link from 'next/link';
 import { FeedItem } from '@/sanity/schema';
 import { parseSearchParams, createSearchParams, parseItemParam, createItemParam, trapFocus } from '@/lib/utils';
 
@@ -15,12 +14,20 @@ interface LightboxProps {
 export default function Lightbox({ items, section }: LightboxProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const pathname = usePathname();
   const dialogRef = useRef<HTMLDivElement>(null);
   
   const { tags: activeTags, item: activeItem } = useMemo(
     () => parseSearchParams(searchParams),
     [searchParams]
   );
+
+  // Determine current route context
+  const currentRoute = useMemo(() => {
+    if (pathname.includes('/work')) return 'work';
+    if (pathname.includes('/index')) return 'index';
+    return 'index'; // default fallback
+  }, [pathname]);
 
   const currentItemData = useMemo(() => {
     if (!activeItem) return null;
@@ -43,8 +50,8 @@ export default function Lightbox({ items, section }: LightboxProps) {
 
   const close = useCallback(() => {
     const newParams = createSearchParams(activeTags);
-    router.replace(`/${section}/index?${newParams}`, { scroll: false });
-  }, [activeTags, router, section]);
+    router.replace(`/${section}/${currentRoute}?${newParams}`, { scroll: false });
+  }, [activeTags, router, section, currentRoute]);
 
   const navigate = useCallback((direction: 'prev' | 'next') => {
     if (items.length === 0) return;
@@ -60,8 +67,8 @@ export default function Lightbox({ items, section }: LightboxProps) {
     const itemParam = createItemParam(newItem.parentSlug, newItem.index);
     const newParams = createSearchParams(activeTags, itemParam);
     
-    router.replace(`/${section}/index?${newParams}`, { scroll: false });
-  }, [activeTags, currentIndex, items, router, section]);
+    router.replace(`/${section}/${currentRoute}?${newParams}`, { scroll: false });
+  }, [activeTags, currentIndex, items, router, section, currentRoute]);
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     switch (e.key) {
@@ -117,91 +124,85 @@ export default function Lightbox({ items, section }: LightboxProps) {
 
   return (
     <div
-      className="fixed inset-0 z-50 lightbox-backdrop"
+      className="fixed inset-0 z-50 bg-white"
       onClick={handleBackdropClick}
     >
+      {/* Single vertical grid line in the center */}
+      <div className="fixed inset-0 pointer-events-none z-0">
+        <div
+          className="absolute top-0 bottom-0 border-r border-var"
+          style={{ left: '50%', borderWidth: '0.5px' }}
+        />
+      </div>
+
       <div
         ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-label={`${currentItem.parentTitle} - Image ${currentItem.index + 1}`}
-        className="flex items-center justify-center min-h-screen p-4"
+        className="relative z-10 h-full flex flex-col"
       >
-        {/* Close Button */}
-        <button
-          onClick={close}
-          className="absolute top-4 right-4 z-10 w-10 h-10 rounded-full bg-black bg-opacity-50 text-white hover:bg-opacity-75 transition-colors focus:outline-none focus:ring-2 focus:ring-white"
-          aria-label="Close lightbox"
-        >
-          <svg className="w-6 h-6 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-
-        {/* Navigation Buttons */}
-        {items.length > 1 && (
-          <>
-            <button
-              onClick={() => navigate('prev')}
-              className="absolute left-4 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-black bg-opacity-50 text-white hover:bg-opacity-75 transition-colors focus:outline-none focus:ring-2 focus:ring-white"
-              aria-label="Previous image"
-            >
-              <svg className="w-6 h-6 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
+        {/* Work Tile - exactly matching Grid component home variant */}
+        <div className="flex-1 flex items-center justify-center">
+          <div className="relative w-full">
+            {/* Horizontal hairline across the full width at vertical center */}
+            <span
+              aria-hidden
+              className="pointer-events-none absolute inset-x-0 top-1/2 h-px bg-[var(--border)] z-0"
+            />
             
-            <button
-              onClick={() => navigate('next')}
-              className="absolute right-4 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-black bg-opacity-50 text-white hover:bg-opacity-75 transition-colors focus:outline-none focus:ring-2 focus:ring-white"
-              aria-label="Next image"
-            >
-              <svg className="w-6 h-6 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
-          </>
-        )}
-
-        {/* Image */}
-        <div className="relative max-w-5xl max-h-[80vh] w-full h-full">
-          <Image
-            src={currentItem.src}
-            alt={currentItem.alt}
-            fill
-            className="object-contain"
-            placeholder="blur"
-            blurDataURL={currentItem.lqip}
-            sizes="80vw"
-            priority
-          />
+            {/* Work tile container - matching Grid component exactly */}
+            <div className="relative overflow-hidden p-12 lg:p-20 lg:max-w-[100dvh] mx-auto w-full">
+              <div className="relative aspect-square">
+                <Image
+                  src={currentItem.src}
+                  alt={currentItem.alt || ''}
+                  fill
+                  className="object-contain object-center"
+                  placeholder="blur"
+                  blurDataURL={currentItem.lqip}
+                  sizes="50vw"
+                  priority
+                />
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* Info Panel */}
-        <div className="absolute bottom-4 left-4 right-4 z-10">
-          <div className="bg-black bg-opacity-75 text-white rounded-lg p-4 max-w-md">
-            <h3 className="font-medium mb-2">{currentItem.parentTitle}</h3>
-            {currentItem.parentTags.length > 0 && (
-              <div className="flex flex-wrap gap-1 mb-3">
-                {currentItem.parentTags.map((tag, index) => (
-                  <span
-                    key={`${tag}-${index}`}
-                    className="px-2 py-1 text-xs bg-white bg-opacity-20 rounded"
-                  >
-                    {tag}
-                  </span>
-                ))}
+        {/* Bottom text layout */}
+        <div className="absolute bottom-0 left-0 right-0 z-20">
+          <div className="grid grid-cols-2 gap-16 px-8 py-6">
+            {/* Left side: Year and Title/Tags */}
+            <div className="grid grid-cols-[auto_1fr] gap-8">
+              {/* Year column - minimal width */}
+              <div className="text-var">
+                {currentItem.year || ''}
               </div>
-            )}
-            <Link
-              href={`/${section}/${currentItem.parentSlug}`}
-              className="inline-flex items-center text-sm hover:underline"
-            >
-              Open project
-              <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-              </svg>
-            </Link>
+              
+              {/* Title and tags column - takes remaining space */}
+              <div>
+                <div className="text-var font-normal">
+                  {currentItem.parentTitle}
+                </div>
+                {currentItem.parentTags.length > 0 && (
+                  <div className="flex flex-wrap gap-1">
+                    {currentItem.parentTags.map((tag, index) => (
+                      <span
+                        key={`${tag}-${index}`}
+                        className="text-muted font-light"
+                      >
+                        {tag}{index < currentItem.parentTags.length - 1 && ', '}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Right side: Description */}
+            <div className="text-var">
+              {currentItem.description || ''}
+            </div>
           </div>
         </div>
       </div>

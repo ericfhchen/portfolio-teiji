@@ -1,14 +1,13 @@
 'use client';
 
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { useCallback, useMemo } from 'react';
 import Image from 'next/image';
 import { FeedItem } from '@/sanity/schema';
-import { parseSearchParams, createSearchParams, toggleTag, createItemParam } from '@/lib/utils';
+import { parseSearchParams, createSearchParams, createItemParam } from '@/lib/utils';
 
 interface GridProps {
   items: FeedItem[];
-  allTags: string[];
   section: string;
   /**
    * Controls the default column count based on page context.
@@ -19,14 +18,22 @@ interface GridProps {
   variant?: 'home' | 'work' | 'index';
 }
 
-export default function Grid({ items, allTags, section, variant = 'index' }: GridProps) {
+export default function Grid({ items, section, variant = 'index' }: GridProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const pathname = usePathname();
   
   const { tags: activeTags, item: activeItem } = useMemo(
     () => parseSearchParams(searchParams),
     [searchParams]
   );
+
+  // Determine current route context
+  const currentRoute = useMemo(() => {
+    if (pathname.includes('/work')) return 'work';
+    if (pathname.includes('/index')) return 'index';
+    return 'index'; // default fallback
+  }, [pathname]);
 
   const filteredItems = useMemo(() => {
     if (activeTags.length === 0) return items;
@@ -36,63 +43,56 @@ export default function Grid({ items, allTags, section, variant = 'index' }: Gri
     );
   }, [items, activeTags]);
 
-  const handleTagToggle = useCallback((tag: string) => {
-    const newTags = toggleTag(activeTags, tag);
-    const newParams = createSearchParams(newTags);
-    
-    router.replace(`/${section}/index?${newParams}`, { scroll: false });
-  }, [activeTags, router, section]);
+
 
   const handleItemClick = useCallback((item: FeedItem) => {
-    const itemParam = createItemParam(item.parentSlug, item.index);
-    const newParams = createSearchParams(activeTags, itemParam);
-    
-    router.replace(`/${section}/index?${newParams}`, { scroll: false });
-  }, [activeTags, router, section]);
+    if (variant === 'work') {
+      // For work page, navigate directly to project page
+      router.push(`/${section}/${item.parentSlug}`);
+    } else {
+      // For index/home pages, open lightbox
+      const itemParam = createItemParam(item.parentSlug, item.index);
+      const newParams = createSearchParams(activeTags, itemParam);
+      
+      router.replace(`/${section}/${currentRoute}?${newParams}`, { scroll: false });
+    }
+  }, [variant, section, router, activeTags, currentRoute]);
 
-  // Determine column classes based on variant
-  const columnClasses = useMemo(() => {
+  // Determine column classes and count based on variant
+  const { columnClasses, columnCount } = useMemo(() => {
     switch (variant) {
       case 'home':
-        return 'grid-cols-1';
+        return { columnClasses: 'grid-cols-1', columnCount: 1 };
       case 'work':
-        return 'grid-cols-2';
+        return { columnClasses: 'grid-cols-2', columnCount: 2 };
       case 'index':
       default:
-        return 'grid-cols-3';
+        return { columnClasses: 'grid-cols-3', columnCount: 3 };
     }
   }, [variant]);
 
+  // Calculate empty tiles needed to fill incomplete rows
+  const emptyTilesNeeded = useMemo(() => {
+    if (columnCount === 1) return 0; // No need for empty tiles in single column
+    
+    const remainder = filteredItems.length % columnCount;
+    return remainder === 0 ? 0 : columnCount - remainder;
+  }, [filteredItems.length, columnCount]);
+
+  // Create empty tiles for incomplete rows
+  const emptyTiles = useMemo(() => {
+    return Array.from({ length: emptyTilesNeeded }, (_, index) => ({
+      _id: `empty-${index}`,
+      isEmpty: true
+    }));
+  }, [emptyTilesNeeded]);
+
   return (
     <div className="w-full">
-      {/* Tags Filter */}
-      {allTags.length > 0 && (
-        <div className="mb-8">
-          <div className="flex flex-wrap gap-2">
-            {allTags.map((tag, index) => (
-              <button
-                key={`${tag}-${index}`}
-                onClick={() => handleTagToggle(tag)}
-                className={`px-3 py-1 text-sm rounded-full border transition-colors ${
-                  activeTags.includes(tag)
-                    ? 'bg-var text-var border-var'
-                    : 'bg-transparent text-muted border-var hover:text-var'
-                }`}
-                style={{
-                  backgroundColor: activeTags.includes(tag) ? 'var(--fg)' : 'transparent',
-                  color: activeTags.includes(tag) ? 'var(--bg)' : 'var(--muted)',
-                }}
-              >
-                {tag}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
       {/* Grid */}
       {/* Tailwind base grid + dynamic base column count; rely on responsive utilities for smaller screens */}
-      <div className={`grid ${columnClasses} gap-4 justify-items-center`}>
+      <div className={`grid ${columnClasses} justify-items-center`}>
+        {/* Render actual items */}
         {filteredItems.map((item) => (
           <div key={item._id} className="relative w-full">
             {/* full-width hairline across the column */}
@@ -122,6 +122,42 @@ export default function Grid({ items, allTags, section, variant = 'index' }: Gri
                   />
                 </div>
               </button>
+              
+              {/* Text content for work variant */}
+              {variant === 'work' && (
+                <div className="mt-4 flex justify-between items-start">
+                  <div className="flex-1">
+                    <div className="text-var font-normal">
+                      {item.parentTitle}
+                    </div>
+                    {item.medium && (
+                      <div className="text-muted font-light">
+                        {item.medium}
+                      </div>
+                    )}
+                  </div>
+                  {item.year && (
+                    <div className="text-muted font-light">
+                      {item.year}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+        
+        {/* Render empty tiles to fill incomplete rows */}
+        {emptyTiles.map((emptyTile) => (
+          <div key={emptyTile._id} className="relative w-full">
+            {/* full-width hairline across the column */}
+            <span
+              aria-hidden
+              className="pointer-events-none absolute inset-x-0 top-1/2 h-px bg-[var(--border)] z-0"
+            />
+            {/* Empty tile with same padding as regular tiles to maintain grid alignment */}
+            <div className="relative overflow-hidden p-12 lg:p-20 lg:max-w-[100dvh] mx-auto w-full">
+              <div className="relative aspect-square" />
             </div>
           </div>
         ))}

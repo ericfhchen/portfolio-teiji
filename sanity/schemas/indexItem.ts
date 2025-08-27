@@ -1,4 +1,5 @@
-import { defineType, defineField } from 'sanity'
+ import { defineType, defineField } from 'sanity'
+import { orderRankField, orderRankOrdering } from '@sanity/orderable-document-list'
 
 export default defineType({
   name: 'indexItem',
@@ -70,13 +71,7 @@ export default defineType({
       },
       validation: (Rule) => Rule.required(),
     }),
-    defineField({
-      name: 'orderRank',
-      title: 'Order',
-      type: 'number',
-      hidden: true,
-      description: 'Used for drag-and-drop ordering',
-    }),
+    orderRankField({ type: 'indexItem' }),
     defineField({
       name: 'slug',
       title: 'Slug',
@@ -108,11 +103,7 @@ export default defineType({
     },
   },
   orderings: [
-    {
-      title: 'Manual Order',
-      name: 'manualOrder',
-      by: [{ field: 'orderRank', direction: 'asc' }],
-    },
+    orderRankOrdering,
     {
       title: 'Year, Newest',
       name: 'yearDesc',
