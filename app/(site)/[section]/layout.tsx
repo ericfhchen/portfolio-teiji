@@ -43,10 +43,13 @@ export async function generateMetadata({
   };
 }
 
-export default function SectionLayout({
+export default async function SectionLayout({
   children,
   params,
-}: LayoutProps<{ section: string }>) {
+}: {
+  children: React.ReactNode;
+  params: { section: string };
+}) {
   const section = isValidSection(params.section) ? params.section : 'art';
 
   if (!isValidSection(section)) {
