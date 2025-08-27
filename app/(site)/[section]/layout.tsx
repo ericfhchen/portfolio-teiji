@@ -30,7 +30,7 @@ export async function generateMetadata({
   }
 
   const settings = await getSiteSettings();
-  const siteTitle = settings?.title || 'Tei-ji';
+  const siteTitle = settings?.title || 'Teiji';
   const defaultThemeColor = params.section === 'art' ? '#ffffff' : '#000000';
   const themeColor = settings?.themeColors?.[params.section] || defaultThemeColor;
   
@@ -42,14 +42,15 @@ export async function generateMetadata({
   };
 }
 
-export default function SectionLayout({
+export default async function SectionLayout({
   children,
   params,
 }: {
   children: React.ReactNode;
-  params: { section: string };
+  params: Promise<{ section: string }>;
 }) {
-  const section = isValidSection(params.section) ? params.section : 'art';
+  const resolved = await params;
+  const section = isValidSection(resolved.section) ? resolved.section : 'art';
 
   if (!isValidSection(section)) {
     notFound();
