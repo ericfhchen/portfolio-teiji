@@ -3,6 +3,7 @@ import Header from '@/components/Header';
 import { client } from '@/lib/sanity.client';
 import { siteSettingsQuery } from '@/lib/queries';
 import { SiteSettings } from '@/lib/types';
+import type { LayoutProps } from 'next';
 
 const validSections = ['art', 'design'] as const;
 type Section = typeof validSections[number];
@@ -42,15 +43,11 @@ export async function generateMetadata({
   };
 }
 
-export default async function SectionLayout({
+export default function SectionLayout({
   children,
   params,
-}: {
-  children: React.ReactNode;
-  params: Promise<{ section: string }>;
-}) {
-  const resolved = await params;
-  const section = isValidSection(resolved.section) ? resolved.section : 'art';
+}: LayoutProps<{ section: string }>) {
+  const section = isValidSection(params.section) ? params.section : 'art';
 
   if (!isValidSection(section)) {
     notFound();
