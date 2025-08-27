@@ -49,7 +49,7 @@ export default async function SectionPage({
         <h1 className="sr-only">{section}</h1>
 
         {feedItems.length > 0 && (
-          <Grid items={feedItems} allTags={[]} section={section} variant="home" />
+          <Grid items={feedItems} section={section} variant="home" />
         )}
 
         

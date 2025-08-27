@@ -56,7 +56,6 @@ export default async function WorkPage({
           {feedItems.length > 0 ? (
             <Grid 
               items={feedItems} 
-              allTags={[]} 
               section={section} 
               variant="work" 
             />

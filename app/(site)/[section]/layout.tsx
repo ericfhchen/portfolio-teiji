@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+import { Suspense } from 'react';
 import Header from '@/components/Header';
 import { client } from '@/lib/sanity.client';
 import { siteSettingsQuery } from '@/lib/queries';
@@ -60,7 +61,9 @@ export default async function SectionLayout({
 
   return (
     <div data-theme={validatedSection} className="bg-var text-var min-h-screen">
-      <Header currentSection={validatedSection} />
+      <Suspense fallback={<div className="h-16" />}>
+        <Header currentSection={validatedSection} />
+      </Suspense>
       <main>{children}</main>
     </div>
   );
