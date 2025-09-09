@@ -41,6 +41,23 @@
   border-color: var(--border);
 }
 
+/* Typography tracking utilities */
+.tracking-tight {
+  letter-spacing: -0.01em;
+}
+
+.tracking-normal {
+  letter-spacing: 0.01em;
+}
+
+.tracking-wide {
+  letter-spacing: 0.02em;
+}
+
+.tracking-wider {
+  letter-spacing: 0.05em;
+}
+
 @font-face {
   font-family: 'Gerstner Programm';
   src: url('../public/fonts/gerstner_programm_regular-webfont.woff2') format('woff2'),
@@ -77,6 +94,7 @@ body {
   max-width: 100vw;
   overflow-x: hidden;
   font-family: var(--font);
+  letter-spacing: 0.03em;
 }
 
 body {
@@ -88,6 +106,17 @@ body {
 a {
   color: inherit;
   text-decoration: none;
+}
+
+/* Heading tracking */
+h1, h2, h3, h4, h5, h6 {
+  letter-spacing: -0.01em;
+}
+
+/* Light weight font gets slightly wider tracking */
+.font-light {
+  font-weight: 200;
+  letter-spacing: 0.015em;
 }
 
 /* Focus styles */
@@ -104,4 +133,13 @@ a {
 
 [data-theme="design"] .lightbox-backdrop {
   background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Slideshow cursor styles */
+.cursor-w-resize {
+  cursor: w-resize;
+}
+
+.cursor-e-resize {
+  cursor: e-resize;
 }

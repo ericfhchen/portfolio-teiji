@@ -17,7 +17,7 @@ export default function Header({ currentSection }: HeaderProps) {
   const pathname = usePathname();
   const [allTags, setAllTags] = useState<string[]>([]);
   
-  const { tags: activeTags } = useMemo(
+  const { tags: activeTags, item: activeItem } = useMemo(
     () => parseSearchParams(searchParams),
     [searchParams]
   );
@@ -59,8 +59,8 @@ export default function Header({ currentSection }: HeaderProps) {
     router.replace(`/${currentSection}/${currentRoute}?${newParams}`, { scroll: false });
   }, [activeTags, router, currentSection, currentRoute]);
 
-  // Show tags only on index pages and when we have tags
-  const showTags = currentRoute === 'index' && allTags.length > 0;
+  // Show tags only on index pages, when we have tags, and when lightbox is not open
+  const showTags = currentRoute === 'index' && allTags.length > 0 && !activeItem;
 
   return (
     <header className="pointer-events-none fixed inset-x-0 top-0 z-50">
@@ -113,7 +113,7 @@ export default function Header({ currentSection }: HeaderProps) {
           Index
         </Link>
         <Link 
-          href="/about" 
+          href={`/${currentSection}/about`} 
           className={`text-sm font-medium transition-colors ${
             currentRoute === 'about' ? 'text-var' : 'text-muted hover:text-var'
           }`}

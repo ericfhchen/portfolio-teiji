@@ -20,7 +20,7 @@ export const workBySlugQuery = groq`
       "lqip": asset->metadata.lqip,
       alt
     },
-    summary,
+    description,
     content[] {
       ...,
       _type == "image" => {
@@ -168,5 +168,25 @@ export const workPageQuery = groq`
       "lqip": asset->metadata.lqip,
       alt
     }
+  }
+`;
+
+export const aboutQuery = groq`
+  *[_type == "about" && discipline == $section][0] {
+    _id,
+    discipline,
+    bio,
+    cv[] {
+      _key,
+      year,
+      text
+    },
+    "services": services[]->name,
+    clients[] {
+      _key,
+      name,
+      url
+    },
+    email
   }
 `;

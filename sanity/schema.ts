@@ -4,6 +4,7 @@ import work from './schemas/work'
 import indexItem from './schemas/indexItem'
 import tag from './schemas/tag'
 import siteSettings from './schemas/siteSettings'
+import about from './schemas/about'
 import imageWithAlt from './schemas/objects/imageWithAlt'
 import imageLayout from './schemas/objects/imageLayout'
 import imageDual from './schemas/objects/imageDual'
@@ -32,6 +33,7 @@ export const schema: { types: SchemaTypeDefinition[] } = {
     indexItem,
     tag,
     siteSettings,
+    about,
     // Objects
     imageWithAlt,
     imageLayout,

@@ -48,10 +48,40 @@ export const deskStructure = (S: any, context: any) =>
       }),
       S.divider(),
       S.listItem()
+        .title('About')
+        .child(
+          S.list()
+            .title('About')
+            .items([
+              S.listItem()
+                .title('About (Art)')
+                .child(
+                  S.documentList()
+                    .title('About Art')
+                    .filter(`_type == "about" && discipline == "art"`)
+                    .canHandleIntent((intentName: string, params: any) => {
+                      return intentName === 'create' && params.type === 'about'
+                    })
+                ),
+              S.listItem()
+                .title('About (Design)')
+                .child(
+                  S.documentList()
+                    .title('About Design')
+                    .filter(`_type == "about" && discipline == "design"`)
+                    .canHandleIntent((intentName: string, params: any) => {
+                      return intentName === 'create' && params.type === 'about'
+                    })
+                ),
+            ])
+        )
+        .icon(() => '👤'),
+      S.divider(),
+      S.listItem()
         .title('All Documents')
         .child(
           S.documentList()
             .title('All Documents')
-            .filter('_type in ["work", "indexItem"]')
+            .filter('_type in ["work", "indexItem", "about"]')
         ),
     ])

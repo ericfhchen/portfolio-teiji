@@ -1,8 +1,7 @@
 import { client } from '@/lib/sanity.client';
 import { featuredWorksQuery } from '@/lib/queries';
 import { getImageUrl } from '@/lib/image';
-import Link from 'next/link';
-import Grid from '@/components/Grid';
+import Slideshow from '@/components/Slideshow';
 import { FeedItem } from '@/sanity/schema';
 import GridLines from '@/components/GridLines';
 
@@ -45,11 +44,11 @@ export default async function SectionPage({
   return (
     <>
       <GridLines type="home" />
-      <div className="relative z-10 mx-auto max-h-screen">
+      <div className="relative z-10">
         <h1 className="sr-only">{section}</h1>
 
         {feedItems.length > 0 && (
-          <Grid items={feedItems} section={section} variant="home" />
+          <Slideshow items={feedItems} section={section} />
         )}
 
         

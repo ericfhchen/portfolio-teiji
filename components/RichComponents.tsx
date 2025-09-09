@@ -4,6 +4,7 @@ import { PortableText, PortableTextComponents } from 'next-sanity';
 import { getImageProps } from '@/lib/image';
 import { getVideoSource, posterFromSanity } from '@/lib/mux';
 import { client } from '@/lib/sanity.client';
+import ImageWithGrid from '@/components/ImageWithGrid';
 
 const RichComponents: PortableTextComponents = {
   types: {
@@ -13,17 +14,16 @@ const RichComponents: PortableTextComponents = {
 
       return (
         <figure className="my-8">
-          <div className="relative aspect-[3/2] w-full overflow-hidden rounded-lg">
-            <Image
-              src={imageProps.src}
-              alt={imageProps.alt}
-              fill
-              className="object-cover"
-              placeholder="blur"
-              blurDataURL={imageProps.blurDataURL}
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px"
-            />
-          </div>
+          <ImageWithGrid
+            src={imageProps.src}
+            alt={imageProps.alt}
+            className="object-cover"
+            placeholder={imageProps.hasBlur ? "blur" as const : undefined}
+            blurDataURL={imageProps.hasBlur ? imageProps.blurDataURL : undefined}
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px"
+            aspectRatio="aspect-[3/2]"
+            containerClassName="rounded-lg"
+          />
           {imageProps.alt && (
             <figcaption className="mt-2 text-sm text-muted text-center">
               {imageProps.alt}
@@ -49,23 +49,22 @@ const RichComponents: PortableTextComponents = {
 
       return (
         <figure className={`my-8 ${containerClass}`}>
-          <div className="relative aspect-[3/2] w-full overflow-hidden rounded-lg">
-            <Image
-              src={imageProps.src}
-              alt={imageProps.alt}
-              fill
-              className="object-cover"
-              placeholder="blur"
-              blurDataURL={imageProps.blurDataURL}
-              sizes={
-                layout === 'small' 
-                  ? '(max-width: 768px) 50vw, 20vw'
-                  : layout === 'medium'
-                  ? '(max-width: 768px) 80vw, 60vw'
-                  : '(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px'
-              }
-            />
-          </div>
+          <ImageWithGrid
+            src={imageProps.src}
+            alt={imageProps.alt}
+            className="object-cover"
+            placeholder={imageProps.hasBlur ? "blur" as const : undefined}
+            blurDataURL={imageProps.hasBlur ? imageProps.blurDataURL : undefined}
+            sizes={
+              layout === 'small' 
+                ? '(max-width: 768px) 50vw, 20vw'
+                : layout === 'medium'
+                ? '(max-width: 768px) 80vw, 60vw'
+                : '(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px'
+            }
+            aspectRatio="aspect-[3/2]"
+            containerClassName="rounded-lg"
+          />
           {(caption || imageProps.alt) && (
             <figcaption className="mt-2 text-sm text-muted text-center">
               {caption || imageProps.alt}
@@ -88,17 +87,17 @@ const RichComponents: PortableTextComponents = {
                 if (!imageProps) return null;
 
                 return (
-                  <div key={image._key || image.asset?._ref || `dual-image-${index}`} className="relative aspect-[4/3] overflow-hidden rounded-lg">
-                    <Image
-                      src={imageProps.src}
-                      alt={imageProps.alt}
-                      fill
-                      className="object-cover"
-                      placeholder="blur"
-                      blurDataURL={imageProps.blurDataURL}
-                      sizes="(max-width: 768px) 40vw, 30vw"
-                    />
-                  </div>
+                  <ImageWithGrid
+                    key={image._key || image.asset?._ref || `dual-image-${index}`}
+                    src={imageProps.src}
+                    alt={imageProps.alt}
+                    className="object-cover"
+                    placeholder={imageProps.hasBlur ? "blur" as const : undefined}
+                    blurDataURL={imageProps.hasBlur ? imageProps.blurDataURL : undefined}
+                    sizes="(max-width: 768px) 40vw, 30vw"
+                    aspectRatio="aspect-[4/3]"
+                    containerClassName="rounded-lg"
+                  />
                 );
               })
               .filter(Boolean)}
@@ -179,8 +178,10 @@ const RichComponents: PortableTextComponents = {
                     alt={imageProps.alt}
                     fill
                     className="object-cover"
-                    placeholder="blur"
-                    blurDataURL={imageProps.blurDataURL}
+                    {...(imageProps.hasBlur && {
+                      placeholder: "blur" as const,
+                      blurDataURL: imageProps.blurDataURL,
+                    })}
                     sizes="(max-width: 768px) 50vw, 33vw"
                   />
                 </div>
@@ -204,8 +205,10 @@ const RichComponents: PortableTextComponents = {
               alt={imageProps.alt}
               fill
               className="object-cover"
-              placeholder="blur"
-              blurDataURL={imageProps.blurDataURL}
+              {...(imageProps.hasBlur && {
+                placeholder: "blur" as const,
+                blurDataURL: imageProps.blurDataURL,
+              })}
               sizes="100vw"
             />
           </div>

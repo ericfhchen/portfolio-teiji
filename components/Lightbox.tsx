@@ -3,6 +3,7 @@
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { FeedItem } from '@/sanity/schema';
 import { parseSearchParams, createSearchParams, parseItemParam, createItemParam, trapFocus } from '@/lib/utils';
 
@@ -159,8 +160,10 @@ export default function Lightbox({ items, section }: LightboxProps) {
                   alt={currentItem.alt || ''}
                   fill
                   className="object-contain object-center"
-                  placeholder="blur"
-                  blurDataURL={currentItem.lqip}
+                  {...(currentItem.lqip && {
+                    placeholder: "blur" as const,
+                    blurDataURL: currentItem.lqip,
+                  })}
                   sizes="50vw"
                   priority
                 />
@@ -187,11 +190,14 @@ export default function Lightbox({ items, section }: LightboxProps) {
                 {currentItem.parentTags.length > 0 && (
                   <div className="flex flex-wrap gap-1">
                     {currentItem.parentTags.map((tag, index) => (
-                      <span
-                        key={`${tag}-${index}`}
-                        className="text-muted font-light"
-                      >
-                        {tag}{index < currentItem.parentTags.length - 1 && ', '}
+                      <span key={`${tag}-${index}`} className="text-muted font-light">
+                        <Link
+                          href={`/${section}/index?tags=${encodeURIComponent(tag)}`}
+                          className="hover:text-var transition-colors focus:outline-none focus:text-var"
+                        >
+                          {tag}
+                        </Link>
+                        {index < currentItem.parentTags.length - 1 && ', '}
                       </span>
                     ))}
                   </div>

@@ -19,10 +19,13 @@ export function getImageProps(
     builder = builder.fit('crop').crop('center');
   }
 
+  const lqip = image.lqip || image.asset?.metadata?.lqip;
+  
   return {
     src: builder.url(),
-    blurDataURL: image.asset.metadata?.lqip || '',
+    blurDataURL: lqip || undefined,
     alt: typeof image.alt === 'string' ? image.alt : '',
+    hasBlur: Boolean(lqip),
   };
 }
 

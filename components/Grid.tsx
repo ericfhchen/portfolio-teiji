@@ -116,8 +116,10 @@ export default function Grid({ items, section, variant = 'index' }: GridProps) {
                     alt=""
                     fill
                     className="object-contain object-center"
-                    placeholder="blur"
-                    blurDataURL={item.lqip}
+                    {...(item.lqip && {
+                      placeholder: "blur" as const,
+                      blurDataURL: item.lqip,
+                    })}
                     sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
                   />
                 </div>
