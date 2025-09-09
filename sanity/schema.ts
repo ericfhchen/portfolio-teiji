@@ -11,6 +11,8 @@ import imageDual from './schemas/objects/imageDual'
 import imageRow from './schemas/objects/imageRow'
 import imageBleed from './schemas/objects/imageBleed'
 import textAside from './schemas/objects/textAside'
+import projectImage from './schemas/objects/projectImage'
+import spacer from './schemas/objects/spacer'
 
 export interface FeedItem {
   _id: string;
@@ -41,5 +43,7 @@ export const schema: { types: SchemaTypeDefinition[] } = {
     imageRow,
     imageBleed,
     textAside,
+    projectImage,
+    spacer,
   ],
 }

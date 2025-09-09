@@ -149,7 +149,8 @@ export default function Lightbox({ items, section }: LightboxProps) {
             {/* Horizontal hairline across the full width at vertical center */}
             <span
               aria-hidden
-              className="pointer-events-none absolute inset-x-0 top-1/2 h-px bg-[var(--border)] z-0"
+              className="pointer-events-none absolute inset-x-0 top-1/2 bg-[var(--border)] z-0"
+            style={{ height: '0.5px' }}
             />
             
             {/* Work tile container - matching Grid component exactly */}

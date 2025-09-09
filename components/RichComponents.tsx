@@ -13,23 +13,38 @@ const RichComponents: PortableTextComponents = {
       if (!imageProps) return null;
 
       return (
-        <figure className="my-8">
-          <ImageWithGrid
-            src={imageProps.src}
-            alt={imageProps.alt}
-            className="object-cover"
-            placeholder={imageProps.hasBlur ? "blur" as const : undefined}
-            blurDataURL={imageProps.hasBlur ? imageProps.blurDataURL : undefined}
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px"
-            aspectRatio="aspect-[3/2]"
-            containerClassName="rounded-lg"
-          />
+        <div className="my-8">
+          {/* Full-width container that breaks out of prose constraints */}
+          <div className="relative -mx-4 sm:-mx-6 lg:-mx-8">
+            {/* Full-width horizontal line at vertical center, behind image */}
+            <span
+              aria-hidden
+              className="pointer-events-none absolute inset-x-0 top-1/2 bg-[var(--border)] z-0"
+            style={{ height: '0.5px' }}
+            />
+            {/* Image centered within normal content width */}
+            <figure className="relative z-10 mx-4 sm:mx-6 lg:mx-8 flex justify-center">
+              <div className="relative aspect-[3/2] w-full max-w-4xl overflow-hidden ">
+                <Image
+                  src={imageProps.src}
+                  alt={imageProps.alt}
+                  fill
+                  className="object-cover"
+                  {...(imageProps.hasBlur && {
+                    placeholder: "blur" as const,
+                    blurDataURL: imageProps.blurDataURL,
+                  })}
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px"
+                />
+              </div>
+            </figure>
+          </div>
           {imageProps.alt && (
             <figcaption className="mt-2 text-sm text-muted text-center">
               {imageProps.alt}
             </figcaption>
           )}
-        </figure>
+        </div>
       );
     },
 
@@ -40,37 +55,50 @@ const RichComponents: PortableTextComponents = {
 
       // Define layout styles
       const layoutStyles = {
-        full: 'w-full',
-        medium: 'w-full max-w-[60%] mx-auto',
-        small: 'w-full max-w-[20%] mx-auto',
+        full: 'w-full max-w-4xl',
+        medium: 'w-full max-w-[60%]',
+        small: 'w-full max-w-[40%]',
       };
 
-      const containerClass = layoutStyles[layout as keyof typeof layoutStyles] || layoutStyles.full;
-
       return (
-        <figure className={`my-8 ${containerClass}`}>
-          <ImageWithGrid
-            src={imageProps.src}
-            alt={imageProps.alt}
-            className="object-cover"
-            placeholder={imageProps.hasBlur ? "blur" as const : undefined}
-            blurDataURL={imageProps.hasBlur ? imageProps.blurDataURL : undefined}
-            sizes={
-              layout === 'small' 
-                ? '(max-width: 768px) 50vw, 20vw'
-                : layout === 'medium'
-                ? '(max-width: 768px) 80vw, 60vw'
-                : '(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px'
-            }
-            aspectRatio="aspect-[3/2]"
-            containerClassName="rounded-lg"
-          />
+        <div className="my-8">
+          {/* Full-width container that breaks out of prose constraints */}
+          <div className="relative -mx-4 sm:-mx-6 lg:-mx-8">
+            {/* Full-width horizontal line at vertical center, behind image */}
+            <span
+              aria-hidden
+              className="pointer-events-none absolute inset-x-0 top-1/2 bg-[var(--border)] z-0"
+            style={{ height: '0.5px' }}
+            />
+            {/* Image centered within normal content width with layout sizing */}
+            <figure className="relative z-10 mx-4 sm:mx-6 lg:mx-8 flex justify-center">
+              <div className={`relative aspect-[3/2] overflow-hidden ${layoutStyles[layout as keyof typeof layoutStyles] || layoutStyles.full}`}>
+                <Image
+                  src={imageProps.src}
+                  alt={imageProps.alt}
+                  fill
+                  className="object-cover"
+                  {...(imageProps.hasBlur && {
+                    placeholder: "blur" as const,
+                    blurDataURL: imageProps.blurDataURL,
+                  })}
+                  sizes={
+                    layout === 'small' 
+                      ? '(max-width: 768px) 50vw, 40vw'
+                      : layout === 'medium'
+                      ? '(max-width: 768px) 80vw, 60vw'
+                      : '(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px'
+                  }
+                />
+              </div>
+            </figure>
+          </div>
           {(caption || imageProps.alt) && (
             <figcaption className="mt-2 text-sm text-muted text-center">
               {caption || imageProps.alt}
             </figcaption>
           )}
-        </figure>
+        </div>
       );
     },
 
@@ -78,36 +106,72 @@ const RichComponents: PortableTextComponents = {
       const { images, caption } = value;
       if (!images?.length || images.length !== 2) return null;
 
-      return (
-        <figure className="my-8 w-full max-w-[60%] mx-auto">
-          <div className="grid grid-cols-2 gap-4">
-            {images
-              .map((image: any, index: number) => {
-                const imageProps = getImageProps(image, 400);
-                if (!imageProps) return null;
+      // Helper function to get the appropriate image source
+      const getImageSource = (imageItem: any) => {
+        if (imageItem.source === 'reference' && imageItem.indexItemRef?.image) {
+          return {
+            image: imageItem.indexItemRef.image,
+            alt: imageItem.indexItemRef.image.alt || imageItem.indexItemRef.title || '',
+          };
+        } else if (imageItem.source === 'upload' && imageItem.uploadedImage) {
+          return {
+            image: imageItem.uploadedImage,
+            alt: imageItem.uploadedImage.alt || '',
+          };
+        }
+        return null;
+      };
 
-                return (
-                  <ImageWithGrid
-                    key={image._key || image.asset?._ref || `dual-image-${index}`}
-                    src={imageProps.src}
-                    alt={imageProps.alt}
-                    className="object-cover"
-                    placeholder={imageProps.hasBlur ? "blur" as const : undefined}
-                    blurDataURL={imageProps.hasBlur ? imageProps.blurDataURL : undefined}
-                    sizes="(max-width: 768px) 40vw, 30vw"
-                    aspectRatio="aspect-[4/3]"
-                    containerClassName="rounded-lg"
-                  />
-                );
-              })
-              .filter(Boolean)}
+      return (
+        <div className="my-8">
+          {/* Full-width container that breaks out of prose constraints */}
+          <div className="relative -mx-4 sm:-mx-6 lg:-mx-8">
+            {/* Full-width horizontal line at vertical center, behind images */}
+            <span
+              aria-hidden
+              className="pointer-events-none absolute inset-x-0 top-1/2 bg-[var(--border)] z-0"
+            style={{ height: '0.5px' }}
+            />
+            {/* Images centered within normal content width */}
+            <figure className="relative z-10 mx-4 sm:mx-6 lg:mx-8 flex justify-center">
+              <div className="w-full max-w-[60%]">
+                <div className="grid grid-cols-2 gap-16">
+                  {images
+                    .map((imageItem: any, index: number) => {
+                      const imageSource = getImageSource(imageItem);
+                      if (!imageSource) return null;
+                      
+                      const imageProps = getImageProps(imageSource.image, 400);
+                      if (!imageProps) return null;
+
+                      return (
+                        <div key={imageItem._key || `dual-image-${index}`} className="relative">
+                          <Image
+                            src={imageProps.src}
+                            alt={imageSource.alt || imageProps.alt}
+                            width={0}
+                            height={0}
+                            className="w-full h-auto"
+                            {...(imageProps.hasBlur && {
+                              placeholder: "blur" as const,
+                              blurDataURL: imageProps.blurDataURL,
+                            })}
+                            sizes="(max-width: 768px) 40vw, 30vw"
+                          />
+                        </div>
+                      );
+                    })
+                    .filter(Boolean)}
+                </div>
+              </div>
+            </figure>
           </div>
           {caption && (
             <figcaption className="mt-2 text-sm text-muted text-center">
               {caption}
             </figcaption>
           )}
-        </figure>
+        </div>
       );
     },
     
@@ -142,7 +206,7 @@ const RichComponents: PortableTextComponents = {
             loop={loop}
             muted={muted}
             poster={posterUrl || undefined}
-            className="w-full rounded-lg"
+            className="w-full"
           >
             <source src={videoSource.src} type={videoSource.type} />
             {captionsUrl && (
@@ -172,7 +236,7 @@ const RichComponents: PortableTextComponents = {
               if (!imageProps) return null;
 
               return (
-                <div key={image._key || image.asset?._ref || `row-image-${index}`} className="relative aspect-[4/3] overflow-hidden rounded-lg">
+                <div key={image._key || image.asset?._ref || `row-image-${index}`} className="relative aspect-[4/3] overflow-hidden">
                   <Image
                     src={imageProps.src}
                     alt={imageProps.alt}
@@ -226,17 +290,27 @@ const RichComponents: PortableTextComponents = {
               value={body || []} 
               components={{
                 block: {
-                  normal: ({ children }) => <p className="text-var">{children}</p>,
+                  normal: ({ children }) => (
+                    <div className="w-3/5 mx-auto">
+                      <p className="text-var">{children}</p>
+                    </div>
+                  ),
                   blockquote: ({ children }) => (
-                    <blockquote className="border-l-4 border-var pl-6 text-muted italic">
-                      {children}
-                    </blockquote>
+                    <div className="w-3/5 mx-auto">
+                      <blockquote className="border-l-4 border-var pl-6 text-muted italic">
+                        {children}
+                      </blockquote>
+                    </div>
                   ),
                   caption: ({ children }) => (
-                    <p className="text-sm text-muted text-center">{children}</p>
+                    <div className="w-3/5 mx-auto">
+                      <p className="text-sm text-muted text-center">{children}</p>
+                    </div>
                   ),
                   small: ({ children }) => (
-                    <p className="text-xs text-muted">{children}</p>
+                    <div className="w-3/5 mx-auto">
+                      <p className="text-xs text-muted">{children}</p>
+                    </div>
                   ),
                 },
                 marks: {
@@ -252,20 +326,129 @@ const RichComponents: PortableTextComponents = {
         </div>
       );
     },
+    
+    projectImage: ({ value }) => {
+      const { source, uploadedImage, indexItemRef, layout, caption } = value;
+      
+      let imageToRender = null;
+      let altText = '';
+      let displayCaption = caption;
+      
+      if (source === 'upload' && uploadedImage) {
+        imageToRender = uploadedImage;
+        altText = uploadedImage.alt || '';
+      } else if (source === 'reference' && indexItemRef) {
+        imageToRender = indexItemRef.image;
+        altText = indexItemRef.image?.alt || indexItemRef.title || '';
+        // Use index item description as fallback caption if no custom caption
+        if (!displayCaption && indexItemRef.description) {
+          displayCaption = indexItemRef.description;
+        }
+      }
+      
+      if (!imageToRender) return null;
+      
+      const imageProps = getImageProps(
+        imageToRender, 
+        layout === 'small' ? 400 : layout === 'medium' ? 800 : 1200
+      );
+      if (!imageProps) return null;
+      
+      // Define layout styles (same as your existing imageLayout)
+      const layoutStyles = {
+        full: 'w-full max-w-4xl',
+        medium: 'w-full max-w-[60%]',
+        small: 'w-full max-w-[40%]',
+      };
+      
+      return (
+        <div className="my-8">
+          {/* Full-width container that breaks out of prose constraints */}
+          <div className="relative -mx-4 sm:-mx-6 lg:-mx-8">
+            {/* Full-width horizontal line at vertical center, behind image */}
+            <span
+              aria-hidden
+              className="pointer-events-none absolute inset-x-0 top-1/2 bg-[var(--border)] z-0"
+            style={{ height: '0.5px' }}
+            />
+            {/* Image centered within normal content width with layout sizing */}
+            <figure className="relative z-10 mx-4 sm:mx-6 lg:mx-8 flex justify-center">
+              <div className={`relative aspect-[3/2] overflow-hidden ${layoutStyles[layout as keyof typeof layoutStyles] || layoutStyles.full}`}>
+                <Image
+                  src={imageProps.src}
+                  alt={altText}
+                  fill
+                  className="object-cover"
+                  {...(imageProps.hasBlur && {
+                    placeholder: "blur" as const,
+                    blurDataURL: imageProps.blurDataURL,
+                  })}
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px"
+                />
+              </div>
+            </figure>
+          </div>
+          {displayCaption && (
+            <figcaption className="mt-2 text-sm text-muted text-center">
+              {displayCaption}
+            </figcaption>
+          )}
+          
+        </div>
+      );
+    },
+
+    spacer: ({ value }) => {
+      const { height, customHeight } = value;
+      
+      // Map height values to CSS custom properties or classes
+      const heightMap = {
+        small: 'h-8',    // 2rem
+        medium: 'h-16',  // 4rem  
+        large: 'h-24',   // 6rem
+        xl: 'h-32',      // 8rem
+      };
+      
+      const spacerClass = height === 'custom' 
+        ? '' 
+        : heightMap[height as keyof typeof heightMap] || heightMap.medium;
+      
+      const customStyle = height === 'custom' && customHeight 
+        ? { height: `${customHeight}rem` }
+        : undefined;
+
+      return (
+        <div 
+          className={spacerClass}
+          style={customStyle}
+          aria-hidden="true"
+        />
+      );
+    },
   },
 
   block: {
-    normal: ({ children }) => <p className="my-4 text-var">{children}</p>,
+    normal: ({ children }) => (
+      <div className="w-3/5 mx-auto">
+        <p className="my-4 text-var">{children}</p>
+      </div>
+    ),
     blockquote: ({ children }) => (
-      <blockquote className="my-6 border-l-4 border-var pl-6 text-muted italic">
-        {children}
-      </blockquote>
+      <div className="w-3/5 mx-auto">
+        <blockquote className="my-6 border-l-4 border-var pl-6 text-muted italic">
+          {children}
+        </blockquote>
+      </div>
     ),
     caption: ({ children }) => (
-      <p className="my-2 text-sm text-muted text-center">{children}</p>
+      <div className="w-3/5 mx-auto">
+        <p className="my-2 text-sm text-muted text-center">{children}</p>
+      </div>
     ),
     small: ({ children }) => (
-      <p className="my-2 text-xs text-muted">{children}</p>
+      <div className="w-3/5 mx-auto">
+        <p className="my-2 text-xs text-muted">{children}</p>
+      </div>
     ),
   },
 

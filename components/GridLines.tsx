@@ -35,8 +35,8 @@ export default function GridLines({ type }: GridLinesProps) {
       {lines.map((position, index) => (
         <div
           key={index}
-          className="absolute top-0 bottom-0 border-r border-var"
-          style={{ left: `${position}%`, borderWidth: '0.5px' }}
+          className="absolute top-0 bottom-0 bg-[var(--border)]"
+          style={{ left: `${position}%`, width: '0.5px' }}
         />
       ))}
     </div>

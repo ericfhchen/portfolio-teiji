@@ -28,6 +28,24 @@ export const workBySlugQuery = groq`
         "lqip": asset->metadata.lqip,
         alt
       },
+      _type == "projectImage" => {
+        ...,
+        uploadedImage {
+          ...,
+          "lqip": asset->metadata.lqip,
+          alt
+        },
+        indexItemRef-> {
+          _id,
+          title,
+          description,
+          image {
+            ...,
+            "lqip": asset->metadata.lqip,
+            alt
+          }
+        }
+      },
       _type == "videoMux" => {
         ...,
         poster {
@@ -48,9 +66,22 @@ export const workBySlugQuery = groq`
         ...,
         images[] {
           _key,
-          asset,
-          "lqip": asset->metadata.lqip,
-          alt
+          source,
+          uploadedImage {
+            ...,
+            "lqip": asset->metadata.lqip,
+            alt
+          },
+          indexItemRef-> {
+            _id,
+            title,
+            description,
+            image {
+              ...,
+              "lqip": asset->metadata.lqip,
+              alt
+            }
+          }
         }
       },
       _type == "imageBleed" => {

@@ -95,39 +95,45 @@ export default function Grid({ items, section, variant = 'index' }: GridProps) {
         {/* Render actual items */}
         {filteredItems.map((item) => (
           <div key={item._id} className="relative w-full">
-            {/* full-width hairline across the column */}
-            <span
-              aria-hidden
-              className="pointer-events-none absolute inset-x-0 top-1/2 h-px bg-[var(--border)] z-0"
-            />
+            {/* Image container with horizontal rule centered on it */}
+            <div className="relative">
+              {/* full-width hairline across the column, centered on image container only */}
+              <span
+                aria-hidden
+                className="pointer-events-none absolute inset-x-0 top-1/2 bg-[var(--border)] z-0"
+              style={{ height: '0.5px' }}
+              />
 
-            {/*
-              Wrapper with padding controls visual cropping and overall size constraints.
-              The button sits inside so only the actual image area is interactive.
-            */}
-            <div className="relative overflow-hidden p-12 lg:p-20 lg:max-w-[100dvh] mx-auto w-full">
-              <button
-                onClick={() => handleItemClick(item)}
-                className="group block w-full focus:outline-none"
-              >
-                <div className="relative aspect-square">
-                  <Image
-                    src={item.src}
-                    alt=""
-                    fill
-                    className="object-contain object-center"
-                    {...(item.lqip && {
-                      placeholder: "blur" as const,
-                      blurDataURL: item.lqip,
-                    })}
-                    sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                  />
-                </div>
-              </button>
-              
-              {/* Text content for work variant */}
-              {variant === 'work' && (
-                <div className="mt-4 flex justify-between items-start">
+              {/*
+                Wrapper with padding controls visual cropping and overall size constraints.
+                The button sits inside so only the actual image area is interactive.
+              */}
+              <div className={`relative overflow-hidden ${variant === 'work' ? 'p-12 pb-4' : 'p-12 pb-4 lg:p-20'} ${variant !== 'work' ? 'lg:max-w-[100dvh]' : ''} mx-auto w-full`}>
+                <button
+                  onClick={() => handleItemClick(item)}
+                  className="group block w-full focus:outline-none"
+                >
+                  <div className={`relative ${variant === 'work' ? 'aspect-[16/9]' : 'aspect-square'}`}>
+                    <Image
+                      src={item.src}
+                      alt=""
+                      fill
+                      className="object-contain object-center"
+                      {...(item.lqip && {
+                        placeholder: "blur" as const,
+                        blurDataURL: item.lqip,
+                      })}
+                      sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                    />
+                  </div>
+                </button>
+              </div>
+            </div>
+            
+            {/* Text content for work variant - outside the image container */}
+            {variant === 'work' && (
+              <div className="px-12 pb-4 mx-auto w-full">
+                <div className="flex justify-between items-start">
                   <div className="flex-1">
                     <div className="text-var font-normal">
                       {item.parentTitle}
@@ -144,22 +150,26 @@ export default function Grid({ items, section, variant = 'index' }: GridProps) {
                     </div>
                   )}
                 </div>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         ))}
         
         {/* Render empty tiles to fill incomplete rows */}
         {emptyTiles.map((emptyTile) => (
           <div key={emptyTile._id} className="relative w-full">
-            {/* full-width hairline across the column */}
-            <span
-              aria-hidden
-              className="pointer-events-none absolute inset-x-0 top-1/2 h-px bg-[var(--border)] z-0"
-            />
-            {/* Empty tile with same padding as regular tiles to maintain grid alignment */}
-            <div className="relative overflow-hidden p-12 lg:p-20 lg:max-w-[100dvh] mx-auto w-full">
-              <div className="relative aspect-square" />
+            {/* Empty image container with horizontal rule centered on it */}
+            <div className="relative">
+              {/* full-width hairline across the column, centered on image container only */}
+              <span
+                aria-hidden
+                className="pointer-events-none absolute inset-x-0 top-1/2 bg-[var(--border)] z-0"
+              style={{ height: '0.5px' }}
+              />
+              {/* Empty tile with same padding as regular tiles to maintain grid alignment */}
+              <div className={`relative overflow-hidden ${variant === 'work' ? 'p-8' : 'p-12 lg:p-20'} ${variant !== 'work' ? 'lg:max-w-[100dvh]' : ''} mx-auto w-full`}>
+                <div className={`relative ${variant === 'work' ? 'aspect-[16/9]' : 'aspect-square'}`} />
+              </div>
             </div>
           </div>
         ))}

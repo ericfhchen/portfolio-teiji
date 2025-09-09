@@ -68,7 +68,8 @@ export default async function WorkPage({
               {/* Horizontal hairline across the full width at vertical center */}
               <span
                 aria-hidden
-                className="pointer-events-none absolute inset-x-0 top-1/2 h-px bg-[var(--border)] z-0"
+                className="pointer-events-none absolute inset-x-0 top-1/2 bg-[var(--border)] z-0"
+              style={{ height: '0.5px' }}
               />
               
               {/* Hero image container */}
@@ -140,23 +141,12 @@ export default async function WorkPage({
 
       {/* Content Section */}
       {work.content && work.content.length > 0 && (
-        <article className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <article className="relative z-10 w-full mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <Prose>
             <PortableText value={work.content} components={RichComponents} />
           </Prose>
 
-          {/* Back Link */}
-          <div className="mt-12 pt-8 border-t border-var">
-            <Link
-              href={`/${section}/index`}
-              className="inline-flex items-center text-sm text-muted hover:text-var transition-colors"
-            >
-              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-              Back to {section}
-            </Link>
-          </div>
+
         </article>
       )}
     </>

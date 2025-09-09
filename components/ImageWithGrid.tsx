@@ -58,7 +58,8 @@ export default function ImageWithGrid({
       {/* Horizontal hairline across the full width at vertical center */}
       <span
         aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-1/2 h-px bg-[var(--border)] z-10"
+        className="pointer-events-none absolute inset-x-0 top-1/2 bg-[var(--border)] z-10"
+              style={{ height: '0.5px' }}
       />
       
       {/* Image container */}

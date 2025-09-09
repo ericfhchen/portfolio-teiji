@@ -30,7 +30,7 @@ export default defineType({
         list: [
           { title: 'Full Width (100%)', value: 'full' },
           { title: 'Medium Width (60%)', value: 'medium' },
-          { title: 'Small Width (20%)', value: 'small' },
+          { title: 'Small Width (40%)', value: 'small' },
         ],
         layout: 'radio',
       },
@@ -54,7 +54,7 @@ export default defineType({
       const layoutLabels = {
         full: 'Full Width',
         medium: '60% Width',
-        small: '20% Width',
+        small: '40% Width',
       }
       return {
         title: title || 'Image',

@@ -85,6 +85,10 @@ export default defineType({
           },
         },
         {
+          type: 'projectImage',
+          title: 'Project Image',
+        },
+        {
           type: 'imageLayout',
           title: 'Image with Layout',
         },
@@ -104,6 +108,10 @@ export default defineType({
           type: 'textAside',
           title: 'Text with Aside',
         },
+        {
+          type: 'spacer',
+          title: 'Spacer',
+        },
       ],
     }),
     defineField({
@@ -116,7 +124,7 @@ export default defineType({
           options: {
             hotspot: true,
           },
-          fields: [
+          fields: [ 
             {
               name: 'alt',
               title: 'Alt text',

@@ -1,10 +1,9 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useRouter, useSearchParams, usePathname } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { FeedItem } from '@/sanity/schema';
-import { parseSearchParams, createSearchParams, createItemParam } from '@/lib/utils';
 
 interface SlideshowProps {
   items: FeedItem[];
@@ -14,17 +13,10 @@ interface SlideshowProps {
 
 export default function Slideshow({ items, section, autoPlayInterval = 5000 }: SlideshowProps) {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const pathname = usePathname();
   
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(true);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
-  
-  const { tags: activeTags } = parseSearchParams(searchParams);
-
-  // Determine current route context
-  const currentRoute = pathname.includes('/work') ? 'work' : 'index';
 
   // Reset to first image if items change
   useEffect(() => {
@@ -74,12 +66,9 @@ export default function Slideshow({ items, section, autoPlayInterval = 5000 }: S
   }, [items.length, stopAutoPlay]);
 
   const handleItemClick = useCallback((item: FeedItem) => {
-    // Open lightbox
-    const itemParam = createItemParam(item.parentSlug, item.index);
-    const newParams = createSearchParams(activeTags, itemParam);
-    
-    router.replace(`/${section}/${currentRoute}?${newParams}`, { scroll: false });
-  }, [section, router, activeTags, currentRoute]);
+    // Navigate directly to project page
+    router.push(`/${section}/${item.parentSlug}`);
+  }, [section, router]);
 
   // Pause auto-play on mouse enter, resume on leave
   const handleMouseEnter = useCallback(() => {
@@ -127,7 +116,8 @@ export default function Slideshow({ items, section, autoPlayInterval = 5000 }: S
         {/* Hairline across center */}
         <span
           aria-hidden
-          className="pointer-events-none absolute inset-x-0 top-1/2 h-px bg-[var(--border)] z-10"
+          className="pointer-events-none absolute inset-x-0 top-1/2 bg-[var(--border)] z-10"
+              style={{ height: '0.5px' }}
         />
 
         {/* Image wrapper with padding */}
