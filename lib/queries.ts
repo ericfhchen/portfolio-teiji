@@ -16,8 +16,31 @@ export const workBySlugQuery = groq`
     year,
     "tags": tags[]->name,
     coverImage {
-      ...,
-      "lqip": asset->metadata.lqip,
+      mediaType,
+      mediaType == "image" => {
+        image {
+          ...,
+          "lqip": asset->metadata.lqip,
+          alt
+        }
+      },
+      mediaType == "video" => {
+        video {
+          asset {
+            playbackId
+          },
+          displayMode,
+          controls,
+          poster {
+            ...,
+            "lqip": asset->metadata.lqip,
+            alt
+          },
+          captions {
+            asset
+          }
+        }
+      },
       alt
     },
     description,
@@ -48,9 +71,17 @@ export const workBySlugQuery = groq`
       },
       _type == "videoMux" => {
         ...,
+        asset {
+          playbackId
+        },
         poster {
           ...,
-          "lqip": asset->metadata.lqip
+          "lqip": asset->metadata.lqip,
+          alt
+        },
+        displayMode,
+        captions {
+          asset
         }
       },
       _type == "imageRow" => {
@@ -86,10 +117,31 @@ export const workBySlugQuery = groq`
       },
       _type == "imageBleed" => {
         ...,
-        image {
-          _key,
-          asset,
-          "lqip": asset->metadata.lqip,
+        media {
+          mediaType,
+          mediaType == "image" => {
+            image {
+              ...,
+              "lqip": asset->metadata.lqip,
+              alt
+            }
+          },
+          mediaType == "video" => {
+            video {
+              asset {
+                playbackId
+              },
+              displayMode,
+              poster {
+                ...,
+                "lqip": asset->metadata.lqip,
+                alt
+              },
+              captions {
+                asset
+              }
+            }
+          },
           alt
         }
       },
@@ -107,8 +159,31 @@ export const workBySlugQuery = groq`
       }
     },
     gallery[] {
-      ...,
-      "lqip": asset->metadata.lqip,
+      mediaType,
+      mediaType == "image" => {
+        image {
+          ...,
+          "lqip": asset->metadata.lqip,
+          alt
+        }
+      },
+      mediaType == "video" => {
+        video {
+          asset {
+            playbackId
+          },
+          displayMode,
+          controls,
+          poster {
+            ...,
+            "lqip": asset->metadata.lqip,
+            alt
+          },
+          captions {
+            asset
+          }
+        }
+      },
       alt
     }
   }
@@ -179,8 +254,31 @@ export const featuredWorksQuery = groq`
     "slug": slug.current,
     description,
     featuredImage {
-      ...,
-      "lqip": asset->metadata.lqip,
+      mediaType,
+      mediaType == "image" => {
+        image {
+          ...,
+          "lqip": asset->metadata.lqip,
+          alt
+        }
+      },
+      mediaType == "video" => {
+        video {
+          asset {
+            playbackId
+          },
+          displayMode,
+          controls,
+          poster {
+            ...,
+            "lqip": asset->metadata.lqip,
+            alt
+          },
+          captions {
+            asset
+          }
+        }
+      },
       alt
     }
   }
@@ -195,8 +293,31 @@ export const workPageQuery = groq`
     medium,
     description,
     coverImage {
-      ...,
-      "lqip": asset->metadata.lqip,
+      mediaType,
+      mediaType == "image" => {
+        image {
+          ...,
+          "lqip": asset->metadata.lqip,
+          alt
+        }
+      },
+      mediaType == "video" => {
+        video {
+          asset {
+            playbackId
+          },
+          displayMode,
+          controls,
+          poster {
+            ...,
+            "lqip": asset->metadata.lqip,
+            alt
+          },
+          captions {
+            asset
+          }
+        }
+      },
       alt
     }
   }

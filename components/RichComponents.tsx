@@ -2,9 +2,10 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { PortableText, PortableTextComponents } from 'next-sanity';
 import { getImageProps } from '@/lib/image';
-import { getVideoSource, posterFromSanity } from '@/lib/mux';
+import { getVideoSourceFromMux, getPlaybackId, posterFromSanity } from '@/lib/mux';
 import { client } from '@/lib/sanity.client';
 import ImageWithGrid from '@/components/ImageWithGrid';
+import { VideoLayout, VideoBleed } from '@/components/VideoPlayer';
 
 const RichComponents: PortableTextComponents = {
   types: {
@@ -49,9 +50,17 @@ const RichComponents: PortableTextComponents = {
     },
 
     imageLayout: ({ value }) => {
-      const { image, layout, caption } = value;
-      const imageProps = getImageProps(image, layout === 'small' ? 400 : layout === 'medium' ? 800 : 1200);
-      if (!imageProps) return null;
+      const { media, layout, caption } = value;
+      
+      if (!media) return null;
+      
+      if (media.mediaType === 'video' && media.video) {
+        return <VideoLayout video={media.video} layout={layout} caption={caption} alt={media.alt} />;
+      }
+      
+      if (media.mediaType === 'image' && media.image) {
+        const imageProps = getImageProps(media.image, layout === 'small' ? 400 : layout === 'medium' ? 800 : 1200);
+        if (!imageProps) return null;
 
       // Define layout styles
       const layoutStyles = {
@@ -93,13 +102,17 @@ const RichComponents: PortableTextComponents = {
               </div>
             </figure>
           </div>
-          {(caption || imageProps.alt) && (
+          {(caption || imageProps.alt || media.alt) && (
             <figcaption className="mt-2 text-sm text-muted text-center">
-              {caption || imageProps.alt}
+              {caption || imageProps.alt || media.alt}
             </figcaption>
           )}
         </div>
       );
+      }
+      
+      // Fallback if neither image nor video
+      return null;
     },
 
     imageDual: ({ value }) => {
@@ -177,51 +190,65 @@ const RichComponents: PortableTextComponents = {
     
     videoMux: ({ value }) => {
       const {
-        playbackId,
+        asset,
         poster,
         captions,
-        autoplay = false,
-        loop = false,
-        muted = false,
-        controls = true,
+        displayMode
       } = value;
       
-      const videoSource = getVideoSource(playbackId);
-      const posterUrl = posterFromSanity(poster);
-      
-      // Get captions URL if available
-      let captionsUrl = '';
-      if (captions?.asset?._ref) {
-        const assetId = captions.asset._ref.replace('file-', '').replace('-vtt', '');
-        captionsUrl = `https://cdn.sanity.io/files/${client.config().projectId}/${client.config().dataset}/${assetId}.vtt`;
+      const playbackIdToUse = getPlaybackId(value);
+      if (!playbackIdToUse) {
+        console.error('No valid playback ID found in video data:', value);
+        return null; // Return null instead of error div to avoid layout issues
       }
+      
+      try {
+        const videoSource = getVideoSourceFromMux(value);
+        const posterUrl = posterFromSanity(poster);
+        
+        // Ensure we have a valid video source
+        if (!videoSource?.src) {
+          console.error('No valid video source generated:', videoSource);
+          return null;
+        }
+        
+        // Get captions URL if available
+        let captionsUrl = '';
+        if (captions?.asset?._ref) {
+          const assetId = captions.asset._ref.replace('file-', '').replace('-vtt', '');
+          captionsUrl = `https://cdn.sanity.io/files/${client.config().projectId}/${client.config().dataset}/${assetId}.vtt`;
+        }
 
-      return (
-        <div className="my-8">
-          <video
-            controls={controls}
-            playsInline
-            preload="metadata"
-            autoPlay={autoplay}
-            loop={loop}
-            muted={muted}
-            poster={posterUrl || undefined}
-            className="w-full"
-          >
-            <source src={videoSource.src} type={videoSource.type} />
-            {captionsUrl && (
-              <track
-                kind="captions"
-                src={captionsUrl}
-                srcLang="en"
-                label="English"
-                default
-              />
-            )}
-            Your browser does not support the video tag.
-          </video>
-        </div>
-      );
+        return (
+          <div className="my-8">
+            <video
+              controls={true}
+              playsInline
+              preload="metadata"
+              autoPlay={false}
+              loop={false}
+              muted={true}
+              {...(posterUrl && { poster: posterUrl })}
+              className="w-full"
+            >
+              <source src={videoSource.src} type={videoSource.type} />
+              {captionsUrl && (
+                <track
+                  kind="captions"
+                  src={captionsUrl}
+                  srcLang="en"
+                  label="English"
+                  default
+                />
+              )}
+              Your browser does not support the video tag.
+            </video>
+          </div>
+        );
+      } catch (error) {
+        console.error('Error rendering video:', error);
+        return null;
+      }
     },
 
     imageRow: ({ value }) => {
@@ -257,9 +284,17 @@ const RichComponents: PortableTextComponents = {
     },
 
     imageBleed: ({ value }) => {
-      const { image } = value;
-      const imageProps = getImageProps(image, 1600, 900);
-      if (!imageProps) return null;
+      const { media } = value;
+      
+      if (!media) return null;
+      
+      if (media.mediaType === 'video' && media.video) {
+        return <VideoBleed video={media.video} alt={media.alt} />;
+      }
+      
+      if (media.mediaType === 'image' && media.image) {
+        const imageProps = getImageProps(media.image, 1600, 900);
+        if (!imageProps) return null;
 
       return (
         <div className="my-12 -mx-4 sm:-mx-6 lg:-mx-8">
@@ -278,6 +313,10 @@ const RichComponents: PortableTextComponents = {
           </div>
         </div>
       );
+      }
+      
+      // Fallback if neither image nor video
+      return null;
     },
 
     textAside: ({ value }) => {
@@ -457,5 +496,6 @@ const RichComponents: PortableTextComponents = {
     em: ({ children }) => <em className="italic">{children}</em>,
   },
 };
+
 
 export default RichComponents;

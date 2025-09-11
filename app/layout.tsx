@@ -57,8 +57,14 @@ export async function generateMetadata(): Promise<Metadata> {
       shortcut: settings.favicon.url,
       apple: settings.favicon.url,
     } : undefined,
+    viewport: {
+      width: 'device-width',
+      initialScale: 1,
+      userScalable: false,
+    },
     other: {
       'theme-color': settings?.themeColors?.art || '#ffffff',
+      'screen-orientation': 'portrait',
     },
   };
   

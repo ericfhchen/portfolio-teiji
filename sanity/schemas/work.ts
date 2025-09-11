@@ -8,35 +8,15 @@ export default defineType({
   fields: [
     defineField({
       name: 'featuredImage',
-      title: 'Featured Image',
-      type: 'image',
-      options: {
-        hotspot: true,
-      },
-      fields: [
-        {
-          name: 'alt',
-          title: 'Alt text',
-          type: 'string',
-          description: 'Alternative text for screen readers',
-        },
-      ],
+      title: 'Featured Media',
+      type: 'mediaItem',
+      description: 'Featured image or video for this work',
     }),
     defineField({
       name: 'coverImage',
-      title: 'Cover Image',
-      type: 'image',
-      options: {
-        hotspot: true,
-      },
-      fields: [
-        {
-          name: 'alt',
-          title: 'Alt text',
-          type: 'string',
-          description: 'Alternative text for screen readers',
-        },
-      ],
+      title: 'Cover Media',
+      type: 'mediaItem',
+      description: 'Cover image or video for this work',
     }),
     defineField({
       name: 'title',
@@ -112,6 +92,10 @@ export default defineType({
           type: 'spacer',
           title: 'Spacer',
         },
+        {
+          type: 'videoMux',
+          title: 'Video (MUX)',
+        },
       ],
     }),
     defineField({
@@ -120,21 +104,10 @@ export default defineType({
       type: 'array',
       of: [
         {
-          type: 'image',
-          options: {
-            hotspot: true,
-          },
-          fields: [ 
-            {
-              name: 'alt',
-              title: 'Alt text',
-              type: 'string',
-              description: 'Alternative text for screen readers',
-            },
-          ],
+          type: 'mediaItem',
         },
       ],
-      description: 'Images that will appear in the index feed for this work',
+      description: 'Images and videos that will appear in the index feed for this work',
     }),
     defineField({
       name: 'tags',
@@ -189,9 +162,17 @@ export default defineType({
       title: 'title',
       year: 'year',
       discipline: 'discipline',
-      media: 'featuredImage',
+      featuredImage: 'featuredImage',
     },
-    prepare({ title, year, discipline, media }) {
+    prepare({ title, year, discipline, featuredImage }) {
+      // Get media for preview - prioritize image, fall back to video poster
+      let media = null;
+      if (featuredImage?.mediaType === 'image' && featuredImage.image) {
+        media = featuredImage.image;
+      } else if (featuredImage?.mediaType === 'video' && featuredImage.video?.poster) {
+        media = featuredImage.video.poster;
+      }
+      
       return {
         title: `${title} (${discipline})`,
         subtitle: year ? `${year}` : undefined,

@@ -60,7 +60,7 @@ export default async function SectionLayout({
   }
 
   return (
-    <div data-theme={validatedSection} className="bg-var text-var min-h-screen">
+    <div data-theme={validatedSection} className="bg-var text-var min-h-screen pb-16">
       <Suspense fallback={<div className="h-16" />}>
         <Header currentSection={validatedSection} />
       </Suspense>

@@ -16,7 +16,7 @@ A minimal, production-grade Next.js + Sanity + Tailwind portfolio site for tei-j
 - **Frontend**: Next.js 14 (App Router), TypeScript, Tailwind CSS
 - **CMS**: Sanity v3
 - **Images**: next/image with LQIP blur placeholders
-- **Video**: MUX with HTML5 video (no Mux Player)
+- **Video**: MUX with HTML5 video (no Mux Player), direct upload from Sanity Studio
 - **Deployment**: Vercel
 
 ## Quick Start
@@ -33,6 +33,7 @@ A minimal, production-grade Next.js + Sanity + Tailwind portfolio site for tei-j
    
    Fill in your Sanity project details:
    - Get your project ID and dataset from [sanity.io/manage](https://sanity.io/manage)
+   - Get your MUX credentials from [dashboard.mux.com](https://dashboard.mux.com/) (Settings → Access Tokens)
 
 3. **Set up Sanity CORS**:
    Add these domains to your Sanity project's CORS settings:
@@ -44,7 +45,40 @@ A minimal, production-grade Next.js + Sanity + Tailwind portfolio site for tei-j
    npm run dev
    \`\`\`
 
-5. **Open [http://localhost:3000](http://localhost:3000)** in your browser.
+5. **Run the Sanity Studio**:
+   ```bash
+   npm run studio
+   ```
+   
+   Access the Sanity Studio at [http://localhost:3333](http://localhost:3333) to manage content.
+
+6. **Open [http://localhost:3000](http://localhost:3000)** in your browser.
+
+## MUX Video Setup
+
+To enable direct video uploads in Sanity Studio:
+
+1. **Get MUX credentials**:
+   - Sign up at [mux.com](https://mux.com)
+   - Go to [dashboard.mux.com](https://dashboard.mux.com/)
+   - Navigate to Settings → Access Tokens
+   - Create a new access token with Read and Write permissions
+
+2. **Add credentials to your `.env.local`**:
+   ```env
+   MUX_TOKEN_ID=your_mux_token_id_here
+   MUX_TOKEN_SECRET=your_mux_token_secret_here
+   ```
+
+3. **Enable video uploads**:
+   - Once credentials are added, restart your Sanity Studio (`npm run studio`)
+   - You can now upload videos directly in the Studio
+   - Videos will be processed by MUX and playback IDs will be automatically generated
+
+4. **Video rendering**:
+   - Videos use HTML5 `<video>` elements (no Mux Player dependency)
+   - Supports HLS on Safari/iOS, MP4 fallback on other browsers
+   - Includes poster images, captions, and interactive controls
 
 ## Content Structure
 

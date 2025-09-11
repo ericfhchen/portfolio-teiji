@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { FeedItem } from '@/sanity/schema';
+import { getVideoSource } from '@/lib/mux';
 
 interface SlideshowProps {
   items: FeedItem[];
@@ -128,23 +129,109 @@ export default function Slideshow({ items, section, autoPlayInterval = 5000 }: S
             aria-label={`Open ${currentItem.parentTitle} in lightbox`}
           >
             <div className="relative aspect-square w-[80vmin] h-[80vmin]">
-              <Image
-                src={currentItem.src}
-                alt={currentItem.alt || ''}
-                fill
-                className="object-contain object-center"
-                {...(currentItem.lqip && {
-                  placeholder: "blur" as const,
-                  blurDataURL: currentItem.lqip,
-                })}
-                sizes="80vmin"
-                priority
-              />
+              {currentItem.mediaType === 'video' && currentItem.playbackId ? (
+                <SlideshowVideoItem item={currentItem} />
+              ) : currentItem.src && currentItem.src.trim() !== '' ? (
+                <Image
+                  src={currentItem.src}
+                  alt={currentItem.alt || ''}
+                  fill
+                  className="object-contain object-center"
+                  {...(currentItem.lqip && {
+                    placeholder: "blur" as const,
+                    blurDataURL: currentItem.lqip,
+                  })}
+                  sizes="80vmin"
+                  priority
+                />
+              ) : (
+                <div className="absolute inset-0 flex items-center justify-center bg-gray-100 text-gray-500">
+                  <div className="text-center">
+                    <div className="w-16 h-16 mx-auto mb-2 bg-gray-300 rounded flex items-center justify-center">
+                      <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M2 6a2 2 0 012-2h6l2 2h6a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM10 12a2 2 0 100-4 2 2 0 000 4z" />
+                      </svg>
+                    </div>
+                    <p className="text-sm">Media unavailable</p>
+                  </div>
+                </div>
+              )}
             </div>
           </button>
         </div>
       </div>
 
+    </div>
+  );
+}
+
+// SlideshowVideoItem component for rendering video items in the slideshow
+function SlideshowVideoItem({ item }: { item: FeedItem }) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [showVideo, setShowVideo] = useState(false);
+
+  // For slideshow, we always want to show the video if displayMode is thumbnail
+  // or show on hover if displayMode is hover
+  const shouldShowVideo = item.displayMode === 'thumbnail' || item.displayMode === 'hover';
+
+  useEffect(() => {
+    if (shouldShowVideo) {
+      setShowVideo(true);
+    }
+  }, [shouldShowVideo]);
+
+  const videoSource = item.playbackId ? getVideoSource(item.playbackId) : null;
+
+  return (
+    <div className="relative w-full h-full">
+      {/* Poster/Fallback Image - only render if src is not empty */}
+      {item.src && item.src.trim() !== '' && (
+        <Image
+          src={item.src}
+          alt={item.alt || ''}
+          fill
+          className={`object-contain object-center transition-opacity duration-200 ${
+            showVideo && shouldShowVideo ? 'opacity-0' : 'opacity-100'
+          }`}
+          {...(item.lqip && {
+            placeholder: "blur" as const,
+            blurDataURL: item.lqip,
+          })}
+          sizes="80vmin"
+          priority
+        />
+      )}
+
+      {/* Video Element */}
+      {showVideo && shouldShowVideo && videoSource && videoSource.src && (
+        <video
+          ref={videoRef}
+          className={`absolute inset-0 w-full h-full object-contain object-center transition-opacity duration-200 ${
+            shouldShowVideo ? 'opacity-100' : 'opacity-0'
+          }`}
+          autoPlay={true}
+          loop={true}
+          muted={true}
+          playsInline
+          preload="metadata"
+        >
+          <source src={videoSource.src} type={videoSource.type} />
+        </video>
+      )}
+
+      {/* Fallback when no poster and no video source */}
+      {(!item.src || item.src.trim() === '') && (!videoSource || !videoSource.src) && (
+        <div className="absolute inset-0 flex items-center justify-center bg-gray-100 text-gray-500">
+          <div className="text-center">
+            <div className="w-16 h-16 mx-auto mb-2 bg-gray-300 rounded flex items-center justify-center">
+              <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M2 6a2 2 0 012-2h6l2 2h6a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM10 12a2 2 0 100-4 2 2 0 000 4z" />
+              </svg>
+            </div>
+            <p className="text-sm">Media loading...</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

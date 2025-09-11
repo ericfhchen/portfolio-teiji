@@ -73,7 +73,7 @@ export default async function WorkPage({
               />
               
               {/* Hero image container */}
-              <div className="relative overflow-hidden mx-auto w-full p-8 pt-20">
+              <div className="relative overflow-hidden mx-auto w-full p-8 mt-8">
                 <div className="relative aspect-[16/9]">
                   <Image
                     src={coverImage.src}

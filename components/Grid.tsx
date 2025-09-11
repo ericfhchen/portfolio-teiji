@@ -59,33 +59,52 @@ export default function Grid({ items, section, variant = 'index' }: GridProps) {
   }, [variant, section, router, activeTags, currentRoute]);
 
   // Determine column classes and count based on variant
-  const { columnClasses, columnCount } = useMemo(() => {
+  const { columnClasses, mobileColumnCount, desktopColumnCount } = useMemo(() => {
     switch (variant) {
       case 'home':
-        return { columnClasses: 'grid-cols-1', columnCount: 1 };
+        return { columnClasses: 'grid-cols-1', mobileColumnCount: 1, desktopColumnCount: 1 };
       case 'work':
-        return { columnClasses: 'grid-cols-2', columnCount: 2 };
+        return { columnClasses: 'grid-cols-1 lg:grid-cols-2', mobileColumnCount: 1, desktopColumnCount: 2 };
       case 'index':
       default:
-        return { columnClasses: 'grid-cols-3', columnCount: 3 };
+        return { columnClasses: 'grid-cols-2 lg:grid-cols-3', mobileColumnCount: 2, desktopColumnCount: 3 };
     }
   }, [variant]);
 
-  // Calculate empty tiles needed to fill incomplete rows
-  const emptyTilesNeeded = useMemo(() => {
-    if (columnCount === 1) return 0; // No need for empty tiles in single column
-    
-    const remainder = filteredItems.length % columnCount;
-    return remainder === 0 ? 0 : columnCount - remainder;
-  }, [filteredItems.length, columnCount]);
+  // Calculate empty tiles needed for mobile and desktop separately
+  const { mobileEmptyTiles, desktopEmptyTiles } = useMemo(() => {
+    // Single column layouts don't need empty tiles
+    if (mobileColumnCount === 1 && desktopColumnCount === 1) {
+      return { mobileEmptyTiles: 0, desktopEmptyTiles: 0 };
+    }
 
-  // Create empty tiles for incomplete rows
+    // Calculate for mobile
+    const mobileRemainder = filteredItems.length % mobileColumnCount;
+    const mobileEmpty = mobileColumnCount === 1 ? 0 : 
+      (mobileRemainder === 0 ? 0 : mobileColumnCount - mobileRemainder);
+
+    // Calculate for desktop
+    const desktopRemainder = filteredItems.length % desktopColumnCount;
+    const desktopEmpty = desktopColumnCount === 1 ? 0 : 
+      (desktopRemainder === 0 ? 0 : desktopColumnCount - desktopRemainder);
+
+    return { 
+      mobileEmptyTiles: mobileEmpty, 
+      desktopEmptyTiles: desktopEmpty 
+    };
+  }, [filteredItems.length, mobileColumnCount, desktopColumnCount]);
+
+  // Create empty tiles - we need the maximum of mobile and desktop needs
+  const maxEmptyTiles = Math.max(mobileEmptyTiles, desktopEmptyTiles);
   const emptyTiles = useMemo(() => {
-    return Array.from({ length: emptyTilesNeeded }, (_, index) => ({
+    return Array.from({ length: maxEmptyTiles }, (_, index) => ({
       _id: `empty-${index}`,
-      isEmpty: true
+      isEmpty: true,
+      // Mark which breakpoints this empty tile should be visible on
+      showOnMobile: index < mobileEmptyTiles,
+      showOnDesktop: index < desktopEmptyTiles
     }));
-  }, [emptyTilesNeeded]);
+  }, [maxEmptyTiles, mobileEmptyTiles, desktopEmptyTiles]);
 
   return (
     <div className="w-full">
@@ -108,7 +127,7 @@ export default function Grid({ items, section, variant = 'index' }: GridProps) {
                 Wrapper with padding controls visual cropping and overall size constraints.
                 The button sits inside so only the actual image area is interactive.
               */}
-              <div className={`relative overflow-hidden ${variant === 'work' ? 'p-12 pb-4' : 'p-12 pb-4 lg:p-20'} ${variant !== 'work' ? 'lg:max-w-[100dvh]' : ''} mx-auto w-full`}>
+              <div className={`relative overflow-hidden ${variant === 'work' ? 'p-12' : 'p-6 lg:p-16'} ${variant !== 'work' ? 'lg:max-w-[100dvh]' : ''} mx-auto w-full`}>
                 <button
                   onClick={() => handleItemClick(item)}
                   className="group block w-full focus:outline-none"
@@ -135,17 +154,17 @@ export default function Grid({ items, section, variant = 'index' }: GridProps) {
               <div className="px-12 pb-4 mx-auto w-full">
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
-                    <div className="text-var font-normal">
+                    <div className="text-var font-normal text-sm sm:text-base">
                       {item.parentTitle}
                     </div>
                     {item.medium && (
-                      <div className="text-muted font-light">
+                      <div className="text-muted font-light text-sm sm:text-base tracking-widest">
                         {item.medium}
                       </div>
                     )}
                   </div>
                   {item.year && (
-                    <div className="text-muted font-light">
+                    <div className="text-muted font-light text-sm sm:text-base tracking-widest">
                       {item.year}
                     </div>
                   )}
@@ -156,23 +175,37 @@ export default function Grid({ items, section, variant = 'index' }: GridProps) {
         ))}
         
         {/* Render empty tiles to fill incomplete rows */}
-        {emptyTiles.map((emptyTile) => (
-          <div key={emptyTile._id} className="relative w-full">
-            {/* Empty image container with horizontal rule centered on it */}
-            <div className="relative">
-              {/* full-width hairline across the column, centered on image container only */}
-              <span
-                aria-hidden
-                className="pointer-events-none absolute inset-x-0 top-1/2 bg-[var(--border)] z-0"
-              style={{ height: '0.5px' }}
-              />
-              {/* Empty tile with same padding as regular tiles to maintain grid alignment */}
-              <div className={`relative overflow-hidden ${variant === 'work' ? 'p-8' : 'p-12 lg:p-20'} ${variant !== 'work' ? 'lg:max-w-[100dvh]' : ''} mx-auto w-full`}>
-                <div className={`relative ${variant === 'work' ? 'aspect-[16/9]' : 'aspect-square'}`} />
+        {emptyTiles.map((emptyTile) => {
+          // Create responsive visibility classes
+          let visibilityClasses = '';
+          if (emptyTile.showOnMobile && emptyTile.showOnDesktop) {
+            visibilityClasses = 'block'; // Show on all screen sizes
+          } else if (emptyTile.showOnMobile && !emptyTile.showOnDesktop) {
+            visibilityClasses = 'block lg:hidden'; // Show on mobile only
+          } else if (!emptyTile.showOnMobile && emptyTile.showOnDesktop) {
+            visibilityClasses = 'hidden lg:block'; // Show on desktop only
+          } else {
+            visibilityClasses = 'hidden'; // Don't show (shouldn't happen, but safety)
+          }
+
+          return (
+            <div key={emptyTile._id} className={`relative w-full ${visibilityClasses}`}>
+              {/* Empty image container with horizontal rule centered on it */}
+              <div className="relative">
+                {/* full-width hairline across the column, centered on image container only */}
+                <span
+                  aria-hidden
+                  className="pointer-events-none absolute inset-x-0 top-1/2 bg-[var(--border)] z-0"
+                style={{ height: '0.5px' }}
+                />
+                {/* Empty tile with same padding as regular tiles to maintain grid alignment */}
+                <div className={`relative overflow-hidden ${variant === 'work' ? 'p-12' : 'p-12 lg:p-20'} ${variant !== 'work' ? 'lg:max-w-[100dvh]' : ''} mx-auto w-full`}>
+                  <div className={`relative ${variant === 'work' ? 'aspect-[16/9]' : 'aspect-square'}`} />
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {filteredItems.length === 0 && (

@@ -13,12 +13,15 @@ import imageBleed from './schemas/objects/imageBleed'
 import textAside from './schemas/objects/textAside'
 import projectImage from './schemas/objects/projectImage'
 import spacer from './schemas/objects/spacer'
+import videoMux from './schemas/objects/videoMux'
+import mediaItem from './schemas/objects/mediaItem'
 
 export interface FeedItem {
   _id: string;
+  mediaType: 'image' | 'video';
   src: string;
   alt: string;
-  lqip: string;
+  lqip?: string;
   parentSlug: string;
   parentTitle: string;
   parentTags: string[];
@@ -26,6 +29,11 @@ export interface FeedItem {
   year?: number;
   medium?: string;
   description?: string;
+  // Video-specific fields
+  playbackId?: string;
+  poster?: string;
+  displayMode?: 'thumbnail' | 'hover';
+  controls?: boolean;
 }
 
 export const schema: { types: SchemaTypeDefinition[] } = {
@@ -45,5 +53,7 @@ export const schema: { types: SchemaTypeDefinition[] } = {
     textAside,
     projectImage,
     spacer,
+    videoMux,
+    mediaItem,
   ],
 }

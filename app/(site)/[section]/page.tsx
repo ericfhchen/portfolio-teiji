@@ -28,21 +28,63 @@ export default async function SectionPage({
   const { section } = await params;
   const featured = await getFeaturedData(section);
 
-  // Transform featured works into FeedItem[] compatible with Grid
-  const feedItems: FeedItem[] = featured.map((work: any, idx: number) => ({
-    _id: work._id,
-    src: getImageUrl(work.featuredImage, 800),
-    alt: work.featuredImage?.alt || '',
-    lqip: work.featuredImage?.lqip || '',
-    parentSlug: work.slug,
-    parentTitle: work.title,
-    parentTags: work.tags || [],
-    description: work.description,
-    index: idx,
-  }));
+   // Transform featured works into FeedItem[] compatible with Grid
+   const feedItems: FeedItem[] = featured.map((work: any, idx: number) => {
+    const featuredImage = work.featuredImage;
+    const isVideo = featuredImage?.mediaType === 'video';
+    
+    
+    if (isVideo && featuredImage?.video) {
+      // Handle video media type
+      const video = featuredImage.video;
+      const playbackId = video.asset?.playbackId;
+      
+      // For videos, use MUX thumbnail as fallback if no poster
+      let posterSrc = '';
+      if (video.poster) {
+        posterSrc = getImageUrl(video.poster, 800);
+      } else if (playbackId) {
+        // Use MUX thumbnail as fallback poster
+        posterSrc = `https://image.mux.com/${playbackId}/thumbnail.jpg?width=800&fit_mode=preserve`;
+      }
+      
+      return {
+        _id: work._id,
+        mediaType: 'video' as const,
+        src: posterSrc, // Will be empty only if no poster and no playbackId
+        alt: video.poster?.alt || featuredImage.alt || '',
+        lqip: video.poster?.lqip || '',
+        parentSlug: work.slug,
+        parentTitle: work.title,
+        parentTags: work.tags || [],
+        description: work.description,
+        index: idx,
+        playbackId: playbackId,
+        displayMode: video.displayMode || 'thumbnail',
+        controls: video.controls,
+      };
+    } else if (featuredImage?.image) {
+      // Handle image media type
+      return {
+        _id: work._id,
+        mediaType: 'image' as const,
+        src: getImageUrl(featuredImage.image, 800),
+        alt: featuredImage.image.alt || featuredImage.alt || '',
+        lqip: featuredImage.image.lqip || '',
+        parentSlug: work.slug,
+        parentTitle: work.title,
+        parentTags: work.tags || [],
+        description: work.description,
+        index: idx,
+      };
+    } else {
+      // Fallback for missing media - don't create items with empty src
+      return null;
+    }
+  }).filter(Boolean); // Remove null items
 
   return (
-    <>
+    <div className="-mb-16">
       <GridLines type="home" />
       <div className="relative z-10">
         <h1 className="sr-only">{section}</h1>
@@ -53,6 +95,6 @@ export default async function SectionPage({
 
         
       </div>
-    </>
+    </div>
   );
 }

@@ -2,25 +2,14 @@ import { defineType, defineField } from 'sanity'
 
 export default defineType({
   name: 'imageLayout',
-  title: 'Image with Layout',
+  title: 'Media with Layout',
   type: 'object',
   fields: [
     defineField({
-      name: 'image',
-      title: 'Image',
-      type: 'image',
-      options: {
-        hotspot: true,
-      },
+      name: 'media',
+      title: 'Media',
+      type: 'mediaItem',
       validation: (Rule) => Rule.required(),
-      fields: [
-        {
-          name: 'alt',
-          title: 'Alt text',
-          type: 'string',
-          description: 'Alternative text for screen readers',
-        },
-      ],
     }),
     defineField({
       name: 'layout',
@@ -41,24 +30,35 @@ export default defineType({
       name: 'caption',
       title: 'Caption',
       type: 'string',
-      description: 'Optional caption to display below the image',
+      description: 'Optional caption to display below the media',
     }),
   ],
   preview: {
     select: {
-      media: 'image',
-      title: 'image.alt',
-      subtitle: 'layout',
+      mediaItem: 'media',
+      alt: 'media.alt',
+      layout: 'layout',
     },
-    prepare({ media, title, subtitle }) {
+    prepare({ mediaItem, alt, layout }) {
       const layoutLabels = {
         full: 'Full Width',
         medium: '60% Width',
         small: '40% Width',
       }
+      
+      // Get media for preview - prioritize image, fall back to video poster
+      let media = null;
+      if (mediaItem?.mediaType === 'image' && mediaItem.image) {
+        media = mediaItem.image;
+      } else if (mediaItem?.mediaType === 'video' && mediaItem.video?.poster) {
+        media = mediaItem.video.poster;
+      }
+      
+      const mediaType = mediaItem?.mediaType === 'video' ? 'Video' : 'Image';
+      
       return {
-        title: title || 'Image',
-        subtitle: layoutLabels[subtitle as keyof typeof layoutLabels] || subtitle,
+        title: alt || mediaType,
+        subtitle: layoutLabels[layout as keyof typeof layoutLabels] || layout,
         media,
       }
     },

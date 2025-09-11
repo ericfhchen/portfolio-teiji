@@ -154,7 +154,7 @@ export default function Lightbox({ items, section }: LightboxProps) {
             />
             
             {/* Work tile container - matching Grid component exactly */}
-            <div className="relative overflow-hidden p-12 lg:p-20 lg:max-w-[100dvh] mx-auto w-full">
+            <div className="relative overflow-hidden p-6 lg:max-w-[100dvh] mx-auto w-full">
               <div className="relative aspect-square">
                 <Image
                   src={currentItem.src}
@@ -174,24 +174,24 @@ export default function Lightbox({ items, section }: LightboxProps) {
         </div>
 
         {/* Bottom text layout */}
-        <div className="absolute bottom-0 left-0 right-0 z-20">
-          <div className="grid grid-cols-2 gap-16 px-8 py-6">
+        <div className="absolute bottom-12 md:bottom-0 left-0 right-0 z-20">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 px-4 py-4">
             {/* Left side: Year and Title/Tags */}
-            <div className="grid grid-cols-[auto_1fr] gap-8">
+            <div className="grid grid-cols-[auto_1fr] gap-4 sm:gap-8">
               {/* Year column - minimal width */}
-              <div className="text-var">
+              <div className="text-var text-xs">
                 {currentItem.year || ''}
               </div>
               
               {/* Title and tags column - takes remaining space */}
               <div>
-                <div className="text-var font-normal">
+                <div className="text-var font-normal text-xs">
                   {currentItem.parentTitle}
                 </div>
                 {currentItem.parentTags.length > 0 && (
                   <div className="flex flex-wrap gap-1">
                     {currentItem.parentTags.map((tag, index) => (
-                      <span key={`${tag}-${index}`} className="text-muted font-light">
+                      <span key={`${tag}-${index}`} className="text-muted font-light text-xs">
                         <Link
                           href={`/${section}/index?tags=${encodeURIComponent(tag)}`}
                           className="hover:text-var transition-colors focus:outline-none focus:text-var"
@@ -206,8 +206,8 @@ export default function Lightbox({ items, section }: LightboxProps) {
               </div>
             </div>
 
-            {/* Right side: Description */}
-            <div className="text-var">
+            {/* Right side: Description - hidden on mobile */}
+            <div className="text-var text-xs hidden lg:block">
               {currentItem.description || ''}
             </div>
           </div>

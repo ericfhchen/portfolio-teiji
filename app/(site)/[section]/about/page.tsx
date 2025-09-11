@@ -68,7 +68,7 @@ export default async function AboutPage({
     return (
       <>
         <GridLines type="about" />
-        <div className="min-h-screen pt-24 pb-4">
+        <div className="min-h-screen pt-24 pb-20">
           <div className="max-w-7xl mx-auto px-4">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24">
               {/* Left side - Bio and Services */}
@@ -152,8 +152,8 @@ export default async function AboutPage({
   return (
     <>
       <GridLines type="about" />
-      <div className="min-h-screen pt-24 pb-4 relative">
-        <div className="max-w-7xl mx-auto px-4">
+      <div className="min-h-screen pt-24 pb-20 relative">
+        <div className="mx-auto px-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24">
             {/* Left side - Bio and CV */}
             <div className="space-y-12">

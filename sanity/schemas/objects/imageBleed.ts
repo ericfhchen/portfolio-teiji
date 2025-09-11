@@ -2,33 +2,35 @@ import { defineType } from 'sanity';
 
 export default defineType({
   name: 'imageBleed',
-  title: 'Image Bleed',
+  title: 'Media Bleed',
   type: 'object',
   fields: [
     {
-      name: 'image',
-      title: 'Image',
-      type: 'image',
-      options: { hotspot: true },
-      fields: [
-        {
-          name: 'alt',
-          title: 'Alt Text',
-          type: 'string',
-          validation: (Rule) => Rule.required(),
-        },
-      ],
+      name: 'media',
+      title: 'Media',
+      type: 'mediaItem',
       validation: (Rule) => Rule.required(),
     },
   ],
   preview: {
     select: {
-      media: 'image',
+      mediaItem: 'media',
     },
     prepare(selection) {
-      const { media } = selection;
+      const { mediaItem } = selection;
+      
+      // Get media for preview - prioritize image, fall back to video poster
+      let media = null;
+      if (mediaItem?.mediaType === 'image' && mediaItem.image) {
+        media = mediaItem.image;
+      } else if (mediaItem?.mediaType === 'video' && mediaItem.video?.poster) {
+        media = mediaItem.video.poster;
+      }
+      
+      const mediaType = mediaItem?.mediaType === 'video' ? 'Video' : 'Image';
+      
       return {
-        title: 'Image Bleed',
+        title: `${mediaType} Bleed`,
         media,
       };
     },
