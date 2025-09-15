@@ -9,7 +9,6 @@ export default defineType({
       name: 'asset',
       title: 'Video Asset',
       type: 'mux.video',
-      validation: (Rule) => Rule.required(),
       description: 'Upload a video file - it will be processed by MUX',
     }),
     defineField({

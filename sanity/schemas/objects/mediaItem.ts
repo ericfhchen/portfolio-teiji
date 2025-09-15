@@ -38,9 +38,15 @@ export default defineType({
       validation: (Rule) => 
         Rule.custom((image, context) => {
           const parent = context.parent as any;
-          if (parent?.mediaType === 'image' && !image) {
-            return 'Image is required when media type is image';
+          
+          // Only validate if this is actually an image media type
+          if (parent?.mediaType === 'image') {
+            if (!image) {
+              return 'Image is required when media type is image';
+            }
           }
+          
+          // Always return true for other media types or when validation passes
           return true;
         }),
     }),
@@ -52,9 +58,19 @@ export default defineType({
       validation: (Rule) => 
         Rule.custom((video, context) => {
           const parent = context.parent as any;
-          if (parent?.mediaType === 'video' && !video) {
-            return 'Video is required when media type is video';
+          
+          // Only validate if this is actually a video media type
+          if (parent?.mediaType === 'video') {
+            if (!video) {
+              return 'Video is required when media type is video';
+            }
+            // Also check if the video has an asset
+            if (video && typeof video === 'object' && !(video as any).asset) {
+              return 'Video asset is required';
+            }
           }
+          
+          // Always return true for other media types or when validation passes
           return true;
         }),
     }),

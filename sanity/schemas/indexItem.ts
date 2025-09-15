@@ -7,20 +7,11 @@ export default defineType({
   type: 'document',
   fields: [
     defineField({
-      name: 'image',
-      title: 'Image',
-      type: 'image',
-      options: {
-        hotspot: true,
-      },
-      fields: [
-        {
-          name: 'alt',
-          title: 'Alt text',
-          type: 'string',
-          description: 'Alternative text for screen readers',
-        },
-      ],
+      name: 'featuredMedia',
+      title: 'Featured Media',
+      type: 'mediaItem',
+      description: 'Main image or video for this index item',
+      validation: (Rule) => Rule.required(),
     }),
     defineField({
       name: 'title',
@@ -42,6 +33,17 @@ export default defineType({
       name: 'description',
       title: 'Description',
       type: 'text',
+    }),
+    defineField({
+      name: 'gallery',
+      title: 'Gallery',
+      type: 'array',
+      of: [
+        {
+          type: 'mediaItem',
+        },
+      ],
+      description: 'Additional images and videos that will appear in the lightbox gallery for this item',
     }),
     defineField({
       name: 'tags',
@@ -90,9 +92,17 @@ export default defineType({
       year: 'year',
       discipline: 'discipline',
       tags: 'tags',
-      media: 'image',
+      featuredMedia: 'featuredMedia',
     },
-    prepare({ title, year, discipline, tags, media }) {
+    prepare({ title, year, discipline, tags, featuredMedia }) {
+      // Get media for preview - prioritize image, fall back to video poster
+      let media = null;
+      if (featuredMedia?.mediaType === 'image' && featuredMedia.image) {
+        media = featuredMedia.image;
+      } else if (featuredMedia?.mediaType === 'video' && featuredMedia.video?.poster) {
+        media = featuredMedia.video.poster;
+      }
+      
       const yearText = year ? `${year}` : '';
       const tagsText = tags && tags.length > 0 ? ` • ${tags.length} tag${tags.length === 1 ? '' : 's'}` : '';
       return {

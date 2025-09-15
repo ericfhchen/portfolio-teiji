@@ -2,8 +2,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { PortableText, PortableTextComponents } from 'next-sanity';
 import { getImageProps, isVerticalMedia } from '@/lib/image';
-import { getVideoSourceFromMux, getPlaybackId, posterFromSanity } from '@/lib/mux';
-import { client } from '@/lib/sanity.client';
+import { getPlaybackId } from '@/lib/mux';
 import ImageWithGrid from '@/components/ImageWithGrid';
 import { VideoLayout, VideoBleed } from '@/components/VideoPlayer';
 
@@ -189,13 +188,6 @@ const RichComponents: PortableTextComponents = {
     },
     
     videoMux: ({ value }) => {
-      const {
-        asset,
-        poster,
-        captions,
-        displayMode
-      } = value;
-      
       const playbackIdToUse = getPlaybackId(value);
       if (!playbackIdToUse) {
         console.error('No valid playback ID found in video data:', value);
@@ -203,48 +195,8 @@ const RichComponents: PortableTextComponents = {
       }
       
       try {
-        const videoSource = getVideoSourceFromMux(value);
-        const posterUrl = posterFromSanity(poster);
-        
-        // Ensure we have a valid video source
-        if (!videoSource?.src) {
-          console.error('No valid video source generated:', videoSource);
-          return null;
-        }
-        
-        // Get captions URL if available
-        let captionsUrl = '';
-        if (captions?.asset?._ref) {
-          const assetId = captions.asset._ref.replace('file-', '').replace('-vtt', '');
-          captionsUrl = `https://cdn.sanity.io/files/${client.config().projectId}/${client.config().dataset}/${assetId}.vtt`;
-        }
-
-        return (
-          <div className="my-8">
-            <video
-              controls={true}
-              playsInline
-              preload="metadata"
-              autoPlay={false}
-              loop={false}
-              muted={true}
-              {...(posterUrl && { poster: posterUrl })}
-              className="w-full"
-            >
-              <source src={videoSource.src} type={videoSource.type} />
-              {captionsUrl && (
-                <track
-                  kind="captions"
-                  src={captionsUrl}
-                  srcLang="en"
-                  label="English"
-                  default
-                />
-              )}
-              Your browser does not support the video tag.
-            </video>
-          </div>
-        );
+        // Use VideoLayout component for consistent vertical handling
+        return <VideoLayout video={value} layout="full" alt={value.alt} />;
       } catch (error) {
         console.error('Error rendering video:', error);
         return null;

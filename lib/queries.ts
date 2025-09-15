@@ -51,6 +51,42 @@ export const workBySlugQuery = groq`
       },
       alt
     },
+    hoverMedia {
+      mediaType,
+      mediaType == "image" => {
+        image {
+          ...,
+          "lqip": asset->metadata.lqip,
+          alt
+        }
+      },
+      mediaType == "video" => {
+        video {
+          // Properly dereference the MUX asset
+          asset {
+            ...,
+            asset-> {
+              ...,
+              playbackId,
+              data,
+              status,
+              assetId
+            }
+          },
+          displayMode,
+          controls,
+          poster {
+            ...,
+            "lqip": asset->metadata.lqip,
+            alt
+          },
+          captions {
+            asset
+          }
+        }
+      },
+      alt
+    },
     description,
     content[] {
       ...,
@@ -205,9 +241,74 @@ export const indexFeedQuery = groq`
     medium,
     description,
     "tags": tags[]->name,
-    image {
-      ...,
-      "lqip": asset->metadata.lqip,
+    featuredMedia {
+      mediaType,
+      mediaType == "image" => {
+        image {
+          ...,
+          "lqip": asset->metadata.lqip,
+          alt
+        }
+      },
+      mediaType == "video" => {
+        video {
+          asset {
+            ...,
+            asset-> {
+              ...,
+              playbackId,
+              data,
+              status,
+              assetId
+            }
+          },
+          displayMode,
+          controls,
+          poster {
+            ...,
+            "lqip": asset->metadata.lqip,
+            alt
+          },
+          captions {
+            asset
+          }
+        }
+      },
+      alt
+    },
+    gallery[] {
+      mediaType,
+      mediaType == "image" => {
+        image {
+          ...,
+          "lqip": asset->metadata.lqip,
+          alt
+        }
+      },
+      mediaType == "video" => {
+        video {
+          asset {
+            ...,
+            asset-> {
+              ...,
+              playbackId,
+              data,
+              status,
+              assetId
+            }
+          },
+          displayMode,
+          controls,
+          poster {
+            ...,
+            "lqip": asset->metadata.lqip,
+            alt
+          },
+          captions {
+            asset
+          }
+        }
+      },
       alt
     }
   }
@@ -222,9 +323,74 @@ export const indexFeedByTagsQuery = groq`
     medium,
     description,
     "tags": tags[]->name,
-    image {
-      ...,
-      "lqip": asset->metadata.lqip,
+    featuredMedia {
+      mediaType,
+      mediaType == "image" => {
+        image {
+          ...,
+          "lqip": asset->metadata.lqip,
+          alt
+        }
+      },
+      mediaType == "video" => {
+        video {
+          asset {
+            ...,
+            asset-> {
+              ...,
+              playbackId,
+              data,
+              status,
+              assetId
+            }
+          },
+          displayMode,
+          controls,
+          poster {
+            ...,
+            "lqip": asset->metadata.lqip,
+            alt
+          },
+          captions {
+            asset
+          }
+        }
+      },
+      alt
+    },
+    gallery[] {
+      mediaType,
+      mediaType == "image" => {
+        image {
+          ...,
+          "lqip": asset->metadata.lqip,
+          alt
+        }
+      },
+      mediaType == "video" => {
+        video {
+          asset {
+            ...,
+            asset-> {
+              ...,
+              playbackId,
+              data,
+              status,
+              assetId
+            }
+          },
+          displayMode,
+          controls,
+          poster {
+            ...,
+            "lqip": asset->metadata.lqip,
+            alt
+          },
+          captions {
+            asset
+          }
+        }
+      },
       alt
     }
   }
@@ -318,7 +484,53 @@ export const workPageQuery = groq`
       },
       mediaType == "video" => {
         video {
-          playbackId,
+          // Properly dereference the MUX asset
+          asset {
+            ...,
+            asset-> {
+              ...,
+              playbackId,
+              data,
+              status,
+              assetId
+            }
+          },
+          displayMode,
+          controls,
+          poster {
+            ...,
+            "lqip": asset->metadata.lqip,
+            alt
+          },
+          captions {
+            asset
+          }
+        }
+      },
+      alt
+    },
+    hoverMedia {
+      mediaType,
+      mediaType == "image" => {
+        image {
+          ...,
+          "lqip": asset->metadata.lqip,
+          alt
+        }
+      },
+      mediaType == "video" => {
+        video {
+          // Properly dereference the MUX asset
+          asset {
+            ...,
+            asset-> {
+              ...,
+              playbackId,
+              data,
+              status,
+              assetId
+            }
+          },
           displayMode,
           controls,
           poster {

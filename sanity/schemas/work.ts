@@ -19,6 +19,12 @@ export default defineType({
       description: 'Cover image or video for this work',
     }),
     defineField({
+      name: 'hoverMedia',
+      title: 'Hover Media',
+      type: 'mediaItem',
+      description: 'Image or video that appears on hover in the work grid (16:9 aspect ratio recommended)',
+    }),
+    defineField({
       name: 'title',
       title: 'Title',
       type: 'string',
@@ -162,15 +168,15 @@ export default defineType({
       title: 'title',
       year: 'year',
       discipline: 'discipline',
-      featuredImage: 'featuredImage',
+      coverImage: 'coverImage',
     },
-    prepare({ title, year, discipline, featuredImage }) {
+    prepare({ title, year, discipline, coverImage }) {
       // Get media for preview - prioritize image, fall back to video poster
       let media = null;
-      if (featuredImage?.mediaType === 'image' && featuredImage.image) {
-        media = featuredImage.image;
-      } else if (featuredImage?.mediaType === 'video' && featuredImage.video?.poster) {
-        media = featuredImage.video.poster;
+      if (coverImage?.mediaType === 'image' && coverImage.image) {
+        media = coverImage.image;
+      } else if (coverImage?.mediaType === 'video' && coverImage.video?.poster) {
+        media = coverImage.video.poster;
       }
       
       return {

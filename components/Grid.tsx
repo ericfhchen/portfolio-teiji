@@ -5,6 +5,7 @@ import { useCallback, useMemo } from 'react';
 import Image from 'next/image';
 import { FeedItem } from '@/sanity/schema';
 import { parseSearchParams, createSearchParams, createItemParam } from '@/lib/utils';
+import HoverMedia from '@/components/HoverMedia';
 
 interface GridProps {
   items: FeedItem[];
@@ -128,24 +129,47 @@ export default function Grid({ items, section, variant = 'index' }: GridProps) {
                 The button sits inside so only the actual image area is interactive.
               */}
               <div className={`relative overflow-hidden ${variant === 'work' ? 'p-12' : 'p-6 lg:p-16'} ${variant !== 'work' ? 'lg:max-w-[100dvh]' : ''} mx-auto w-full`}>
-                <button
-                  onClick={() => handleItemClick(item)}
-                  className="group block w-full focus:outline-none"
-                >
+                {variant === 'work' ? (
                   <div className={`relative ${variant === 'work' ? 'aspect-[16/9]' : 'aspect-square'}`}>
-                    <Image
-                      src={item.src}
-                      alt=""
-                      fill
-                      className="object-contain object-center"
-                      {...(item.lqip && {
-                        placeholder: "blur" as const,
-                        blurDataURL: item.lqip,
-                      })}
-                      sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                    <HoverMedia
+                      staticMedia={{
+                        src: item.src,
+                        alt: item.alt || '',
+                        lqip: item.lqip,
+                        mediaType: item.mediaType,
+                        videoData: item.videoData,
+                      }}
+                      hoverMedia={item.hoverMedia ? {
+                        src: item.hoverMedia.src,
+                        alt: item.hoverMedia.alt,
+                        lqip: item.hoverMedia.lqip,
+                        mediaType: item.hoverMedia.mediaType,
+                        videoData: item.hoverMedia.videoData,
+                      } : undefined}
+                      onClick={() => handleItemClick(item)}
+                      className="w-full h-full"
                     />
                   </div>
-                </button>
+                ) : (
+                  <button
+                    onClick={() => handleItemClick(item)}
+                    className="group block w-full focus:outline-none"
+                  >
+                    <div className="relative aspect-square">
+                      <Image
+                        src={item.src}
+                        alt=""
+                        fill
+                        className="object-contain object-center"
+                        {...(item.lqip && {
+                          placeholder: "blur" as const,
+                          blurDataURL: item.lqip,
+                        })}
+                        sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                      />
+                    </div>
+                  </button>
+                )}
               </div>
             </div>
             

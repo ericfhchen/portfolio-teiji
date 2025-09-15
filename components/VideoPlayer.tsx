@@ -65,10 +65,12 @@ export function VideoBleed({ video, alt }: { video: any; alt?: string }) {
 }
 
 // VideoPlayer component
-export function VideoPlayer({ video, objectFit = 'contain', isVertical = false }: { 
+export function VideoPlayer({ video, objectFit = 'contain', isVertical = false, autoPlay = true, showMuteButton = true }: { 
   video: any; 
   objectFit?: 'contain' | 'cover' | 'fill' | 'none' | 'scale-down';
   isVertical?: boolean;
+  autoPlay?: boolean;
+  showMuteButton?: boolean;
 }) {
   // Early validation before any hooks
   const playbackId = getPlaybackId(video);
@@ -133,18 +135,14 @@ export function VideoPlayer({ video, objectFit = 'contain', isVertical = false }
     }
   }, []);
 
-  const handleMuteToggle = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent triggering the video click handler
+  const toggleMute = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent video click when clicking unmute button
     if (!videoRef.current) return;
+    
+    videoRef.current.muted = !videoRef.current.muted;
+    setIsMuted(videoRef.current.muted);
+  }, []);
 
-    if (isMuted) {
-      videoRef.current.muted = false;
-      setIsMuted(false);
-    } else {
-      videoRef.current.muted = true;
-      setIsMuted(true);
-    }
-  }, [isMuted]);
 
   // Use height-constrained approach for vertical videos
   const actuallyVertical = actualDimensions 
@@ -156,7 +154,7 @@ export function VideoPlayer({ video, objectFit = 'contain', isVertical = false }
       <video
         ref={videoRef}
         className={`w-full h-full object-${objectFit}`}
-        autoPlay={true}
+        autoPlay={autoPlay}
         loop={true}
         muted={isMuted}
         playsInline
@@ -178,13 +176,16 @@ export function VideoPlayer({ video, objectFit = 'contain', isVertical = false }
         Your browser does not support the video tag.
       </video>
       
-      {/* Mute/Unmute Button */}
-      <button 
-        className="absolute bottom-0 right-0 z-10 px-2 py-1 bg-black/50 text-white text-xs font-medium tracking-wider rounded hover:opacity-60 transition-opacity"
-        onClick={handleMuteToggle}
-      >
-        {isMuted ? 'UNMUTE' : 'MUTE'}
-      </button>
+      {/* Unmute button - positioned at bottom right, only show if showMuteButton is true */}
+      {showMuteButton && (
+        <button
+          onClick={toggleMute}
+          className="absolute bottom-0 right-0 z-10 text-var text-xs font-light tracking-wider hover:opacity-60 transition-opacity bg-black/20 px-2 py-1 rounded"
+          aria-label={isMuted ? 'Unmute video' : 'Mute video'}
+        >
+          {isMuted ? 'UNMUTE' : 'MUTE'}
+        </button>
+      )}
     </div>
   );
 }

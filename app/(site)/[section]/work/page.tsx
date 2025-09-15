@@ -8,44 +8,63 @@ import GridLines from '@/components/GridLines';
 async function getWorkData(section: string) {
   const featured = await client.fetch(workPageQuery, { section });
 
-  // Transform featured works into FeedItem[] compatible with Grid
-  const feedItems: FeedItem[] = featured.map((work: any, idx: number) => {
-    const coverImage = work.coverImage;
-    const isVideo = coverImage?.mediaType === 'video';
+  // Helper function to process media item
+  const processMediaItem = (mediaItem: any) => {
+    if (!mediaItem) return null;
     
-    // For images, use the image directly; for videos, use poster if available
+    const isVideo = mediaItem.mediaType === 'video';
     let src = '';
     let lqip = '';
     let alt = '';
+    let videoData = null;
     
     if (isVideo) {
-      const videoData = coverImage.video;
+      videoData = mediaItem.video;
       // Use poster image if available, otherwise use MUX thumbnail
       if (videoData?.poster) {
         src = getImageUrl(videoData.poster, 800);
         lqip = videoData.poster.lqip || '';
         alt = videoData.poster.alt || '';
-      } else if (videoData?.asset?.playbackId) {
+      } else if (videoData?.asset?.asset?.playbackId) {
         // Fallback to MUX thumbnail - only if playbackId exists
+        src = `https://image.mux.com/${videoData.asset.asset.playbackId}/thumbnail.jpg`;
+        alt = mediaItem.alt || '';
+      } else if (videoData?.asset?.playbackId) {
+        // Alternative structure
         src = `https://image.mux.com/${videoData.asset.playbackId}/thumbnail.jpg`;
-        alt = coverImage.alt || '';
+        alt = mediaItem.alt || '';
       } else {
         // No poster and no playbackId - use empty src
         src = '';
-        alt = coverImage.alt || '';
+        alt = mediaItem.alt || '';
       }
-    } else if (coverImage?.mediaType === 'image' && coverImage.image) {
-      src = getImageUrl(coverImage.image, 800);
-      lqip = coverImage.image.lqip || '';
-      alt = coverImage.image.alt || '';
+    } else if (mediaItem.mediaType === 'image' && mediaItem.image) {
+      src = getImageUrl(mediaItem.image, 800);
+      lqip = mediaItem.image.lqip || '';
+      alt = mediaItem.image.alt || '';
     }
     
     return {
-      _id: work._id,
-      mediaType: isVideo ? ('video' as const) : ('image' as const),
       src,
-      alt: alt || coverImage?.alt || '',
+      alt: alt || mediaItem.alt || '',
       lqip,
+      mediaType: isVideo ? ('video' as const) : ('image' as const),
+      videoData,
+    };
+  };
+
+  // Transform featured works into FeedItem[] compatible with Grid
+  const feedItems: FeedItem[] = featured.map((work: any, idx: number) => {
+    const coverImage = work.coverImage;
+    const staticMedia = processMediaItem(coverImage);
+    const hoverMedia = processMediaItem(work.hoverMedia);
+    
+    return {
+      _id: work._id,
+      mediaType: staticMedia?.mediaType || 'image',
+      src: staticMedia?.src || '',
+      alt: staticMedia?.alt || '',
+      lqip: staticMedia?.lqip || '',
       parentSlug: work.slug,
       parentTitle: work.title,
       parentTags: work.tags || [],
@@ -54,12 +73,21 @@ async function getWorkData(section: string) {
       medium: work.medium,
       description: work.description,
       // Video-specific fields
-      ...(isVideo && {
-        playbackId: coverImage.video?.asset?.playbackId,
-        poster: coverImage.video?.poster ? getImageUrl(coverImage.video.poster, 800) : undefined,
-        displayMode: coverImage.video?.displayMode || 'thumbnail',
-        controls: coverImage.video?.controls ?? false,
+      ...(staticMedia?.videoData && {
+        playbackId: staticMedia.videoData?.asset?.asset?.playbackId || staticMedia.videoData?.asset?.playbackId,
+        poster: staticMedia.videoData?.poster ? getImageUrl(staticMedia.videoData.poster, 800) : undefined,
+        displayMode: staticMedia.videoData?.displayMode || 'thumbnail',
+        controls: staticMedia.videoData?.controls ?? false,
+        videoData: staticMedia.videoData,
       }),
+      // Hover media
+      hoverMedia: hoverMedia ? {
+        src: hoverMedia.src,
+        alt: hoverMedia.alt,
+        lqip: hoverMedia.lqip,
+        mediaType: hoverMedia.mediaType,
+        videoData: hoverMedia.videoData,
+      } : undefined,
     };
   });
 

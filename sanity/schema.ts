@@ -16,6 +16,20 @@ import spacer from './schemas/objects/spacer'
 import videoMux from './schemas/objects/videoMux'
 import mediaItem from './schemas/objects/mediaItem'
 
+export interface MediaItemData {
+  mediaType: 'image' | 'video';
+  src: string;
+  alt: string;
+  lqip?: string;
+  // Video-specific fields
+  playbackId?: string;
+  poster?: string;
+  displayMode?: 'thumbnail' | 'hover';
+  controls?: boolean;
+  // Raw video data for VideoPlayer component
+  videoData?: any;
+}
+
 export interface FeedItem {
   _id: string;
   mediaType: 'image' | 'video';
@@ -34,6 +48,12 @@ export interface FeedItem {
   poster?: string;
   displayMode?: 'thumbnail' | 'hover';
   controls?: boolean;
+  // Raw video data for VideoPlayer component
+  videoData?: any;
+  // Gallery support - additional media items for this feed item
+  gallery?: MediaItemData[];
+  // Hover media for work grid
+  hoverMedia?: MediaItemData;
 }
 
 export const schema: { types: SchemaTypeDefinition[] } = {
