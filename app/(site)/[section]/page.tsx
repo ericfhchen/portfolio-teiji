@@ -46,7 +46,7 @@ export default async function SectionPage({
   }
 
    // Transform featured works into FeedItem[] compatible with Grid
-   const feedItems: FeedItem[] = featured.map((work: any, idx: number) => {
+   const feedItems: FeedItem[] = featured.flatMap((work: any, idx: number) => {
     const featuredImage = work.featuredImage;
     const isVideo = featuredImage?.mediaType === 'video';
     
@@ -72,7 +72,7 @@ export default async function SectionPage({
         console.error(`❌ No playback ID found for video in work: ${work.title}`);
       }
       
-      return {
+      const feedItem: FeedItem = {
         _id: work._id,
         mediaType: 'video' as const,
         src: posterSrc, // Will be empty only if no poster and no playbackId
@@ -83,14 +83,15 @@ export default async function SectionPage({
         parentTags: work.tags || [],
         description: work.description,
         index: idx,
-        playbackId: playbackId,
+        playbackId: playbackId || undefined,
         displayMode: video.displayMode || 'thumbnail',
         controls: video.controls,
       };
+      return [feedItem];
     } else if (featuredImage?.image) {
       // Handle image media type
       console.log(`🖼️ Image processing for "${work.title}"`);
-      return {
+      const feedItem: FeedItem = {
         _id: work._id,
         mediaType: 'image' as const,
         src: getImageUrl(featuredImage.image, 800),
@@ -102,12 +103,13 @@ export default async function SectionPage({
         description: work.description,
         index: idx,
       };
+      return [feedItem];
     } else {
-      // Fallback for missing media - don't create items with empty src
+      // Fallback for missing media - return empty array to skip this item
       console.warn(`⚠️ No valid media found for work: ${work.title}`);
-      return null;
+      return [];
     }
-  }).filter((item): item is FeedItem => item !== null); // Type-safe filter to remove null items
+  });
 
   console.log(`📋 Final feed items count: ${feedItems.length}`);
 
