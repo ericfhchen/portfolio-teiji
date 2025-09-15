@@ -564,6 +564,42 @@ export const aboutQuery = groq`
       name,
       url
     },
-    email
+    email,
+    mediaItem {
+      mediaType,
+      mediaType == "image" => {
+        image {
+          ...,
+          "lqip": asset->metadata.lqip,
+          alt
+        }
+      },
+      mediaType == "video" => {
+        video {
+          // Properly dereference the MUX asset
+          asset {
+            ...,
+            asset-> {
+              ...,
+              playbackId,
+              data,
+              status,
+              assetId
+            }
+          },
+          displayMode,
+          controls,
+          poster {
+            ...,
+            "lqip": asset->metadata.lqip,
+            alt
+          },
+          captions {
+            asset
+          }
+        }
+      },
+      alt
+    }
   }
 `;

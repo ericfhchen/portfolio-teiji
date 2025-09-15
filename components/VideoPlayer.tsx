@@ -4,6 +4,7 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { getVideoSourceFromMux, getPlaybackId, posterFromSanity } from '@/lib/mux';
 import { client } from '@/lib/sanity.client';
 import { isVerticalMedia } from '@/lib/image';
+import Hls from 'hls.js';
 
 // VideoLayout component for layout-aware video rendering
 export function VideoLayout({ video, layout, caption, alt }: { 
@@ -75,7 +76,6 @@ export function VideoPlayer({ video, objectFit = 'contain', isVertical = false, 
   // Early validation before any hooks
   const playbackId = getPlaybackId(video);
   if (!playbackId) {
-    console.error('No valid playback ID found in video data:', video);
     return null;
   }
 
@@ -84,12 +84,10 @@ export function VideoPlayer({ video, objectFit = 'contain', isVertical = false, 
   try {
     videoSource = getVideoSourceFromMux(video);
     if (!videoSource?.src) {
-      console.error('No valid video source generated:', videoSource);
       return null;
     }
     posterUrl = posterFromSanity(video.poster);
   } catch (error) {
-    console.error('Error processing video data:', error);
     return null;
   }
 
@@ -102,9 +100,82 @@ export function VideoPlayer({ video, objectFit = 'contain', isVertical = false, 
 
   // Now declare hooks after all validation and data processing
   const videoRef = useRef<HTMLVideoElement>(null);
+  const hlsRef = useRef<Hls | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
   const [actualDimensions, setActualDimensions] = useState<{width: number, height: number} | null>(null);
+
+  // Setup HLS.js for Chrome
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !videoSource?.src) return;
+
+    // Clean up previous HLS instance
+    if (hlsRef.current) {
+      hlsRef.current.destroy();
+      hlsRef.current = null;
+    }
+
+    // Check if browser supports HLS natively (Safari)
+    if (video.canPlayType('application/vnd.apple.mpegurl')) {
+      video.src = videoSource.src;
+    } else if (Hls.isSupported()) {
+      // Use HLS.js for Chrome and other browsers
+      const hls = new Hls({
+        enableWorker: false,
+        lowLatencyMode: true,
+      });
+      
+      hls.loadSource(videoSource.src);
+      hls.attachMedia(video);
+      
+      hls.on(Hls.Events.MANIFEST_PARSED, () => {
+        if (autoPlay) {
+          video.play().catch(() => {
+            // Autoplay prevented, user will need to interact
+          });
+        }
+      });
+      
+      hls.on(Hls.Events.ERROR, (event, data) => {
+        if (data.fatal) {
+          switch (data.type) {
+            case Hls.ErrorTypes.NETWORK_ERROR:
+              hls.startLoad();
+              break;
+            case Hls.ErrorTypes.MEDIA_ERROR:
+              hls.recoverMediaError();
+              break;
+            default:
+              hls.destroy();
+              break;
+          }
+        }
+      });
+      
+      hlsRef.current = hls;
+    }
+
+    return () => {
+      if (hlsRef.current) {
+        hlsRef.current.destroy();
+        hlsRef.current = null;
+      }
+    };
+  }, [videoSource?.src, autoPlay]);
+
+  // Handle autoplay changes (for hover videos)
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !autoPlay) return;
+
+    // If autoplay becomes true and video is paused, start playing
+    if (video.paused) {
+      video.play().catch(() => {
+        // Autoplay prevented, user will need to interact
+      });
+    }
+  }, [autoPlay]);
 
   // Capture actual video dimensions when metadata loads
   useEffect(() => {
@@ -163,7 +234,6 @@ export function VideoPlayer({ video, objectFit = 'contain', isVertical = false, 
         onPlay={() => setIsPlaying(true)}
         onPause={() => setIsPlaying(false)}
       >
-        <source src={videoSource.src} type={videoSource.type} />
         {captionsUrl && (
           <track
             kind="captions"

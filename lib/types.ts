@@ -41,4 +41,33 @@ export interface About {
   services?: string[]; // Tag names for services
   clients?: Client[];
   email: string;
+  mediaItem?: {
+    mediaType: 'image' | 'video';
+    image?: {
+      asset: any;
+      lqip?: string;
+      alt?: string;
+    };
+    video?: {
+      asset: {
+        asset: {
+          playbackId: string;
+          data: any;
+          status: string;
+          assetId: string;
+        };
+      };
+      displayMode?: string;
+      controls?: boolean;
+      poster?: {
+        asset: any;
+        lqip?: string;
+        alt?: string;
+      };
+      captions?: {
+        asset: any;
+      };
+    };
+    alt?: string;
+  };
 }

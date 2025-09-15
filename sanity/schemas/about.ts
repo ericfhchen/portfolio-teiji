@@ -145,6 +145,12 @@ export default defineType({
       type: 'string',
       validation: (Rule) => Rule.required().email(),
     }),
+    defineField({
+      name: 'mediaItem',
+      title: 'Media Item',
+      type: 'mediaItem',
+      description: 'Optional media item to display on the about page (right side on desktop, below content on mobile)',
+    }),
   ],
   preview: {
     select: {

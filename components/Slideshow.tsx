@@ -4,7 +4,8 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { FeedItem } from '@/sanity/schema';
-import { getVideoSource } from '@/lib/mux';
+import { getVideoSource, shouldUseHls } from '@/lib/mux';
+import Hls from 'hls.js';
 
 interface SlideshowProps {
   items: FeedItem[];
@@ -168,11 +169,11 @@ export default function Slideshow({ items, section, autoPlayInterval = 5000 }: S
 // SlideshowVideoItem component for rendering video items in the slideshow
 function SlideshowVideoItem({ item }: { item: FeedItem }) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const hlsRef = useRef<Hls | null>(null);
   const [showVideo, setShowVideo] = useState(false);
 
-  // For slideshow, we always want to show the video if displayMode is thumbnail
-  // or show on hover if displayMode is hover
   const shouldShowVideo = item.displayMode === 'thumbnail' || item.displayMode === 'hover';
+  const videoSource = item.playbackId ? getVideoSource(item.playbackId) : null;
 
   useEffect(() => {
     if (shouldShowVideo) {
@@ -180,10 +181,66 @@ function SlideshowVideoItem({ item }: { item: FeedItem }) {
     }
   }, [shouldShowVideo]);
 
-  const videoSource = item.playbackId ? getVideoSource(item.playbackId) : null;
+  // Setup HLS.js for Chrome
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !videoSource?.src || !showVideo) return;
+
+    // Clean up previous HLS instance
+    if (hlsRef.current) {
+      hlsRef.current.destroy();
+      hlsRef.current = null;
+    }
+
+    // Check if browser supports HLS natively (Safari)
+    if (video.canPlayType('application/vnd.apple.mpegurl')) {
+      video.src = videoSource.src;
+    } else if (Hls.isSupported()) {
+      // Use HLS.js for Chrome and other browsers
+      const hls = new Hls({
+        enableWorker: false,
+        lowLatencyMode: true,
+      });
+      
+      hls.loadSource(videoSource.src);
+      hls.attachMedia(video);
+      
+      hls.on(Hls.Events.MANIFEST_PARSED, () => {
+        video.play().catch(() => {
+          // Autoplay prevented, user will need to interact
+        });
+      });
+      
+      hls.on(Hls.Events.ERROR, (event, data) => {
+        if (data.fatal) {
+          switch (data.type) {
+            case Hls.ErrorTypes.NETWORK_ERROR:
+              hls.startLoad();
+              break;
+            case Hls.ErrorTypes.MEDIA_ERROR:
+              hls.recoverMediaError();
+              break;
+            default:
+              hls.destroy();
+              break;
+          }
+        }
+      });
+      
+      hlsRef.current = hls;
+    }
+
+    return () => {
+      if (hlsRef.current) {
+        hlsRef.current.destroy();
+        hlsRef.current = null;
+      }
+    };
+  }, [videoSource?.src, showVideo]);
 
   return (
     <div className="relative w-full h-full">
+
       {/* Poster/Fallback Image - only render if src is not empty */}
       {item.src && item.src.trim() !== '' && (
         <Image
@@ -214,8 +271,12 @@ function SlideshowVideoItem({ item }: { item: FeedItem }) {
           muted={true}
           playsInline
           preload="metadata"
+          onError={(e) => {
+            // Handle video errors silently
+          }}
         >
-          <source src={videoSource.src} type={videoSource.type} />
+          {/* Fallback message for unsupported formats */}
+          <p>Your browser does not support the video format.</p>
         </video>
       )}
 

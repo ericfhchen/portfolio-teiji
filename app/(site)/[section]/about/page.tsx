@@ -5,6 +5,7 @@ import { aboutQuery } from '@/lib/queries';
 import { About } from '@/lib/types';
 import { PortableText } from '@portabletext/react';
 import GridLines from '@/components/GridLines';
+import MediaItem from '@/components/MediaItem';
 
 const validSections = ['art', 'design'] as const;
 type Section = typeof validSections[number];
@@ -150,13 +151,13 @@ export default async function AboutPage({
 
   // Art section layout (existing layout)
   return (
-    <>
+    <div className="fixed inset-0 overflow-hidden">
       <GridLines type="about" />
-      <div className="min-h-screen pt-24 pb-20 relative">
-        <div className="mx-auto px-4">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24">
+      <div className="h-full relative">
+        <div className="mx-auto px-4 h-full">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24 h-full">
             {/* Left side - Bio and CV */}
-            <div className="space-y-12">
+            <div className="space-y-12 mt-24 overflow-y-auto">
               {/* Bio */}
               {about.bio && about.bio.length > 0 && (
                 <div className="space-y-6">
@@ -185,16 +186,20 @@ export default async function AboutPage({
               )}
             </div>
 
-            {/* Right side - Empty for art section */}
-            <div className="hidden lg:block">
-              {/* Left blank as requested */}
+            {/* Right side - Media item for art section */}
+            <div className="hidden lg:block h-full">
+              {about.mediaItem && (
+                <div className="h-full w-full">
+                  <MediaItem mediaItem={about.mediaItem} className="h-full w-full" />
+                </div>
+              )}
             </div>
           </div>
         </div>
 
         {/* Contact - absolutely positioned at bottom for art section */}
         <div className="absolute bottom-6 left-0 w-full">
-          <div className="max-w-7xl mx-auto px-4">
+          <div className="max-w-7xl px-4">
             <div className="flex gap-6 text-sm">
               <span className="text-var">Contact</span>
               <a 
@@ -207,6 +212,6 @@ export default async function AboutPage({
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 }

@@ -50,26 +50,18 @@ export default async function SectionPage({
     const featuredImage = work.featuredImage;
     const isVideo = featuredImage?.mediaType === 'video';
     
-    console.log(`🔍 Processing work: ${work.title}`, { featuredImage, isVideo });
-    
     if (isVideo && featuredImage?.video) {
       // Handle video media type
       const video = featuredImage.video;
-      const playbackId = getPlaybackId(video); // Use enhanced function
-      
-      console.log(`🎥 Video data for "${work.title}":`, { playbackId, video });
+      const playbackId = getPlaybackId(video);
       
       // For videos, use MUX thumbnail as fallback if no poster
       let posterSrc = '';
       if (video.poster) {
         posterSrc = getImageUrl(video.poster, 800);
-        console.log(`📸 Using custom poster: ${posterSrc}`);
       } else if (playbackId) {
         // Use MUX thumbnail as fallback poster
         posterSrc = `https://image.mux.com/${playbackId}/thumbnail.jpg?width=800&fit_mode=preserve`;
-        console.log(`📸 Using MUX thumbnail: ${posterSrc}`);
-      } else {
-        console.error(`❌ No playback ID found for video in work: ${work.title}`);
       }
       
       const feedItem: FeedItem = {
@@ -90,7 +82,6 @@ export default async function SectionPage({
       return [feedItem];
     } else if (featuredImage?.image) {
       // Handle image media type
-      console.log(`🖼️ Image processing for "${work.title}"`);
       const feedItem: FeedItem = {
         _id: work._id,
         mediaType: 'image' as const,
@@ -106,12 +97,9 @@ export default async function SectionPage({
       return [feedItem];
     } else {
       // Fallback for missing media - return empty array to skip this item
-      console.warn(`⚠️ No valid media found for work: ${work.title}`);
       return [];
     }
   });
-
-  console.log(`📋 Final feed items count: ${feedItems.length}`);
 
   return (
     <div className="-mb-16">

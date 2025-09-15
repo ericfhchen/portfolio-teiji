@@ -110,7 +110,7 @@ export default function HoverMedia({
                 video={hoverMedia.videoData} 
                 objectFit="cover" 
                 isVertical={false}
-                autoPlay={true}
+                autoPlay={showHoverMedia}
                 showMuteButton={false}
               />
             ) : (
