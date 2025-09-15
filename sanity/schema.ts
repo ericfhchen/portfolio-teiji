@@ -24,7 +24,6 @@ export interface MediaItemData {
   // Video-specific fields
   playbackId?: string;
   poster?: string;
-  displayMode?: 'thumbnail' | 'hover';
   controls?: boolean;
   // Raw video data for VideoPlayer component
   videoData?: any;
@@ -46,7 +45,6 @@ export interface FeedItem {
   // Video-specific fields
   playbackId?: string;
   poster?: string;
-  displayMode?: 'thumbnail' | 'hover';
   controls?: boolean;
   // Raw video data for VideoPlayer component
   videoData?: any;

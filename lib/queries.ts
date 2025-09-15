@@ -14,6 +14,7 @@ export const workBySlugQuery = groq`
     slug,
     discipline,
     year,
+    client,
     "tags": tags[]->name,
     coverImage {
       mediaType,
@@ -37,7 +38,41 @@ export const workBySlugQuery = groq`
               assetId
             }
           },
-          displayMode,
+          controls,
+          poster {
+            ...,
+            "lqip": asset->metadata.lqip,
+            alt
+          },
+          captions {
+            asset
+          }
+        }
+      },
+      alt
+    },
+    heroAsset {
+      mediaType,
+      mediaType == "image" => {
+        image {
+          ...,
+          "lqip": asset->metadata.lqip,
+          alt
+        }
+      },
+      mediaType == "video" => {
+        video {
+          // Properly dereference the MUX asset
+          asset {
+            ...,
+            asset-> {
+              ...,
+              playbackId,
+              data,
+              status,
+              assetId
+            }
+          },
           controls,
           poster {
             ...,
@@ -73,7 +108,6 @@ export const workBySlugQuery = groq`
               assetId
             }
           },
-          displayMode,
           controls,
           poster {
             ...,
@@ -115,6 +149,16 @@ export const workBySlugQuery = groq`
       },
       _type == "videoMux" => {
         ...,
+        asset {
+          ...,
+          asset-> {
+            ...,
+            playbackId,
+            data,
+            status,
+            assetId
+          }
+        },
         poster {
           ...,
           "lqip": asset->metadata.lqip
@@ -175,7 +219,6 @@ export const workBySlugQuery = groq`
                   assetId
                 }
               },
-              displayMode,
               controls,
               poster {
                 ...,
@@ -202,32 +245,6 @@ export const workBySlugQuery = groq`
           }
         }
       }
-    },
-    gallery[] {
-      mediaType,
-      mediaType == "image" => {
-        image {
-          ...,
-          "lqip": asset->metadata.lqip,
-          alt
-        }
-      },
-      mediaType == "video" => {
-        video {
-          playbackId,
-          displayMode,
-          controls,
-          poster {
-            ...,
-            "lqip": asset->metadata.lqip,
-            alt
-          },
-          captions {
-            asset
-          }
-        }
-      },
-      alt
     }
   }
 `;
@@ -262,7 +279,6 @@ export const indexFeedQuery = groq`
               assetId
             }
           },
-          displayMode,
           controls,
           poster {
             ...,
@@ -297,7 +313,6 @@ export const indexFeedQuery = groq`
               assetId
             }
           },
-          displayMode,
           controls,
           poster {
             ...,
@@ -344,7 +359,6 @@ export const indexFeedByTagsQuery = groq`
               assetId
             }
           },
-          displayMode,
           controls,
           poster {
             ...,
@@ -379,7 +393,6 @@ export const indexFeedByTagsQuery = groq`
               assetId
             }
           },
-          displayMode,
           controls,
           poster {
             ...,
@@ -448,7 +461,6 @@ export const featuredWorksQuery = groq`
               assetId
             }
           },
-          displayMode,
           controls,
           poster {
             ...,
@@ -495,7 +507,6 @@ export const workPageQuery = groq`
               assetId
             }
           },
-          displayMode,
           controls,
           poster {
             ...,
@@ -531,7 +542,6 @@ export const workPageQuery = groq`
               assetId
             }
           },
-          displayMode,
           controls,
           poster {
             ...,
@@ -587,7 +597,6 @@ export const aboutQuery = groq`
               assetId
             }
           },
-          displayMode,
           controls,
           poster {
             ...,

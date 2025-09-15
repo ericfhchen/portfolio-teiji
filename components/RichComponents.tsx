@@ -54,7 +54,7 @@ const RichComponents: PortableTextComponents = {
       if (!media) return null;
       
       if (media.mediaType === 'video' && media.video) {
-        return <VideoLayout video={media.video} layout={layout} caption={caption} alt={media.alt} />;
+        return <VideoLayout video={media.video} layout={layout} caption={caption} alt={media.alt} isPortableText={true} />;
       }
       
       if (media.mediaType === 'image' && media.image) {
@@ -146,8 +146,8 @@ const RichComponents: PortableTextComponents = {
             />
             {/* Images centered within normal content width */}
             <figure className="relative z-10 mx-4 sm:mx-6 lg:mx-8 flex justify-center">
-              <div className="w-full max-w-[60%]">
-                <div className="grid grid-cols-2 gap-16">
+              <div className="w-full max-w-[90%] sm:max-w-[60%]">
+                <div className="grid grid-cols-2 gap-4 sm:gap-16">
                   {images
                     .map((imageItem: any, index: number) => {
                       const imageSource = getImageSource(imageItem);
@@ -188,6 +188,7 @@ const RichComponents: PortableTextComponents = {
     },
     
     videoMux: ({ value }) => {
+      // console.log('🎥 videoMux component received value:', value);
       const playbackIdToUse = getPlaybackId(value);
       if (!playbackIdToUse) {
         console.error('No valid playback ID found in video data:', value);
@@ -196,7 +197,7 @@ const RichComponents: PortableTextComponents = {
       
       try {
         // Use VideoLayout component for consistent vertical handling
-        return <VideoLayout video={value} layout="full" alt={value.alt} />;
+        return <VideoLayout video={value} layout="full" alt={value.alt} isPortableText={true} />;
       } catch (error) {
         console.error('Error rendering video:', error);
         return null;
@@ -282,24 +283,24 @@ const RichComponents: PortableTextComponents = {
               components={{
                 block: {
                   normal: ({ children }) => (
-                    <div className="w-3/5 mx-auto">
+                    <div className="w-full sm:w-3/5 mx-auto">
                       <p className="text-var">{children}</p>
                     </div>
                   ),
                   blockquote: ({ children }) => (
-                    <div className="w-3/5 mx-auto">
+                    <div className="w-full sm:w-3/5 mx-auto">
                       <blockquote className="border-l-4 border-var pl-6 text-muted italic">
                         {children}
                       </blockquote>
                     </div>
                   ),
                   caption: ({ children }) => (
-                    <div className="w-3/5 mx-auto">
+                    <div className="w-full sm:w-3/5 mx-auto">
                       <p className="text-sm text-muted text-center">{children}</p>
                     </div>
                   ),
                   small: ({ children }) => (
-                    <div className="w-3/5 mx-auto">
+                    <div className="w-full sm:w-3/5 mx-auto">
                       <p className="text-xs text-muted">{children}</p>
                     </div>
                   ),
@@ -420,24 +421,24 @@ const RichComponents: PortableTextComponents = {
 
   block: {
     normal: ({ children }) => (
-      <div className="w-3/5 mx-auto">
+      <div className="w-full sm:w-3/5 mx-auto">
         <p className="my-4 text-var">{children}</p>
       </div>
     ),
     blockquote: ({ children }) => (
-      <div className="w-3/5 mx-auto">
+      <div className="w-full sm:w-3/5 mx-auto">
         <blockquote className="my-6 border-l-4 border-var pl-6 text-muted italic">
           {children}
         </blockquote>
       </div>
     ),
     caption: ({ children }) => (
-      <div className="w-3/5 mx-auto">
+      <div className="w-full sm:w-3/5 mx-auto">
         <p className="my-2 text-sm text-muted text-center">{children}</p>
       </div>
     ),
     small: ({ children }) => (
-      <div className="w-3/5 mx-auto">
+      <div className="w-full sm:w-3/5 mx-auto">
         <p className="my-2 text-xs text-muted">{children}</p>
       </div>
     ),

@@ -71,7 +71,6 @@ export default function Lightbox({ items, section }: LightboxProps) {
         videoData: currentItem.videoData,
         playbackId: currentItem.playbackId,
         poster: currentItem.poster,
-        displayMode: currentItem.displayMode,
         controls: currentItem.controls,
       }
     ];
@@ -86,7 +85,6 @@ export default function Lightbox({ items, section }: LightboxProps) {
         videoData: galleryItem.videoData,
         playbackId: galleryItem.playbackId,
         poster: galleryItem.poster,
-        displayMode: galleryItem.displayMode,
         controls: galleryItem.controls,
       }));
       mediaItems.push(...galleryItems);
@@ -344,8 +342,8 @@ export default function Lightbox({ items, section }: LightboxProps) {
         {/* Controls row - above footer */}
         <div className="absolute bottom-16 md:bottom-16 left-0 right-0 z-20">
           <div className="flex justify-between items-center px-4">
-            {/* Left: Gallery number indicator - fixed height container */}
-            <div className="h-4 flex items-center">
+            {/* Left: Gallery number indicator - desktop only */}
+            <div className="h-4 flex items-center hidden md:flex">
               {allMediaItems.length > 1 && (
                 <div className="text-var text-xs font-light tracking-wider">
                   {currentGalleryIndex + 1}/{allMediaItems.length}
@@ -353,8 +351,8 @@ export default function Lightbox({ items, section }: LightboxProps) {
               )}
             </div>
             
-            {/* Right: Mute button - fixed height container */}
-            <div className="h-4 flex items-center">
+            {/* Right: Mute button - desktop only */}
+            <div className="h-4 flex items-center hidden md:flex">
               {currentMediaItem.mediaType === 'video' && currentMediaItem.videoData && (
                 <button
                   onClick={toggleMute}
@@ -364,6 +362,28 @@ export default function Lightbox({ items, section }: LightboxProps) {
                 </button>
               )}
             </div>
+          </div>
+        </div>
+
+        {/* Mobile controls - fixed position bottom right */}
+        <div className="fixed bottom-16 right-4 z-30 md:hidden">
+          <div className="flex flex-col items-end gap-0">
+            {/* Mute button - top */}
+            {currentMediaItem.mediaType === 'video' && currentMediaItem.videoData && (
+              <button
+                onClick={toggleMute}
+                className="text-var text-xs font-light tracking-wider hover:opacity-60 transition-opacity"
+              >
+                {isMuted ? 'UNMUTE' : 'MUTE'}
+              </button>
+            )}
+            
+            {/* Gallery number indicator - bottom */}
+            {allMediaItems.length > 1 && (
+              <div className="text-var text-xs font-light tracking-wider">
+                {currentGalleryIndex + 1}/{allMediaItems.length}
+              </div>
+            )}
           </div>
         </div>
 

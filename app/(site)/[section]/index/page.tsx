@@ -72,7 +72,6 @@ async function getFeedData(section: string, tags?: string[]) {
         ...(isVideo && {
           playbackId: mediaData.video?.asset?.asset?.playbackId,
           poster: mediaData.video?.poster ? getImageUrl(mediaData.video.poster, 800) : undefined,
-          displayMode: mediaData.video?.displayMode || 'thumbnail',
           controls: mediaData.video?.controls ?? false,
           videoData: mediaData.video, // Store raw video data for VideoPlayer
         }),
@@ -112,7 +111,6 @@ async function getFeedData(section: string, tags?: string[]) {
             ...(galleryIsVideo && {
               playbackId: galleryMedia.video?.asset?.asset?.playbackId,
               poster: galleryMedia.video?.poster ? getImageUrl(galleryMedia.video.poster, 800) : undefined,
-              displayMode: galleryMedia.video?.displayMode || 'thumbnail',
               controls: galleryMedia.video?.controls ?? false,
               videoData: galleryMedia.video,
             }),

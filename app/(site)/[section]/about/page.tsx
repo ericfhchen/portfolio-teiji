@@ -156,7 +156,7 @@ export default async function AboutPage({
       <div className="h-full relative">
         <div className="mx-auto px-4 h-full">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24 h-full">
-            {/* Left side - Bio and CV */}
+            {/* Left side - Bio, CV, and Contact (mobile) */}
             <div className="space-y-12 mt-24 overflow-y-auto">
               {/* Bio */}
               {about.bio && about.bio.length > 0 && (
@@ -172,7 +172,7 @@ export default async function AboutPage({
                 <div className="space-y-6">
                   <div className="space-y-3">
                     {about.cv.map((item) => (
-                      <div key={item._key} className="flex gap-6">
+                      <div key={item._key} className="flex sm:gap-6">
                         <div className="w-16 shrink-0 text-sm text-var">
                           {item.year}
                         </div>
@@ -184,6 +184,19 @@ export default async function AboutPage({
                   </div>
                 </div>
               )}
+
+              {/* Contact - visible on mobile, hidden on desktop */}
+              <div className="lg:hidden space-y-6">
+                <div className="flex gap-4 sm:gap-6 text-sm">
+                  <span className="text-var">Contact</span>
+                  <a 
+                    href={`mailto:${about.email}`} 
+                    className="text-var hover:text-muted transition-colors"
+                  >
+                    {about.email}
+                  </a>
+                </div>
+              </div>
             </div>
 
             {/* Right side - Media item for art section */}
@@ -197,8 +210,8 @@ export default async function AboutPage({
           </div>
         </div>
 
-        {/* Contact - absolutely positioned at bottom for art section */}
-        <div className="absolute bottom-6 left-0 w-full">
+        {/* Contact - absolutely positioned at bottom for art section (desktop only) */}
+        <div className="hidden lg:block absolute bottom-6 left-0 w-full">
           <div className="max-w-7xl px-4">
             <div className="flex gap-6 text-sm">
               <span className="text-var">Contact</span>

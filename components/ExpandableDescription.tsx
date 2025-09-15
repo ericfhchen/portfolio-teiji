@@ -12,17 +12,13 @@ export default function ExpandableDescription({ description }: ExpandableDescrip
   if (!description) return null;
   
   // Check if text is likely to be longer than 2 lines
-  const isLongText = description.length > 150; // Rough estimate for 2 lines
+  // On mobile, allow more text before truncating (roughly 3-4 lines)
+  const isLongText = description.length > 150; // Rough estimate for 2 lines on desktop
   
   return (
     <div className="text-var">
       <div 
-        className={!isExpanded && isLongText ? 'overflow-hidden' : ''}
-        style={!isExpanded && isLongText ? {
-          display: '-webkit-box',
-          WebkitLineClamp: 2,
-          WebkitBoxOrient: 'vertical' as const,
-        } : undefined}
+        className={!isExpanded && isLongText ? 'overflow-hidden line-clamp-6 md:line-clamp-2' : ''}
       >
         {description}
       </div>

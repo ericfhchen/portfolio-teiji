@@ -1,17 +1,19 @@
 'use client';
 
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { getVideoSourceFromMux, getPlaybackId, posterFromSanity } from '@/lib/mux';
+import { getVideoSourceFromMux, getPlaybackId } from '@/lib/mux';
 import { client } from '@/lib/sanity.client';
 import { isVerticalMedia } from '@/lib/image';
 import Hls from 'hls.js';
 
+
 // VideoLayout component for layout-aware video rendering
-export function VideoLayout({ video, layout, caption, alt }: { 
+export function VideoLayout({ video, layout, caption, alt, isPortableText = false }: { 
   video: any; 
   layout: string; 
   caption?: string; 
   alt?: string; 
+  isPortableText?: boolean;
 }) {
   const layoutStyles = {
     full: 'w-full max-w-4xl',
@@ -33,11 +35,30 @@ export function VideoLayout({ video, layout, caption, alt }: {
         />
         {/* Video centered within normal content width with layout sizing */}
         <figure className="relative z-10 mx-4 sm:mx-6 lg:mx-8 flex justify-center">
-          <div className={`relative ${isVertical ? 'max-h-[60vh]' : 'aspect-[3/2]'} overflow-hidden ${layoutStyles[layout as keyof typeof layoutStyles] || layoutStyles.full}`}>
-            <VideoPlayer video={video} objectFit="contain" isVertical={isVertical} />
+          <div className={`relative ${
+            isPortableText 
+              ? video?.width === 'half' 
+                ? 'w-full md:w-1/2' 
+                : 'w-full md:w-full md:max-w-4xl'
+              : isVertical 
+                ? 'max-h-[60vh]' 
+                : 'aspect-[3/2]'
+          } overflow-hidden ${
+            isPortableText 
+              ? '' 
+              : layoutStyles[layout as keyof typeof layoutStyles] || layoutStyles.full
+          }`}>
+            <VideoPlayer 
+              video={video} 
+              objectFit="contain" 
+              isVertical={isVertical} 
+              showMuteButton={!isPortableText}
+            />
           </div>
         </figure>
       </div>
+      
+      
       {(caption || alt) && (
         <figcaption className="mt-2 text-sm text-muted text-center">
           {caption || alt}
@@ -80,13 +101,11 @@ export function VideoPlayer({ video, objectFit = 'contain', isVertical = false, 
   }
 
   let videoSource;
-  let posterUrl;
   try {
     videoSource = getVideoSourceFromMux(video);
     if (!videoSource?.src) {
       return null;
     }
-    posterUrl = posterFromSanity(video.poster);
   } catch (error) {
     return null;
   }
@@ -221,7 +240,7 @@ export function VideoPlayer({ video, objectFit = 'contain', isVertical = false, 
     : isVertical;
 
   return (
-    <div className="relative group cursor-pointer w-full h-full" onClick={handleVideoClick}>
+    <div className="relative group cursor-pointer w-full h-full" onClick={handleVideoClick} data-video-container>
       <video
         ref={videoRef}
         className={`w-full h-full object-${objectFit}`}
@@ -230,7 +249,6 @@ export function VideoPlayer({ video, objectFit = 'contain', isVertical = false, 
         muted={isMuted}
         playsInline
         preload="metadata"
-        {...(posterUrl && { poster: posterUrl })}
         onPlay={() => setIsPlaying(true)}
         onPause={() => setIsPlaying(false)}
       >
@@ -250,7 +268,7 @@ export function VideoPlayer({ video, objectFit = 'contain', isVertical = false, 
       {showMuteButton && (
         <button
           onClick={toggleMute}
-          className="absolute bottom-0 right-0 z-10 text-var text-xs font-light tracking-wider hover:opacity-60 transition-opacity bg-black/20 px-2 py-1 rounded"
+          className="absolute -bottom-2 md:bottom-0 right-0 z-10 text-var text-xs font-light tracking-wider hover:opacity-60 transition-opacity px-0 md:px-2 py-1"
           aria-label={isMuted ? 'Unmute video' : 'Mute video'}
         >
           {isMuted ? 'UNMUTE' : 'MUTE'}

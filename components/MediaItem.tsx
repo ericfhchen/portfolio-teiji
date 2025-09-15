@@ -21,7 +21,6 @@ interface MediaItemProps {
           assetId: string;
         };
       };
-      displayMode?: string;
       controls?: boolean;
       poster?: {
         asset: any;

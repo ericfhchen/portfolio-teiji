@@ -76,7 +76,6 @@ async function getWorkData(section: string) {
       ...(staticMedia?.videoData && {
         playbackId: staticMedia.videoData?.asset?.asset?.playbackId || staticMedia.videoData?.asset?.playbackId,
         poster: staticMedia.videoData?.poster ? getImageUrl(staticMedia.videoData.poster, 800) : undefined,
-        displayMode: staticMedia.videoData?.displayMode || 'thumbnail',
         controls: staticMedia.videoData?.controls ?? false,
         videoData: staticMedia.videoData,
       }),

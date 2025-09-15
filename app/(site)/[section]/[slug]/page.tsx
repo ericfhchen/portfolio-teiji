@@ -31,12 +31,14 @@ export async function generateMetadata({
     return {};
   }
 
-  // Handle both image and video cover media for metadata
+  // Handle both image and video media for metadata
+  // Use heroAsset if available, otherwise fall back to coverImage
+  const metaMedia = work.heroAsset || work.coverImage;
   let metaImage = null;
-  if (work.coverImage?.mediaType === 'image' && work.coverImage.image) {
-    metaImage = getImageProps(work.coverImage.image, 1200, 630);
-  } else if (work.coverImage?.mediaType === 'video' && work.coverImage.video?.poster) {
-    metaImage = getImageProps(work.coverImage.video.poster, 1200, 630);
+  if (metaMedia?.mediaType === 'image' && metaMedia.image) {
+    metaImage = getImageProps(metaMedia.image, 1200, 630);
+  } else if (metaMedia?.mediaType === 'video' && metaMedia.video?.poster) {
+    metaImage = getImageProps(metaMedia.video.poster, 1200, 630);
   }
   
   return {
@@ -62,20 +64,22 @@ export default async function WorkPage({
     notFound();
   }
 
-  // Prepare cover media (image or video) for the hero section
+  // Prepare hero media (image or video) for the hero section
+  // Use heroAsset if available, otherwise fall back to coverImage
+  const heroMedia = work.heroAsset || work.coverImage;
   let coverImage = null;
   let coverVideo = null;
   let isVertical = false;
   let aspectRatio = 16 / 9; // default
   
-  if (work.coverImage?.mediaType === 'image' && work.coverImage.image) {
-    coverImage = getImageProps(work.coverImage.image, 1600, 900);
-    isVertical = isVerticalMedia(work.coverImage.image);
-    aspectRatio = getMediaAspectRatio(work.coverImage.image);
-  } else if (work.coverImage?.mediaType === 'video' && work.coverImage.video) {
-    coverVideo = work.coverImage.video;
-    isVertical = isVerticalMedia(work.coverImage.video);
-    aspectRatio = getMediaAspectRatio(work.coverImage.video);
+  if (heroMedia?.mediaType === 'image' && heroMedia.image) {
+    coverImage = getImageProps(heroMedia.image, 1600, 900);
+    isVertical = isVerticalMedia(heroMedia.image);
+    aspectRatio = getMediaAspectRatio(heroMedia.image);
+  } else if (heroMedia?.mediaType === 'video' && heroMedia.video) {
+    coverVideo = heroMedia.video;
+    isVertical = isVerticalMedia(heroMedia.video);
+    aspectRatio = getMediaAspectRatio(heroMedia.video);
   }
 
   return (
@@ -172,9 +176,10 @@ export default async function WorkPage({
 
         {/* Bottom text layout - matching lightbox component */}
         <div className="relative z-20">
-          <div className="grid grid-cols-2 gap-16 px-8 py-6">
-            {/* Left side: Year and Title only */}
-            <div className="grid grid-cols-[auto_1fr] gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16 px-8 py-6">
+            {/* Mobile: Year and Title horizontally, then Description and Tags below */}
+            {/* Desktop: Left side: Year and Title only */}
+            <div className="grid grid-cols-[auto_1fr] gap-6 md:gap-8">
               {/* Year column - minimal width */}
               <div className="text-var">
                 {work.year || ''}
@@ -188,8 +193,16 @@ export default async function WorkPage({
               </div>
             </div>
 
-            {/* Right side: Description and Tags */}
-            <div className="space-y-4">
+            {/* Mobile: Description and Tags below year/title */}
+            {/* Desktop: Right side: Description and Tags */}
+            <div className="space-y-4 md:col-start-2">
+              {/* Client name positioned to the right of center line */}
+              {work.client && (
+                <div className="text-right text-var font-normal">
+                  {work.client}
+                </div>
+              )}
+              
               {/* Description first - expandable */}
               {work.description && (
                 <ExpandableDescription description={work.description} />
@@ -199,7 +212,7 @@ export default async function WorkPage({
               {work.tags && work.tags.length > 0 && (
                 <div className="flex flex-wrap gap-1">
                   {work.tags.map((tag: string, index: number) => (
-                    <span key={`${tag}-${index}`} className="text-muted font-light">
+                    <span key={`${tag}-${index}`} className="text-muted font-light text-sm md:text-base">
                       <Link
                         href={`/${section}/index?tags=${encodeURIComponent(tag)}`}
                         className="hover:text-var transition-colors focus:outline-none focus:text-var tracking-wider"

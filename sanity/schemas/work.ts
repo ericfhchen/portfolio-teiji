@@ -25,6 +25,12 @@ export default defineType({
       description: 'Image or video that appears on hover in the work grid (16:9 aspect ratio recommended)',
     }),
     defineField({
+      name: 'heroAsset',
+      title: 'Hero Asset',
+      type: 'mediaItem',
+      description: 'Dedicated hero image or video for the project page. If not set, will fall back to cover image.',
+    }),
+    defineField({
       name: 'title',
       title: 'Title',
       type: 'string',
@@ -34,6 +40,11 @@ export default defineType({
       name: 'year',
       title: 'Year',
       type: 'number',
+    }),
+    defineField({
+      name: 'client',
+      title: 'Client',
+      type: 'string',
     }),
     defineField({
       name: 'location',
@@ -103,17 +114,6 @@ export default defineType({
           title: 'Video (MUX)',
         },
       ],
-    }),
-    defineField({
-      name: 'gallery',
-      title: 'Gallery',
-      type: 'array',
-      of: [
-        {
-          type: 'mediaItem',
-        },
-      ],
-      description: 'Images and videos that will appear in the index feed for this work',
     }),
     defineField({
       name: 'tags',

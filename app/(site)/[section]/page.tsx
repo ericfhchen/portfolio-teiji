@@ -76,7 +76,6 @@ export default async function SectionPage({
         description: work.description,
         index: idx,
         playbackId: playbackId || undefined,
-        displayMode: video.displayMode || 'thumbnail',
         controls: video.controls,
       };
       return [feedItem];

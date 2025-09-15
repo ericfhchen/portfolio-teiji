@@ -57,7 +57,6 @@ export interface About {
           assetId: string;
         };
       };
-      displayMode?: string;
       controls?: boolean;
       poster?: {
         asset: any;

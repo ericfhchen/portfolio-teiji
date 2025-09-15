@@ -29,32 +29,43 @@ export default defineType({
       description: 'Optional poster image displayed before video loads',
     }),
     defineField({
-      name: 'displayMode',
-      title: 'Display Mode',
+      name: 'width',
+      title: 'Video Width',
       type: 'string',
       options: {
         list: [
-          { title: 'Video as Thumbnail', value: 'thumbnail' },
-          { title: 'Show on Hover', value: 'hover' },
+          { title: 'Full Width', value: 'full' },
+          { title: 'Half Width', value: 'half' },
         ],
         layout: 'radio',
       },
-      initialValue: 'thumbnail',
-      description: 'How to display the video in grid views',
+      initialValue: 'full',
+      description: 'Width of the video in portable text content',
+      fieldset: 'layout',
     }),
     
 
+  ],
+  fieldsets: [
+    {
+      name: 'layout',
+      title: 'Layout Options',
+      options: {
+        collapsible: true,
+        collapsed: true,
+      },
+    },
   ],
   preview: {
     select: {
       title: 'playbackId',
       poster: 'poster',
-      displayMode: 'displayMode',
+      width: 'width',
     },
-    prepare({ title, poster, displayMode }) {
+    prepare({ title, poster, width }) {
       return {
         title: `Video: ${title || 'No playback ID'}`,
-        subtitle: `Display: ${displayMode || 'thumbnail'}`,
+        subtitle: `Width: ${width || 'full'}`,
         media: poster,
       }
     },

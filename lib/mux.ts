@@ -60,46 +60,69 @@ export function getPlaybackId(videoData: any): string | null {
     return null;
   }
 
+  // Debug: Log the actual data structure to understand what we're working with
+  // console.log('🔍 getPlaybackId: Video data structure:', JSON.stringify(videoData, null, 2));
+
   // Check for various possible structures from MUX plugin
   
-  // Structure 1: { asset: { asset: { playbackId: "..." } } } - NEW: nested asset structure
-  if (videoData?.asset?.asset?.playbackId) {
-    return videoData.asset.asset.playbackId;
+  // Structure 1: Direct playbackId field (most common in current MUX plugin)
+  if (videoData?.playbackId) {
+    // console.log('✅ Found playbackId in direct field:', videoData.playbackId);
+    return videoData.playbackId;
   }
 
-  // Structure 2: { asset: { playbackId: "..." } }
+  // Structure 2: { asset: { playbackId: "..." } } - standard MUX structure
   if (videoData?.asset?.playbackId) {
+    // console.log('✅ Found playbackId in asset field:', videoData.asset.playbackId);
     return videoData.asset.playbackId;
   }
 
-  // Structure 3: { asset: { data: { playback_ids: [{ id: "..." }] } } }
+  // Structure 3: { asset: { asset: { playbackId: "..." } } } - nested asset structure
+  if (videoData?.asset?.asset?.playbackId) {
+    // console.log('✅ Found playbackId in nested asset field:', videoData.asset.asset.playbackId);
+    return videoData.asset.asset.playbackId;
+  }
+
+  // Structure 4: { asset: { data: { playback_ids: [{ id: "..." }] } } }
   if (videoData?.asset?.data?.playback_ids?.[0]?.id) {
+    // console.log('✅ Found playbackId in data.playback_ids:', videoData.asset.data.playback_ids[0].id);
     return videoData.asset.data.playback_ids[0].id;
   }
 
-  // Structure 4: { asset: { asset: { data: { playback_ids: [{ id: "..." }] } } } } - nested version
+  // Structure 5: { asset: { asset: { data: { playback_ids: [{ id: "..." }] } } } } - nested version
   if (videoData?.asset?.asset?.data?.playback_ids?.[0]?.id) {
+    // console.log('✅ Found playbackId in nested data.playback_ids:', videoData.asset.asset.data.playback_ids[0].id);
     return videoData.asset.asset.data.playback_ids[0].id;
-  }
-
-  // Structure 5: Direct playbackId field
-  if (videoData?.playbackId) {
-    return videoData.playbackId;
   }
 
   // Structure 6: { asset: { assetId: "..." } } - some older MUX versions
   if (videoData?.asset?.assetId) {
+    // console.log('✅ Found assetId in asset field:', videoData.asset.assetId);
     return videoData.asset.assetId;
   }
 
   // Structure 7: { asset: { asset: { assetId: "..." } } } - nested version
   if (videoData?.asset?.asset?.assetId) {
+    // console.log('✅ Found assetId in nested asset field:', videoData.asset.asset.assetId);
     return videoData.asset.asset.assetId;
   }
 
   // Structure 8: Check if the nested asset object is the playback ID (string)
   if (typeof videoData?.asset?.asset === 'string') {
+    // console.log('✅ Found string asset as playbackId:', videoData.asset.asset);
     return videoData.asset.asset;
+  }
+
+  // Structure 9: Check for MUX metadata structure with playbacks array
+  if (videoData?.asset?.metadata?.playbacks?.[0]?._id) {
+    // console.log('✅ Found playbackId in metadata.playbacks:', videoData.asset.metadata.playbacks[0]._id);
+    return videoData.asset.metadata.playbacks[0]._id;
+  }
+
+  // Structure 10: Check for nested asset metadata structure
+  if (videoData?.asset?.asset?.metadata?.playbacks?.[0]?._id) {
+    // console.log('✅ Found playbackId in nested metadata.playbacks:', videoData.asset.asset.metadata.playbacks[0]._id);
+    return videoData.asset.asset.metadata.playbacks[0]._id;
   }
   return null;
 }
