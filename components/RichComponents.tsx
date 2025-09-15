@@ -1,7 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { PortableText, PortableTextComponents } from 'next-sanity';
-import { getImageProps } from '@/lib/image';
+import { getImageProps, isVerticalMedia } from '@/lib/image';
 import { getVideoSourceFromMux, getPlaybackId, posterFromSanity } from '@/lib/mux';
 import { client } from '@/lib/sanity.client';
 import ImageWithGrid from '@/components/ImageWithGrid';

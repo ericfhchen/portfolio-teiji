@@ -56,7 +56,7 @@ export default function Header({ currentSection }: HeaderProps) {
       <nav className={`pointer-events-auto fixed z-50 h-12 md:h-16 
         max-md:inset-x-0 max-md:bottom-0
         md:top-0 ${currentSection === 'art' ? 'md:left-0' : 'md:right-0'}`}>
-        <div className="flex items-center h-full max-md:justify-between max-md:w-full max-md:px-4 md:gap-12 md:px-4">
+        <div className="flex items-center h-full max-md:justify-between max-md:w-full max-md:px-8 md:gap-12 md:px-8">
           <Link 
             href={`/${currentSection}/work`} 
             className={`text-sm font-medium transition-colors ${

@@ -4,11 +4,12 @@ import Link from 'next/link';
 import { PortableText } from '@portabletext/react';
 import { client } from '@/lib/sanity.client';
 import { workBySlugQuery, workSlugParamsQuery } from '@/lib/queries';
-import { getImageProps } from '@/lib/image';
+import { getImageProps, isVerticalMedia, getMediaAspectRatio } from '@/lib/image';
 import RichComponents from '@/components/RichComponents';
 import Prose from '@/components/Prose';
 import GridLines from '@/components/GridLines';
 import ExpandableDescription from '@/components/ExpandableDescription';
+import { VideoPlayer } from '@/components/VideoPlayer';
 
 export async function generateStaticParams() {
   const slugs = await client.fetch(workSlugParamsQuery);
@@ -30,7 +31,13 @@ export async function generateMetadata({
     return {};
   }
 
-  const coverImage = getImageProps(work.coverImage, 1200, 630);
+  // Handle both image and video cover media for metadata
+  let metaImage = null;
+  if (work.coverImage?.mediaType === 'image' && work.coverImage.image) {
+    metaImage = getImageProps(work.coverImage.image, 1200, 630);
+  } else if (work.coverImage?.mediaType === 'video' && work.coverImage.video?.poster) {
+    metaImage = getImageProps(work.coverImage.video.poster, 1200, 630);
+  }
   
   return {
     title: `${work.title} - Tei-ji`,
@@ -38,7 +45,7 @@ export async function generateMetadata({
     openGraph: {
       title: work.title,
       description: work.description || `${work.title} - ${work.discipline} work`,
-      images: coverImage ? [{ url: coverImage.src, width: 1200, height: 630 }] : [],
+      images: metaImage ? [{ url: metaImage.src, width: 1200, height: 630 }] : [],
     },
   };
 }
@@ -55,14 +62,28 @@ export default async function WorkPage({
     notFound();
   }
 
-  const coverImage = getImageProps(work.coverImage, 1600, 900);
+  // Prepare cover media (image or video) for the hero section
+  let coverImage = null;
+  let coverVideo = null;
+  let isVertical = false;
+  let aspectRatio = 16 / 9; // default
+  
+  if (work.coverImage?.mediaType === 'image' && work.coverImage.image) {
+    coverImage = getImageProps(work.coverImage.image, 1600, 900);
+    isVertical = isVerticalMedia(work.coverImage.image);
+    aspectRatio = getMediaAspectRatio(work.coverImage.image);
+  } else if (work.coverImage?.mediaType === 'video' && work.coverImage.video) {
+    coverVideo = work.coverImage.video;
+    isVertical = isVerticalMedia(work.coverImage.video);
+    aspectRatio = getMediaAspectRatio(work.coverImage.video);
+  }
 
   return (
     <>
       <GridLines type="project" />
       <div className="relative z-10 min-h-screen flex flex-col">
-        {/* Hero Section - similar to lightbox layout */}
-        {coverImage && (
+        {/* Hero Section - handles both image and video */}
+        {(coverImage || coverVideo) && (
           <div className="flex-1 flex items-center justify-center">
             <div className="relative w-full">
               {/* Horizontal hairline across the full width at vertical center */}
@@ -72,22 +93,78 @@ export default async function WorkPage({
               style={{ height: '0.5px' }}
               />
               
-              {/* Hero image container */}
+              {/* Hero media container */}
               <div className="relative overflow-hidden mx-auto w-full p-8 mt-8">
-                <div className="relative aspect-[16/9]">
-                  <Image
-                    src={coverImage.src}
-                    alt={coverImage.alt}
-                    fill
-                    className="object-contain object-center"
-                    {...(coverImage.hasBlur && {
-                      placeholder: "blur" as const,
-                      blurDataURL: coverImage.blurDataURL,
-                    })}
-                    sizes="(max-width: 1024px) 100vw, 1024px"
-                    priority
-                  />
-                </div>
+                {isVertical ? (
+                  // Vertical media: constrain by height, center horizontally
+                  <div className="flex justify-center items-center" style={{ height: 'calc(90vh - 4rem)' }}>
+                    {coverImage ? (
+                      <div 
+                        className="relative"
+                        style={{ 
+                          height: 'calc(90vh - 4rem)',
+                          width: `calc((90vh - 4rem) * ${aspectRatio})`,
+                          minWidth: '200px'
+                        }}
+                      >
+                        <Image
+                          src={coverImage.src}
+                          alt={coverImage.alt}
+                          fill
+                          className="object-contain object-center"
+                          {...(coverImage.hasBlur && {
+                            placeholder: "blur" as const,
+                            blurDataURL: coverImage.blurDataURL,
+                          })}
+                          sizes="(max-width: 768px) 50vw, (max-width: 1024px) 40vw, 30vw"
+                          priority
+                        />
+                      </div>
+                    ) : coverVideo ? (
+                      <div className="h-full flex items-center justify-center">
+                        <VideoPlayer video={coverVideo} objectFit="contain" isVertical={true} />
+                      </div>
+                    ) : null}
+                  </div>
+                ) : (
+                  // Horizontal media: height-constrained with proper aspect ratio
+                  <div className="flex justify-center items-center" style={{ height: 'calc(90vh - 4rem)' }}>
+                    {coverImage ? (
+                      <div 
+                        className="relative"
+                        style={{ 
+                          height: 'calc(90vh - 4rem)',
+                          width: `calc((90vh - 4rem) * ${aspectRatio})`,
+                          maxWidth: '100%'
+                        }}
+                      >
+                        <Image
+                          src={coverImage.src}
+                          alt={coverImage.alt}
+                          fill
+                          className="object-contain object-center"
+                          {...(coverImage.hasBlur && {
+                            placeholder: "blur" as const,
+                            blurDataURL: coverImage.blurDataURL,
+                          })}
+                          sizes="(max-width: 1024px) 100vw, 1024px"
+                          priority
+                        />
+                      </div>
+                    ) : coverVideo ? (
+                      <div 
+                        className="relative"
+                        style={{ 
+                          height: 'calc(90vh - 4rem)',
+                          width: `calc((90vh - 4rem) * ${aspectRatio})`,
+                          maxWidth: '100%'
+                        }}
+                      >
+                        <VideoPlayer video={coverVideo} objectFit="contain" isVertical={false} />
+                      </div>
+                    ) : null}
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -138,6 +215,7 @@ export default async function WorkPage({
           </div>
         </div>
       </div>
+
 
       {/* Content Section */}
       {work.content && work.content.length > 0 && (

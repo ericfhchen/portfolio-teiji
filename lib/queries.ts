@@ -26,8 +26,16 @@ export const workBySlugQuery = groq`
       },
       mediaType == "video" => {
         video {
+          // Properly dereference the MUX asset
           asset {
-            playbackId
+            ...,
+            asset-> {
+              ...,
+              playbackId,
+              data,
+              status,
+              assetId
+            }
           },
           displayMode,
           controls,
@@ -71,17 +79,9 @@ export const workBySlugQuery = groq`
       },
       _type == "videoMux" => {
         ...,
-        asset {
-          playbackId
-        },
         poster {
           ...,
-          "lqip": asset->metadata.lqip,
-          alt
-        },
-        displayMode,
-        captions {
-          asset
+          "lqip": asset->metadata.lqip
         }
       },
       _type == "imageRow" => {
@@ -128,10 +128,19 @@ export const workBySlugQuery = groq`
           },
           mediaType == "video" => {
             video {
+              // Properly dereference the MUX asset
               asset {
-                playbackId
+                ...,
+                asset-> {
+                  ...,
+                  playbackId,
+                  data,
+                  status,
+                  assetId
+                }
               },
               displayMode,
+              controls,
               poster {
                 ...,
                 "lqip": asset->metadata.lqip,
@@ -169,9 +178,7 @@ export const workBySlugQuery = groq`
       },
       mediaType == "video" => {
         video {
-          asset {
-            playbackId
-          },
+          playbackId,
           displayMode,
           controls,
           poster {
@@ -264,8 +271,16 @@ export const featuredWorksQuery = groq`
       },
       mediaType == "video" => {
         video {
+          // Properly dereference the MUX asset
           asset {
-            playbackId
+            ...,
+            asset-> {
+              ...,
+              playbackId,
+              data,
+              status,
+              assetId
+            }
           },
           displayMode,
           controls,
@@ -303,9 +318,7 @@ export const workPageQuery = groq`
       },
       mediaType == "video" => {
         video {
-          asset {
-            playbackId
-          },
+          playbackId,
           displayMode,
           controls,
           poster {

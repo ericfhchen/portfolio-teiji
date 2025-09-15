@@ -32,31 +32,87 @@ export function getVideoSource(playbackId: string) {
     return null;
   }
   
-  if (shouldUseHls()) {
-    return {
-      src: muxHlsUrl(playbackId),
-      type: 'application/vnd.apple.mpegurl',
-    };
-  }
-  
+  // Always use HLS for video playback since it's widely supported and doesn't require MP4 renditions
   return {
-    src: muxMp4Url(playbackId, 'medium'),
-    type: 'video/mp4',
+    src: muxHlsUrl(playbackId),
+    type: 'application/vnd.apple.mpegurl',
   };
+  
+  // Old logic that caused the MP4 404 error:
+  // if (shouldUseHls()) {
+  //   return {
+  //     src: muxHlsUrl(playbackId),
+  //     type: 'application/vnd.apple.mpegurl',
+  //   };
+  // }
+  // 
+  // return {
+  //   src: muxMp4Url(playbackId, 'medium'),
+  //   type: 'video/mp4',
+  // };
 }
 
-// Helper function to extract playbackId from MUX plugin data structure
+// Enhanced function to extract playbackId from various MUX data structures
 export function getPlaybackId(videoData: any): string | null {
-  // Check if it's the new MUX plugin structure with asset field
+  if (!videoData) {
+    console.warn('getPlaybackId: No video data provided');
+    return null;
+  }
+
+  // Log the structure for debugging
+  console.log('getPlaybackId input:', videoData);
+
+  // Check for various possible structures from MUX plugin
+  
+  // Structure 1: { asset: { asset: { playbackId: "..." } } } - NEW: nested asset structure
+  if (videoData?.asset?.asset?.playbackId) {
+    console.log('Found playbackId in asset.asset.playbackId:', videoData.asset.asset.playbackId);
+    return videoData.asset.asset.playbackId;
+  }
+
+  // Structure 2: { asset: { playbackId: "..." } }
   if (videoData?.asset?.playbackId) {
+    console.log('Found playbackId in asset.playbackId:', videoData.asset.playbackId);
     return videoData.asset.playbackId;
   }
-  
-  // Fallback to old structure with direct playbackId field
+
+  // Structure 3: { asset: { data: { playback_ids: [{ id: "..." }] } } }
+  if (videoData?.asset?.data?.playback_ids?.[0]?.id) {
+    console.log('Found playbackId in asset.data.playback_ids[0].id:', videoData.asset.data.playback_ids[0].id);
+    return videoData.asset.data.playback_ids[0].id;
+  }
+
+  // Structure 4: { asset: { asset: { data: { playback_ids: [{ id: "..." }] } } } } - nested version
+  if (videoData?.asset?.asset?.data?.playback_ids?.[0]?.id) {
+    console.log('Found playbackId in asset.asset.data.playback_ids[0].id:', videoData.asset.asset.data.playback_ids[0].id);
+    return videoData.asset.asset.data.playback_ids[0].id;
+  }
+
+  // Structure 5: Direct playbackId field
   if (videoData?.playbackId) {
+    console.log('Found direct playbackId:', videoData.playbackId);
     return videoData.playbackId;
   }
-  
+
+  // Structure 6: { asset: { assetId: "..." } } - some older MUX versions
+  if (videoData?.asset?.assetId) {
+    console.log('Found assetId (using as playbackId):', videoData.asset.assetId);
+    return videoData.asset.assetId;
+  }
+
+  // Structure 7: { asset: { asset: { assetId: "..." } } } - nested version
+  if (videoData?.asset?.asset?.assetId) {
+    console.log('Found nested assetId (using as playbackId):', videoData.asset.asset.assetId);
+    return videoData.asset.asset.assetId;
+  }
+
+  // Structure 8: Check if the nested asset object is the playback ID (string)
+  if (typeof videoData?.asset?.asset === 'string') {
+    console.log('Nested asset is a string (playback ID):', videoData.asset.asset);
+    return videoData.asset.asset;
+  }
+
+  console.error('getPlaybackId: No playback ID found in video data structure:', videoData);
   return null;
 }
 

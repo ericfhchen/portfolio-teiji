@@ -1,6 +1,7 @@
 import { client } from '@/lib/sanity.client';
-import { featuredWorksQuery } from '@/lib/queries';
+import { featuredWorksQuery } from '@/lib/queries'; // Use the existing query
 import { getImageUrl } from '@/lib/image';
+import { getPlaybackId } from '@/lib/mux';
 import Slideshow from '@/components/Slideshow';
 import { FeedItem } from '@/sanity/schema';
 import GridLines from '@/components/GridLines';
@@ -28,24 +29,47 @@ export default async function SectionPage({
   const { section } = await params;
   const featured = await getFeaturedData(section);
 
+  // Add null checking for the featured data
+  if (!featured || !Array.isArray(featured)) {
+    console.error('No featured works found or invalid data:', featured);
+    return (
+      <div className="-mb-16">
+        <GridLines type="home" />
+        <div className="relative z-10">
+          <h1 className="sr-only">{section}</h1>
+          <div className="text-center py-12">
+            <p className="text-muted">No featured works available.</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
    // Transform featured works into FeedItem[] compatible with Grid
    const feedItems: FeedItem[] = featured.map((work: any, idx: number) => {
     const featuredImage = work.featuredImage;
     const isVideo = featuredImage?.mediaType === 'video';
     
+    console.log(`🔍 Processing work: ${work.title}`, { featuredImage, isVideo });
     
     if (isVideo && featuredImage?.video) {
       // Handle video media type
       const video = featuredImage.video;
-      const playbackId = video.asset?.playbackId;
+      const playbackId = getPlaybackId(video); // Use enhanced function
+      
+      console.log(`🎥 Video data for "${work.title}":`, { playbackId, video });
       
       // For videos, use MUX thumbnail as fallback if no poster
       let posterSrc = '';
       if (video.poster) {
         posterSrc = getImageUrl(video.poster, 800);
+        console.log(`📸 Using custom poster: ${posterSrc}`);
       } else if (playbackId) {
         // Use MUX thumbnail as fallback poster
         posterSrc = `https://image.mux.com/${playbackId}/thumbnail.jpg?width=800&fit_mode=preserve`;
+        console.log(`📸 Using MUX thumbnail: ${posterSrc}`);
+      } else {
+        console.error(`❌ No playback ID found for video in work: ${work.title}`);
       }
       
       return {
@@ -65,6 +89,7 @@ export default async function SectionPage({
       };
     } else if (featuredImage?.image) {
       // Handle image media type
+      console.log(`🖼️ Image processing for "${work.title}"`);
       return {
         _id: work._id,
         mediaType: 'image' as const,
@@ -79,9 +104,12 @@ export default async function SectionPage({
       };
     } else {
       // Fallback for missing media - don't create items with empty src
+      console.warn(`⚠️ No valid media found for work: ${work.title}`);
       return null;
     }
-  }).filter(Boolean); // Remove null items
+  }).filter((item): item is FeedItem => item !== null); // Type-safe filter to remove null items
+
+  console.log(`📋 Final feed items count: ${feedItems.length}`);
 
   return (
     <div className="-mb-16">
