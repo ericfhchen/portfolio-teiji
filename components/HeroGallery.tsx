@@ -18,6 +18,7 @@ export default function HeroGallery({ items, title }: HeroGalleryProps) {
   const [cursorText, setCursorText] = useState<string>('');
   const [showCursor, setShowCursor] = useState(false);
   const hideTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [isFinePointer, setIsFinePointer] = useState(false);
 
   const goToNext = useCallback(() => {
     setCurrentIndex(prevIndex => (prevIndex + 1) % items.length);
@@ -34,6 +35,27 @@ export default function HeroGallery({ items, title }: HeroGalleryProps) {
         clearTimeout(hideTimeoutRef.current);
       }
     };
+  }, []);
+
+  // Detect fine pointer devices (desktop/mouse)
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia === 'undefined') return;
+    const mq = window.matchMedia('(pointer: fine)');
+    const update = (e?: MediaQueryListEvent) => {
+      setIsFinePointer(e ? e.matches : mq.matches);
+    };
+    update();
+    if (typeof mq.addEventListener === 'function') {
+      mq.addEventListener('change', update);
+      return () => mq.removeEventListener('change', update);
+    } else {
+      // @ts-ignore deprecated
+      mq.addListener(update);
+      return () => {
+        // @ts-ignore deprecated
+        mq.removeListener(update);
+      };
+    }
   }, []);
 
   if (items.length === 0) return null;
@@ -53,54 +75,6 @@ export default function HeroGallery({ items, title }: HeroGalleryProps) {
 
   return (
     <div className="relative w-full h-full flex items-center justify-center min-h-[60svh]">
-      {/* Navigation areas - only show if multiple items */}
-      {items.length > 1 && (
-        <>
-          <div 
-            className="absolute left-0 top-0 w-1/2 h-full z-20 cursor-none"
-            onClick={goToPrevious}
-            aria-label="Previous image"
-            onMouseEnter={() => {
-              // Clear any pending hide timeout
-              if (hideTimeoutRef.current) {
-                clearTimeout(hideTimeoutRef.current);
-                hideTimeoutRef.current = null;
-              }
-              setCursorText('PREV');
-              setShowCursor(true);
-            }}
-            onMouseLeave={() => {
-              // Delay hiding to prevent flicker when moving between areas
-              hideTimeoutRef.current = setTimeout(() => {
-                setShowCursor(false);
-                setCursorText('');
-              }, 100);
-            }}
-          />
-          <div 
-            className="absolute right-0 top-0 w-1/2 h-full z-20 cursor-none"
-            onClick={goToNext}
-            aria-label="Next image"
-            onMouseEnter={() => {
-              // Clear any pending hide timeout
-              if (hideTimeoutRef.current) {
-                clearTimeout(hideTimeoutRef.current);
-                hideTimeoutRef.current = null;
-              }
-              setCursorText('NEXT');
-              setShowCursor(true);
-            }}
-            onMouseLeave={() => {
-              // Delay hiding to prevent flicker when moving between areas
-              hideTimeoutRef.current = setTimeout(() => {
-                setShowCursor(false);
-                setCursorText('');
-              }, 100);
-            }}
-          />
-        </>
-      )}
-
       {/* Hero media container: centered with proper aspect ratio */}
       <div className="relative w-full h-full flex items-center justify-center p-4 md:p-8">
         {/* Horizontal hairline across the full width at vertical center */}
@@ -110,9 +84,60 @@ export default function HeroGallery({ items, title }: HeroGalleryProps) {
           style={{ height: '0.5px' }}
         />
         
-        <div className="relative w-full h-[100svh] max-w-7xl flex items-center justify-center">
+        <div className="relative w-full h-[100svh] py-20 max-w-7xl flex items-center justify-center">
           {coverImage ? (
             <div className="relative w-full h-full">
+              {/* Navigation areas - only show if multiple items, limited to media height */}
+              {items.length > 1 && (
+                <>
+                  <div 
+                    className="absolute left-0 top-0 w-1/2 h-full z-20 md:cursor-none"
+                    onClick={goToPrevious}
+                    aria-label="Previous image"
+                    onMouseEnter={() => {
+                      if (!isFinePointer) return;
+                      // Clear any pending hide timeout
+                      if (hideTimeoutRef.current) {
+                        clearTimeout(hideTimeoutRef.current);
+                        hideTimeoutRef.current = null;
+                      }
+                      setCursorText('PREV');
+                      setShowCursor(true);
+                    }}
+                    onMouseLeave={() => {
+                      if (!isFinePointer) return;
+                      // Delay hiding to prevent flicker when moving between areas
+                      hideTimeoutRef.current = setTimeout(() => {
+                        setShowCursor(false);
+                        setCursorText('');
+                      }, 100);
+                    }}
+                  />
+                  <div 
+                    className="absolute right-0 top-0 w-1/2 h-full z-20 md:cursor-none"
+                    onClick={goToNext}
+                    aria-label="Next image"
+                    onMouseEnter={() => {
+                      if (!isFinePointer) return;
+                      // Clear any pending hide timeout
+                      if (hideTimeoutRef.current) {
+                        clearTimeout(hideTimeoutRef.current);
+                        hideTimeoutRef.current = null;
+                      }
+                      setCursorText('NEXT');
+                      setShowCursor(true);
+                    }}
+                    onMouseLeave={() => {
+                      if (!isFinePointer) return;
+                      // Delay hiding to prevent flicker when moving between areas
+                      hideTimeoutRef.current = setTimeout(() => {
+                        setShowCursor(false);
+                        setCursorText('');
+                      }, 100);
+                    }}
+                  />
+                </>
+              )}
               <ImageWithBlur
                 src={coverImage.src}
                 alt={coverImage.alt}
@@ -123,6 +148,57 @@ export default function HeroGallery({ items, title }: HeroGalleryProps) {
             </div>
           ) : coverVideo ? (
             <div className="relative w-full h-full">
+              {/* Navigation areas - only show if multiple items, limited to media height */}
+              {items.length > 1 && (
+                <>
+                  <div 
+                    className="absolute left-0 top-0 w-1/2 h-full z-20 md:cursor-none"
+                    onClick={goToPrevious}
+                    aria-label="Previous image"
+                    onMouseEnter={() => {
+                      if (!isFinePointer) return;
+                      // Clear any pending hide timeout
+                      if (hideTimeoutRef.current) {
+                        clearTimeout(hideTimeoutRef.current);
+                        hideTimeoutRef.current = null;
+                      }
+                      setCursorText('PREV');
+                      setShowCursor(true);
+                    }}
+                    onMouseLeave={() => {
+                      if (!isFinePointer) return;
+                      // Delay hiding to prevent flicker when moving between areas
+                      hideTimeoutRef.current = setTimeout(() => {
+                        setShowCursor(false);
+                        setCursorText('');
+                      }, 100);
+                    }}
+                  />
+                  <div 
+                    className="absolute right-0 top-0 w-1/2 h-full z-20 md:cursor-none"
+                    onClick={goToNext}
+                    aria-label="Next image"
+                    onMouseEnter={() => {
+                      if (!isFinePointer) return;
+                      // Clear any pending hide timeout
+                      if (hideTimeoutRef.current) {
+                        clearTimeout(hideTimeoutRef.current);
+                        hideTimeoutRef.current = null;
+                      }
+                      setCursorText('NEXT');
+                      setShowCursor(true);
+                    }}
+                    onMouseLeave={() => {
+                      if (!isFinePointer) return;
+                      // Delay hiding to prevent flicker when moving between areas
+                      hideTimeoutRef.current = setTimeout(() => {
+                        setShowCursor(false);
+                        setCursorText('');
+                      }, 100);
+                    }}
+                  />
+                </>
+              )}
               <VideoPlayer video={coverVideo} objectFit="contain" isVertical={false} />
             </div>
           ) : null}

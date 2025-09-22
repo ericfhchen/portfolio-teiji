@@ -47,9 +47,9 @@ const RichComponents: PortableTextComponents = {
 
       // Helper function to get the appropriate image source
       const getImageSource = (imageItem: any) => {
-        if (imageItem.source === 'reference' && imageItem.indexItemRef?.image) {
+        if (imageItem.source === 'reference' && imageItem.indexItemRef?.featuredMedia?.image) {
           return {
-            image: imageItem.indexItemRef.image,
+            image: imageItem.indexItemRef.featuredMedia.image,
           };
         } else if (imageItem.source === 'upload' && imageItem.uploadedImage) {
           return {
@@ -169,8 +169,8 @@ const RichComponents: PortableTextComponents = {
       
       if (source === 'upload' && uploadedImage) {
         imageToRender = uploadedImage;
-      } else if (source === 'reference' && indexItemRef) {
-        imageToRender = indexItemRef.image;
+      } else if (source === 'reference' && indexItemRef?.featuredMedia?.image) {
+        imageToRender = indexItemRef.featuredMedia.image;
         // Use index item description as fallback caption if no custom caption
         if (!displayCaption && indexItemRef.description) {
           displayCaption = indexItemRef.description;

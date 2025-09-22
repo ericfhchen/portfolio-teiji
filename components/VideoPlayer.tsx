@@ -264,15 +264,27 @@ export function VideoPlayer({ video, objectFit = 'contain', isVertical = false, 
         Your browser does not support the video tag.
       </video>
       
-      {/* Unmute button - positioned at bottom right, only show if showMuteButton is true */}
+      {/* Unmute button - positioned at bottom right on desktop, below video on mobile */}
       {showMuteButton && (
-        <button
-          onClick={toggleMute}
-          className="absolute -bottom-2 md:bottom-0 right-0 z-10 text-var text-xs font-light tracking-wider hover:opacity-60 transition-opacity px-0 md:px-2 py-1"
-          aria-label={isMuted ? 'Unmute video' : 'Mute video'}
-        >
-          {isMuted ? 'UNMUTE' : 'MUTE'}
-        </button>
+        <>
+          {/* Mobile: button below video */}
+          <button
+            onClick={toggleMute}
+            className="md:hidden absolute -bottom-8 right-0 z-30 text-var text-xs font-light tracking-wider hover:opacity-60 transition-opacity px-0 py-1"
+            aria-label={isMuted ? 'Unmute video' : 'Mute video'}
+          >
+            {isMuted ? 'UNMUTE' : 'MUTE'}
+          </button>
+          
+          {/* Desktop: button overlaying bottom right */}
+          <button
+            onClick={toggleMute}
+            className="hidden md:block absolute bottom-0 right-0 z-30 text-var text-xs font-light tracking-wider hover:opacity-60 transition-opacity px-2 py-1"
+            aria-label={isMuted ? 'Unmute video' : 'Mute video'}
+          >
+            {isMuted ? 'UNMUTE' : 'MUTE'}
+          </button>
+        </>
       )}
     </div>
   );

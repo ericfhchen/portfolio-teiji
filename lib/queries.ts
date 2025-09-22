@@ -119,9 +119,14 @@ export const workBySlugQuery = groq`
           _id,
           title,
           description,
-          image {
-            ...,
-            "lqip": asset->metadata.lqip
+          featuredMedia {
+            mediaType,
+            mediaType == "image" => {
+              image {
+                ...,
+                "lqip": asset->metadata.lqip
+              }
+            }
           }
         }
       },
@@ -155,9 +160,14 @@ export const workBySlugQuery = groq`
             _id,
             title,
             description,
-            image {
-              ...,
-              "lqip": asset->metadata.lqip,
+            featuredMedia {
+              mediaType,
+              mediaType == "image" => {
+                image {
+                  ...,
+                  "lqip": asset->metadata.lqip,
+                }
+              }
             }
           }
         }

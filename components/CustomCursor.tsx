@@ -12,6 +12,28 @@ export default function CustomCursor({ text, isVisible }: CustomCursorProps) {
   const [isPointer, setIsPointer] = useState(false);
   const [showText, setShowText] = useState(false);
   const delayTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [isFinePointer, setIsFinePointer] = useState(false);
+
+  // Detect fine pointer devices (desktop/mouse). Do not render on touch/coarse pointers.
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia === 'undefined') return;
+    const mq = window.matchMedia('(pointer: fine)');
+    const update = (e?: MediaQueryListEvent) => {
+      setIsFinePointer(e ? e.matches : mq.matches);
+    };
+    update();
+    if (typeof mq.addEventListener === 'function') {
+      mq.addEventListener('change', update);
+      return () => mq.removeEventListener('change', update);
+    } else {
+      // @ts-ignore deprecated
+      mq.addListener(update);
+      return () => {
+        // @ts-ignore deprecated
+        mq.removeListener(update);
+      };
+    }
+  }, []);
 
   useEffect(() => {
     const updatePosition = (e: MouseEvent) => {
@@ -57,7 +79,7 @@ export default function CustomCursor({ text, isVisible }: CustomCursorProps) {
     };
   }, []);
 
-  if (!isVisible || !isPointer || !showText) {
+  if (!isFinePointer || !isVisible || !isPointer || !showText) {
     return null;
   }
 
