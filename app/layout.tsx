@@ -63,7 +63,6 @@ export async function generateMetadata(): Promise<Metadata> {
       userScalable: false,
     },
     other: {
-      'theme-color': settings?.themeColors?.art || '#ffffff',
       'screen-orientation': 'portrait',
     },
   };
@@ -77,8 +76,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body>{children}</body>
+    <html lang="en" data-theme="art">
+      <body className="bg-var text-var">{children}</body>
     </html>
   );
 }
