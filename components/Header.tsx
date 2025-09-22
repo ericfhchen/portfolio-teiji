@@ -33,7 +33,7 @@ export default function Header({ currentSection }: HeaderProps) {
   return (
     <>
       {/* Top Header - Section Switcher only */}
-      <header className={`pointer-events-none fixed inset-x-0 top-0 z-50 transition-all duration-300 ${isVisible ? 'max-md:opacity-100 max-md:translate-y-0' : 'max-md:opacity-0 max-md:-translate-y-2'}`}>
+      <header className={`pointer-events-none fixed inset-x-0 top-0 z-[100] transition-all duration-300 ${isVisible ? 'max-md:opacity-100 max-md:translate-y-0' : 'max-md:opacity-0 max-md:-translate-y-2'}`}>
         {/* Section Switcher — centered */}
         <nav
           className="h-16 pointer-events-auto flex items-center absolute left-1/2 -translate-x-1/2"
@@ -64,7 +64,7 @@ export default function Header({ currentSection }: HeaderProps) {
       </header>
 
       {/* Primary Navigation - Position responsive: bottom on mobile, top corners on desktop */}
-      <nav className={`pointer-events-auto fixed z-50 h-12 md:h-16 
+      <nav className={`pointer-events-auto fixed z-[100] h-12 md:h-16 
         max-md:inset-x-0 max-md:bottom-0
         md:top-0 ${currentSection === 'art' ? 'md:left-0' : 'md:right-0'}
         transition-all duration-300 ${isVisible ? 'max-md:opacity-100 max-md:translate-y-0' : 'max-md:opacity-0 max-md:translate-y-2'}`}>

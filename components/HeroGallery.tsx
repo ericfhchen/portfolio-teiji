@@ -91,7 +91,7 @@ export default function HeroGallery({ items, title }: HeroGalleryProps) {
               {items.length > 1 && (
                 <>
                   <div 
-                    className="absolute left-0 top-0 w-1/2 h-full z-20 md:cursor-none"
+                    className="absolute left-0 top-16 bottom-16 w-1/2 z-20 md:cursor-none md:top-0 md:bottom-0"
                     onClick={goToPrevious}
                     aria-label="Previous image"
                     onMouseEnter={() => {
@@ -114,7 +114,7 @@ export default function HeroGallery({ items, title }: HeroGalleryProps) {
                     }}
                   />
                   <div 
-                    className="absolute right-0 top-0 w-1/2 h-full z-20 md:cursor-none"
+                    className="absolute right-0 top-16 bottom-16 w-1/2 z-20 md:cursor-none md:top-0 md:bottom-0"
                     onClick={goToNext}
                     aria-label="Next image"
                     onMouseEnter={() => {
@@ -152,7 +152,7 @@ export default function HeroGallery({ items, title }: HeroGalleryProps) {
               {items.length > 1 && (
                 <>
                   <div 
-                    className="absolute left-0 top-0 w-1/2 h-full z-20 md:cursor-none"
+                    className="absolute left-0 top-16 bottom-16 w-1/2 z-20 md:cursor-none md:top-0 md:bottom-0"
                     onClick={goToPrevious}
                     aria-label="Previous image"
                     onMouseEnter={() => {
@@ -175,7 +175,7 @@ export default function HeroGallery({ items, title }: HeroGalleryProps) {
                     }}
                   />
                   <div 
-                    className="absolute right-0 top-0 w-1/2 h-full z-20 md:cursor-none"
+                    className="absolute right-0 top-16 bottom-16 w-1/2 z-20 md:cursor-none md:top-0 md:bottom-0"
                     onClick={goToNext}
                     aria-label="Next image"
                     onMouseEnter={() => {
