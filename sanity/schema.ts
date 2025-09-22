@@ -42,6 +42,9 @@ export interface FeedItem {
   year?: number;
   medium?: string;
   description?: string;
+  // Optional hover texts from work document
+  hoverTextTop?: string;
+  hoverTextBottom?: string;
   // Video-specific fields
   playbackId?: string;
   poster?: string;

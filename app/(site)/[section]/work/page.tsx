@@ -72,6 +72,8 @@ async function getWorkData(section: string) {
       year: work.year,
       medium: work.medium,
       description: work.description,
+      hoverTextTop: work.hoverTextTop,
+      hoverTextBottom: work.hoverTextBottom,
       // Video-specific fields
       ...(staticMedia?.videoData && {
         playbackId: staticMedia.videoData?.asset?.asset?.playbackId || staticMedia.videoData?.asset?.playbackId,
@@ -118,7 +120,7 @@ export default async function WorkPage({
     <>
       <GridLines type="work" />
       <div className="relative z-10 min-h-screen">
-        <div className="py-8 min-h-screen h-full flex items-center justify-center">
+        <div className="pt-20 pb-8 min-h-screen h-full flex items-center justify-center">
           
           {feedItems.length > 0 ? (
             <Grid 

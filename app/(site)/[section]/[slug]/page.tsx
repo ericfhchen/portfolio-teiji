@@ -10,6 +10,7 @@ import Prose from '@/components/Prose';
 import GridLines from '@/components/GridLines';
 import ExpandableDescription from '@/components/ExpandableDescription';
 import { VideoPlayer } from '@/components/VideoPlayer';
+import HeroGallery from '@/components/HeroGallery';
 
 export async function generateStaticParams() {
   const slugs = await client.fetch(workSlugParamsQuery);
@@ -32,8 +33,10 @@ export async function generateMetadata({
   }
 
   // Handle both image and video media for metadata
-  // Use heroAsset if available, otherwise fall back to coverImage
-  const metaMedia = work.heroAsset || work.coverImage;
+  // Use first heroAsset if available, otherwise fall back to coverImage
+  const metaMedia = Array.isArray(work.heroAsset) && work.heroAsset.length > 0
+    ? work.heroAsset[0]
+    : work.coverImage;
   let metaImage = null;
   if (metaMedia?.mediaType === 'image' && metaMedia.image) {
     metaImage = getImageProps(metaMedia.image, 1200, 630);
@@ -64,113 +67,22 @@ export default async function WorkPage({
     notFound();
   }
 
-  // Prepare hero media (image or video) for the hero section
-  // Use heroAsset if available, otherwise fall back to coverImage
-  const heroMedia = work.heroAsset || work.coverImage;
-  let coverImage = null;
-  let coverVideo = null;
-  let isVertical = false;
-  let aspectRatio = 16 / 9; // default
-  
-  if (heroMedia?.mediaType === 'image' && heroMedia.image) {
-    coverImage = getImageProps(heroMedia.image, 1600, 900);
-    isVertical = isVerticalMedia(heroMedia.image);
-    aspectRatio = getMediaAspectRatio(heroMedia.image);
-  } else if (heroMedia?.mediaType === 'video' && heroMedia.video) {
-    coverVideo = heroMedia.video;
-    isVertical = isVerticalMedia(heroMedia.video);
-    aspectRatio = getMediaAspectRatio(heroMedia.video);
-  }
+  // Prepare hero gallery items for the hero section
+  // Use heroAsset[] if available, otherwise fall back to coverImage as single item
+  const heroArray = Array.isArray(work.heroAsset) && work.heroAsset.length > 0
+    ? work.heroAsset
+    : work.coverImage
+      ? [work.coverImage]
+      : [];
 
   return (
     <>
       <GridLines type="project" />
       <div className="relative z-10 min-h-screen flex flex-col">
-        {/* Hero Section - handles both image and video */}
-        {(coverImage || coverVideo) && (
+        {/* Hero Section - gallery supports images and videos */}
+        {heroArray.length > 0 && (
           <div className="flex-1 flex items-center justify-center">
-            <div className="relative w-full">
-              {/* Horizontal hairline across the full width at vertical center */}
-              <span
-                aria-hidden
-                className="pointer-events-none absolute inset-x-0 top-1/2 bg-[var(--border)] z-0"
-              style={{ height: '0.5px' }}
-              />
-              
-              {/* Hero media container */}
-              <div className="relative overflow-hidden mx-auto w-full p-8 mt-8">
-                {isVertical ? (
-                  // Vertical media: constrain by height, center horizontally
-                  <div className="flex justify-center items-center" style={{ height: 'calc(90vh - 4rem)' }}>
-                    {coverImage ? (
-                      <div 
-                        className="relative"
-                        style={{ 
-                          height: 'calc(90vh - 4rem)',
-                          width: `calc((90vh - 4rem) * ${aspectRatio})`,
-                          minWidth: '200px'
-                        }}
-                      >
-                        <Image
-                          src={coverImage.src}
-                          alt={coverImage.alt}
-                          fill
-                          className="object-contain object-center"
-                          {...(coverImage.hasBlur && {
-                            placeholder: "blur" as const,
-                            blurDataURL: coverImage.blurDataURL,
-                          })}
-                          sizes="(max-width: 768px) 50vw, (max-width: 1024px) 40vw, 30vw"
-                          priority
-                        />
-                      </div>
-                    ) : coverVideo ? (
-                      <div className="h-full flex items-center justify-center">
-                        <VideoPlayer video={coverVideo} objectFit="contain" isVertical={true} />
-                      </div>
-                    ) : null}
-                  </div>
-                ) : (
-                  // Horizontal media: height-constrained with proper aspect ratio
-                  <div className="flex justify-center items-center" style={{ height: 'calc(90vh - 4rem)' }}>
-                    {coverImage ? (
-                      <div 
-                        className="relative"
-                        style={{ 
-                          height: 'calc(90vh - 4rem)',
-                          width: `calc((90vh - 4rem) * ${aspectRatio})`,
-                          maxWidth: '100%'
-                        }}
-                      >
-                        <Image
-                          src={coverImage.src}
-                          alt={coverImage.alt}
-                          fill
-                          className="object-contain object-center"
-                          {...(coverImage.hasBlur && {
-                            placeholder: "blur" as const,
-                            blurDataURL: coverImage.blurDataURL,
-                          })}
-                          sizes="(max-width: 1024px) 100vw, 1024px"
-                          priority
-                        />
-                      </div>
-                    ) : coverVideo ? (
-                      <div 
-                        className="relative"
-                        style={{ 
-                          height: 'calc(90vh - 4rem)',
-                          width: `calc((90vh - 4rem) * ${aspectRatio})`,
-                          maxWidth: '100%'
-                        }}
-                      >
-                        <VideoPlayer video={coverVideo} objectFit="contain" isVertical={false} />
-                      </div>
-                    ) : null}
-                  </div>
-                )}
-              </div>
-            </div>
+            <HeroGallery items={heroArray} title={work.title} />
           </div>
         )}
 
@@ -232,7 +144,7 @@ export default async function WorkPage({
 
       {/* Content Section */}
       {work.content && work.content.length > 0 && (
-        <article className="relative z-10 w-full mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <article className="relative z-10 w-full mx-auto px-4 sm:px-6 lg:px-8 pt-0 pb-16 md:py-16">
           <Prose>
             <PortableText value={work.content} components={RichComponents} />
           </Prose>

@@ -2,10 +2,10 @@
 
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { useCallback, useMemo } from 'react';
-import Image from 'next/image';
 import { FeedItem } from '@/sanity/schema';
 import { parseSearchParams, createSearchParams, createItemParam } from '@/lib/utils';
 import HoverMedia from '@/components/HoverMedia';
+import ImageWithBlur from '@/components/ImageWithBlur';
 
 interface GridProps {
   items: FeedItem[];
@@ -18,6 +18,7 @@ interface GridProps {
    */
   variant?: 'home' | 'work' | 'index';
 }
+
 
 export default function Grid({ items, section, variant = 'index' }: GridProps) {
   const router = useRouter();
@@ -111,7 +112,7 @@ export default function Grid({ items, section, variant = 'index' }: GridProps) {
     <div className="w-full">
       {/* Grid */}
       {/* Tailwind base grid + dynamic base column count; rely on responsive utilities for smaller screens */}
-      <div className={`grid ${columnClasses} justify-items-center`}>
+      <div className={`grid ${columnClasses} justify-items-center ${variant === 'work' ? 'gap-8 lg:gap-0' : ''}`}>
         {/* Render actual items */}
         {filteredItems.map((item) => (
           <div key={item._id} className="relative w-full">
@@ -128,9 +129,9 @@ export default function Grid({ items, section, variant = 'index' }: GridProps) {
                 Wrapper with padding controls visual cropping and overall size constraints.
                 The button sits inside so only the actual image area is interactive.
               */}
-              <div className={`relative overflow-hidden ${variant === 'work' ? 'px-6 lg:px-12 pt-12 pb-4 lg:pb-12' : 'p-6 lg:p-16'} ${variant !== 'work' ? 'lg:max-w-[100dvh]' : ''} mx-auto w-full`}>
+              <div className={`relative overflow-hidden ${variant === 'work' ? 'px-6 lg:px-12 py-4 lg:py-4' : 'p-6 lg:p-16'} ${variant !== 'work' ? 'lg:max-w-[100dvh]' : ''} mx-auto w-full`}>
                 {variant === 'work' ? (
-                  <div className={`relative ${variant === 'work' ? 'aspect-[16/9]' : 'aspect-square'}`}>
+                  <div className={`group relative ${variant === 'work' ? 'aspect-[16/9]' : 'aspect-square'}`}>
                     <HoverMedia
                       staticMedia={{
                         src: item.src,
@@ -149,6 +150,8 @@ export default function Grid({ items, section, variant = 'index' }: GridProps) {
                       onClick={() => handleItemClick(item)}
                       className="w-full h-full"
                     />
+
+                    {/* Hover texts are not shown on the Work page; they are for the section home only */}
                   </div>
                 ) : (
                   <button
@@ -156,16 +159,12 @@ export default function Grid({ items, section, variant = 'index' }: GridProps) {
                     className="group block w-full focus:outline-none"
                   >
                     <div className="relative aspect-square">
-                      <Image
+                      <ImageWithBlur
                         src={item.src}
                         alt=""
-                        fill
-                        className="object-contain object-center"
-                        {...(item.lqip && {
-                          placeholder: "blur" as const,
-                          blurDataURL: item.lqip,
-                        })}
+                        lqip={item.lqip}
                         sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                        className="object-contain object-center"
                       />
                     </div>
                   </button>

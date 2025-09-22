@@ -1,6 +1,6 @@
 'use client';
 
-import Image from 'next/image';
+import ImageWithBlur from '@/components/ImageWithBlur';
 
 interface ImageWithGridProps {
   src: string;
@@ -32,26 +32,6 @@ export default function ImageWithGrid({
   containerClassName = "",
   ...props
 }: ImageWithGridProps) {
-  const imageProps: any = {
-    src,
-    alt,
-    className,
-    sizes,
-    priority,
-    ...props,
-  };
-
-  if (placeholder && blurDataURL) {
-    imageProps.placeholder = placeholder;
-    imageProps.blurDataURL = blurDataURL;
-  }
-
-  if (fill) {
-    imageProps.fill = true;
-  } else if (width && height) {
-    imageProps.width = width;
-    imageProps.height = height;
-  }
 
   return (
     <div className={`relative ${containerClassName}`}>
@@ -64,7 +44,16 @@ export default function ImageWithGrid({
       
       {/* Image container */}
       <div className={`relative ${aspectRatio} w-full overflow-hidden`}>
-        <Image {...imageProps} />
+        <ImageWithBlur
+          src={src}
+          alt={alt}
+          lqip={placeholder && blurDataURL ? blurDataURL : undefined}
+          sizes={sizes || ""}
+          className={className}
+          fill={fill}
+          width={width}
+          height={height}
+        />
       </div>
     </div>
   );

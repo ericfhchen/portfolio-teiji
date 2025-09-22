@@ -2,12 +2,13 @@
 
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { FeedItem } from '@/sanity/schema';
 import { parseSearchParams, createSearchParams, parseItemParam, createItemParam, trapFocus } from '@/lib/utils';
 import { VideoPlayer } from '@/components/VideoPlayer';
+import CustomCursor from './CustomCursor';
 import { isVerticalMedia } from '@/lib/image';
+import ImageWithBlur from '@/components/ImageWithBlur';
 
 interface LightboxProps {
   items: FeedItem[];
@@ -20,10 +21,24 @@ export default function Lightbox({ items, section }: LightboxProps) {
   const pathname = usePathname();
   const dialogRef = useRef<HTMLDivElement>(null);
   
+  // Custom cursor state
+  const [cursorText, setCursorText] = useState<string>('');
+  const [showCursor, setShowCursor] = useState(false);
+  const hideTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
   const { tags: activeTags, item: activeItem } = useMemo(
     () => parseSearchParams(searchParams),
     [searchParams]
   );
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (hideTimeoutRef.current) {
+        clearTimeout(hideTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Determine current route context
   const currentRoute = useMemo(() => {
@@ -185,11 +200,7 @@ export default function Lightbox({ items, section }: LightboxProps) {
     }
   }, [close, navigate]);
 
-  const handleBackdropClick = useCallback((e: React.MouseEvent) => {
-    if (e.target === e.currentTarget) {
-      close();
-    }
-  }, [close]);
+  // Backdrop clicks no longer close the lightbox (explicit close only)
 
   // Preload next and previous images/videos (both feed items and gallery items)
   useEffect(() => {
@@ -254,8 +265,15 @@ export default function Lightbox({ items, section }: LightboxProps) {
   return (
     <div
       className="fixed inset-0 z-50 bg-white"
-      onClick={handleBackdropClick}
     >
+      {/* Top-left close button */}
+      <button
+        onClick={close}
+        className="absolute top-4 left-4 z-30 text-var text-md hover:opacity-60 transition-opacity focus:outline-none"
+        aria-label="Close lightbox"
+      >
+        (CLOSE)
+      </button>
       {/* Single vertical grid line in the center */}
       <div className="fixed inset-0 pointer-events-none z-0">
         <div
@@ -272,7 +290,9 @@ export default function Lightbox({ items, section }: LightboxProps) {
         className="relative z-10 h-full flex flex-col"
       >
         {/* Work Tile - exactly matching Grid component home variant */}
-        <div className="flex-1 flex items-center justify-center">
+        <div
+          className="flex-1 flex items-center justify-center"
+        >
           <div className="relative w-full">
             {/* Horizontal hairline across the full width at vertical center */}
             <span
@@ -299,17 +319,12 @@ export default function Lightbox({ items, section }: LightboxProps) {
                   // Image rendering
                   <div className="relative w-full h-[70vh] flex items-center justify-center">
                     <div className="relative w-full h-full">
-                      <Image
+                      <ImageWithBlur
                         src={currentMediaItem.src}
                         alt={currentMediaItem.alt || ''}
-                        fill
-                        className="object-contain object-center"
-                        {...(currentMediaItem.lqip && {
-                          placeholder: "blur" as const,
-                          blurDataURL: currentMediaItem.lqip,
-                        })}
+                        lqip={currentMediaItem.lqip}
                         sizes="50vw"
-                        priority
+                        className="object-contain object-center"
                       />
                     </div>
                   </div>
@@ -321,15 +336,47 @@ export default function Lightbox({ items, section }: LightboxProps) {
                     {/* Left click area - previous gallery item */}
                     <button
                       onClick={() => navigateGallery('prev')}
-                      className="absolute left-0 top-0 w-1/3 h-full z-10 focus:outline-none cursor-w-resize"
+                      className="absolute left-0 top-0 w-1/3 h-full z-10 focus:outline-none cursor-none"
                       aria-label="Previous image"
+                      onMouseEnter={() => {
+                        // Clear any pending hide timeout
+                        if (hideTimeoutRef.current) {
+                          clearTimeout(hideTimeoutRef.current);
+                          hideTimeoutRef.current = null;
+                        }
+                        setCursorText('PREV');
+                        setShowCursor(true);
+                      }}
+                      onMouseLeave={() => {
+                        // Delay hiding to prevent flicker when moving between areas
+                        hideTimeoutRef.current = setTimeout(() => {
+                          setShowCursor(false);
+                          setCursorText('');
+                        }, 100);
+                      }}
                     />
                     
                     {/* Right click area - next gallery item */}
                     <button
                       onClick={() => navigateGallery('next')}
-                      className="absolute right-0 top-0 w-1/3 h-full z-10 focus:outline-none cursor-e-resize"
+                      className="absolute right-0 top-0 w-1/3 h-full z-10 focus:outline-none cursor-none"
                       aria-label="Next image"
+                      onMouseEnter={() => {
+                        // Clear any pending hide timeout
+                        if (hideTimeoutRef.current) {
+                          clearTimeout(hideTimeoutRef.current);
+                          hideTimeoutRef.current = null;
+                        }
+                        setCursorText('NEXT');
+                        setShowCursor(true);
+                      }}
+                      onMouseLeave={() => {
+                        // Delay hiding to prevent flicker when moving between areas
+                        hideTimeoutRef.current = setTimeout(() => {
+                          setShowCursor(false);
+                          setCursorText('');
+                        }, 100);
+                      }}
                     />
                   </>
                 )}
@@ -345,7 +392,7 @@ export default function Lightbox({ items, section }: LightboxProps) {
             {/* Left: Gallery number indicator - desktop only */}
             <div className="h-4 flex items-center hidden md:flex">
               {allMediaItems.length > 1 && (
-                <div className="text-var text-xs font-light tracking-wider">
+                <div className="text-var text-sm font-light tracking-wider">
                   {currentGalleryIndex + 1}/{allMediaItems.length}
                 </div>
               )}
@@ -356,7 +403,7 @@ export default function Lightbox({ items, section }: LightboxProps) {
               {currentMediaItem.mediaType === 'video' && currentMediaItem.videoData && (
                 <button
                   onClick={toggleMute}
-                  className="text-var text-xs font-light tracking-wider hover:opacity-60 transition-opacity"
+                  className="text-var text-sm font-light tracking-wider hover:opacity-60 transition-opacity"
                 >
                   {isMuted ? 'UNMUTE' : 'MUTE'}
                 </button>
@@ -372,7 +419,7 @@ export default function Lightbox({ items, section }: LightboxProps) {
             {currentMediaItem.mediaType === 'video' && currentMediaItem.videoData && (
               <button
                 onClick={toggleMute}
-                className="text-var text-xs font-light tracking-wider hover:opacity-60 transition-opacity"
+                className="text-var text-sm font-light tracking-wider hover:opacity-60 transition-opacity"
               >
                 {isMuted ? 'UNMUTE' : 'MUTE'}
               </button>
@@ -380,7 +427,7 @@ export default function Lightbox({ items, section }: LightboxProps) {
             
             {/* Gallery number indicator - bottom */}
             {allMediaItems.length > 1 && (
-              <div className="text-var text-xs font-light tracking-wider">
+              <div className="text-var text-sm font-light tracking-wider">
                 {currentGalleryIndex + 1}/{allMediaItems.length}
               </div>
             )}
@@ -393,19 +440,19 @@ export default function Lightbox({ items, section }: LightboxProps) {
             {/* Left side: Year and Title/Tags */}
             <div className="grid grid-cols-[auto_1fr] gap-4 sm:gap-8">
               {/* Year column - minimal width */}
-              <div className="text-var text-xs">
+              <div className="text-var text-sm">
                 {currentItem.year || ''}
               </div>
               
               {/* Title and tags column - takes remaining space */}
               <div>
-                <div className="text-var font-normal text-xs">
+                <div className="text-var font-normal text-sm">
                   {currentItem.parentTitle}
                 </div>
                 {currentItem.parentTags.length > 0 && (
                   <div className="flex flex-wrap gap-1">
                     {currentItem.parentTags.map((tag, index) => (
-                      <span key={`${tag}-${index}`} className="text-muted font-light text-xs">
+                      <span key={`${tag}-${index}`} className="text-muted font-light text-sm">
                         <Link
                           href={`/${section}/index?tags=${encodeURIComponent(tag)}`}
                           className="hover:text-var transition-colors focus:outline-none focus:text-var"
@@ -421,12 +468,15 @@ export default function Lightbox({ items, section }: LightboxProps) {
             </div>
 
             {/* Right side: Description - hidden on mobile */}
-            <div className="text-var text-xs hidden lg:block">
+            <div className="text-var text-sm hidden lg:block">
               {currentItem.description || ''}
             </div>
           </div>
         </div>
       </div>
+      
+      {/* Custom cursor */}
+      <CustomCursor text={cursorText} isVisible={showCursor} />
     </div>
   );
 }

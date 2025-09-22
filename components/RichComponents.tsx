@@ -5,6 +5,7 @@ import { getImageProps, isVerticalMedia } from '@/lib/image';
 import { getPlaybackId } from '@/lib/mux';
 import ImageWithGrid from '@/components/ImageWithGrid';
 import { VideoLayout, VideoBleed } from '@/components/VideoPlayer';
+import ImageWithBlur from '@/components/ImageWithBlur';
 
 const RichComponents: PortableTextComponents = {
   types: {
@@ -25,16 +26,12 @@ const RichComponents: PortableTextComponents = {
             {/* Image centered within normal content width */}
             <figure className="relative z-10 mx-4 sm:mx-6 lg:mx-8 flex justify-center">
               <div className="relative aspect-[3/2] w-full max-w-4xl overflow-hidden ">
-                <Image
+                <ImageWithBlur
                   src={imageProps.src}
                   alt={imageProps.alt}
-                  fill
-                  className="object-cover"
-                  {...(imageProps.hasBlur && {
-                    placeholder: "blur" as const,
-                    blurDataURL: imageProps.blurDataURL,
-                  })}
+                  lqip={imageProps.hasBlur ? imageProps.blurDataURL : undefined}
                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px"
+                  className="object-cover"
                 />
               </div>
             </figure>
@@ -81,15 +78,10 @@ const RichComponents: PortableTextComponents = {
             {/* Image centered within normal content width with layout sizing */}
             <figure className="relative z-10 mx-4 sm:mx-6 lg:mx-8 flex justify-center">
               <div className={`relative aspect-[3/2] overflow-hidden ${layoutStyles[layout as keyof typeof layoutStyles] || layoutStyles.full}`}>
-                <Image
+                <ImageWithBlur
                   src={imageProps.src}
                   alt={imageProps.alt}
-                  fill
-                  className="object-cover"
-                  {...(imageProps.hasBlur && {
-                    placeholder: "blur" as const,
-                    blurDataURL: imageProps.blurDataURL,
-                  })}
+                  lqip={imageProps.hasBlur ? imageProps.blurDataURL : undefined}
                   sizes={
                     layout === 'small' 
                       ? '(max-width: 768px) 50vw, 40vw'
@@ -97,6 +89,7 @@ const RichComponents: PortableTextComponents = {
                       ? '(max-width: 768px) 80vw, 60vw'
                       : '(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px'
                   }
+                  className="object-cover"
                 />
               </div>
             </figure>
@@ -158,17 +151,15 @@ const RichComponents: PortableTextComponents = {
 
                       return (
                         <div key={imageItem._key || `dual-image-${index}`} className="relative">
-                          <Image
+                          <ImageWithBlur
                             src={imageProps.src}
                             alt={imageSource.alt || imageProps.alt}
+                            lqip={imageProps.hasBlur ? imageProps.blurDataURL : undefined}
+                            sizes="(max-width: 768px) 40vw, 30vw"
+                            className="w-full h-auto"
+                            fill={false}
                             width={0}
                             height={0}
-                            className="w-full h-auto"
-                            {...(imageProps.hasBlur && {
-                              placeholder: "blur" as const,
-                              blurDataURL: imageProps.blurDataURL,
-                            })}
-                            sizes="(max-width: 768px) 40vw, 30vw"
                           />
                         </div>
                       );
@@ -217,16 +208,12 @@ const RichComponents: PortableTextComponents = {
 
               return (
                 <div key={image._key || image.asset?._ref || `row-image-${index}`} className="relative aspect-[4/3] overflow-hidden">
-                  <Image
+                  <ImageWithBlur
                     src={imageProps.src}
                     alt={imageProps.alt}
-                    fill
-                    className="object-cover"
-                    {...(imageProps.hasBlur && {
-                      placeholder: "blur" as const,
-                      blurDataURL: imageProps.blurDataURL,
-                    })}
+                    lqip={imageProps.hasBlur ? imageProps.blurDataURL : undefined}
                     sizes="(max-width: 768px) 50vw, 33vw"
+                    className="object-cover"
                   />
                 </div>
               );
@@ -252,16 +239,12 @@ const RichComponents: PortableTextComponents = {
       return (
         <div className="my-12 -mx-4 sm:-mx-6 lg:-mx-8">
           <div className="relative aspect-[16/9] w-full overflow-hidden">
-            <Image
+            <ImageWithBlur
               src={imageProps.src}
               alt={imageProps.alt}
-              fill
-              className="object-cover"
-              {...(imageProps.hasBlur && {
-                placeholder: "blur" as const,
-                blurDataURL: imageProps.blurDataURL,
-              })}
+              lqip={imageProps.hasBlur ? imageProps.blurDataURL : undefined}
               sizes="100vw"
+              className="object-cover"
             />
           </div>
         </div>
@@ -366,16 +349,12 @@ const RichComponents: PortableTextComponents = {
             {/* Image centered within normal content width with layout sizing */}
             <figure className="relative z-10 mx-4 sm:mx-6 lg:mx-8 flex justify-center">
               <div className={`relative aspect-[3/2] overflow-hidden ${layoutStyles[layout as keyof typeof layoutStyles] || layoutStyles.full}`}>
-                <Image
+                <ImageWithBlur
                   src={imageProps.src}
                   alt={altText}
-                  fill
-                  className="object-cover"
-                  {...(imageProps.hasBlur && {
-                    placeholder: "blur" as const,
-                    blurDataURL: imageProps.blurDataURL,
-                  })}
+                  lqip={imageProps.hasBlur ? imageProps.blurDataURL : undefined}
                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px"
+                  className="object-cover"
                 />
               </div>
             </figure>
@@ -449,6 +428,5 @@ const RichComponents: PortableTextComponents = {
     em: ({ children }) => <em className="italic">{children}</em>,
   },
 };
-
 
 export default RichComponents;

@@ -26,9 +26,19 @@ async function getAbout(section: Section): Promise<About | null> {
 // Custom components for portable text with muted support
 const portableTextComponents = {
   marks: {
-    strong: ({ children }: any) => <strong className="font-medium">{children}</strong>,
+    strong: ({ children }: any) => <strong className="font-normal">{children}</strong>,
     em: ({ children }: any) => <em className="italic">{children}</em>,
     muted: ({ children }: any) => <span className="text-muted">{children}</span>,
+    link: ({ children, value }: any) => (
+      <a 
+        href={value?.href} 
+        className="text-var hover:text-[var(--muted)] transition-colors"
+        target={value?.blank ? '_blank' : undefined}
+        rel={value?.blank ? 'noopener noreferrer' : undefined}
+      >
+        {children}
+      </a>
+    ),
   },
 };
 
@@ -69,9 +79,9 @@ export default async function AboutPage({
     return (
       <>
         <GridLines type="about" />
-        <div className="min-h-screen pt-24 pb-20">
-          <div className="max-w-7xl mx-auto px-4">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24">
+        <div className="pt-24 pb-20 relative">
+          <div className="mx-auto px-6 md:px-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-12">
               {/* Left side - Bio and Services */}
               <div className="space-y-2">
                 {/* Bio */}
@@ -91,7 +101,7 @@ export default async function AboutPage({
                         <div key={service}>
                           <Link 
                             href={`/design?tags=${encodeURIComponent(service)}`}
-                            className="text-var hover:text-muted transition-colors block"
+                            className="text-var font-light hover:text-[var(--muted)] transition-colors block"
                           >
                             {service}
                           </Link>
@@ -100,6 +110,7 @@ export default async function AboutPage({
                     </div>
                   </div>
                 )}
+
               </div>
 
               {/* Right side - 2-column layout with Clients and Contact */}
@@ -107,7 +118,7 @@ export default async function AboutPage({
                 {/* First column - Clients */}
                 {about.clients && about.clients.length > 0 && (
                   <div className="space-y-2">
-                    <div className="text-var font-medium">Selected Clients</div>
+                  <div className="text-var font-normal">Selected Clients</div>
                     <div>
                       {about.clients.map((client) => (
                         <div key={client._key}>
@@ -116,12 +127,12 @@ export default async function AboutPage({
                               href={client.url}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="text-var hover:text-muted transition-colors block"
+                              className="text-var font-light hover:text-[var(--muted)] transition-colors block"
                             >
                               {client.name}
                             </a>
                           ) : (
-                            <div className="text-var">
+                            <div className="text-var font-light">
                               {client.name}
                             </div>
                           )}
@@ -130,17 +141,33 @@ export default async function AboutPage({
                     </div>
                   </div>
                 )}
-
-                {/* Second column - Contact */}
-                <div className="space-y-2">
-                  <div className="text-var font-medium">Contact</div>
-                  <a 
-                    href={`mailto:${about.email}`} 
-                    className="text-var hover:text-muted transition-colors block"
-                  >
-                    {about.email}
-                  </a>
+                {/* Mobile-only Contact, placed after clients */}
+                <div className="lg:hidden space-y-6">
+                  <div className="flex gap-4 sm:gap-6">
+                    <span className="text-var">Contact</span>
+                    <a 
+                      href={`mailto:${about.email}`} 
+                      className="text-var font-light hover:text-[var(--muted)] transition-colors"
+                    >
+                      {about.email}
+                    </a>
+                  </div>
                 </div>
+                {/* Second column left intentionally empty on desktop since Contact is bottom-fixed */}
+              </div>
+            </div>
+          </div>
+          {/* Contact - absolutely positioned at bottom for design section (desktop only, match Art) */}
+          <div className="hidden lg:block absolute bottom-6 left-0 w-full">
+            <div className="max-w-7xl px-8">
+              <div className="flex gap-6">
+                <span className="text-var">Contact</span>
+                <a 
+                  href={`mailto:${about.email}`} 
+                  className="text-var font-light hover:text-[var(--muted)] transition-colors"
+                >
+                  {about.email}
+                </a>
               </div>
             </div>
           </div>
@@ -154,7 +181,7 @@ export default async function AboutPage({
     <div className="fixed inset-0 overflow-hidden">
       <GridLines type="about" />
       <div className="h-full relative">
-        <div className="mx-auto px-4 h-full">
+        <div className="mx-auto px-6 md:px-8 h-full">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24 h-full">
             {/* Left side - Bio, CV, and Contact (mobile) */}
             <div className="space-y-12 mt-24 overflow-y-auto">
@@ -173,10 +200,10 @@ export default async function AboutPage({
                   <div className="space-y-3">
                     {about.cv.map((item) => (
                       <div key={item._key} className="flex sm:gap-6">
-                        <div className="w-16 shrink-0 text-sm text-var">
+                        <div className="w-16 shrink-0 text-var font-light">
                           {item.year}
                         </div>
-                        <div className="text-sm text-var">
+                        <div className="text-var font-light">
                           <PortableText value={item.text} components={portableTextComponents} />
                         </div>
                       </div>
@@ -187,11 +214,11 @@ export default async function AboutPage({
 
               {/* Contact - visible on mobile, hidden on desktop */}
               <div className="lg:hidden space-y-6">
-                <div className="flex gap-4 sm:gap-6 text-sm">
+                <div className="flex gap-4 sm:gap-6">
                   <span className="text-var">Contact</span>
                   <a 
                     href={`mailto:${about.email}`} 
-                    className="text-var hover:text-muted transition-colors"
+                    className="text-var font-light hover:text-[var(--muted)] transition-colors"
                   >
                     {about.email}
                   </a>
@@ -200,24 +227,49 @@ export default async function AboutPage({
             </div>
 
             {/* Right side - Media item for art section */}
+            {/* 
+              VIDEO IMPLEMENTATION (temporarily hidden):
+              The MediaItem component supports both images and videos through the mediaType property.
+              Video implementation includes:
+              - VideoPlayer component with HLS.js support for Chrome and native HLS for Safari
+              - MUX video hosting with playbackId
+              - Autoplay, loop, mute controls
+              - Captions support
+              - Responsive sizing and object-fit options
+              
+              To restore video functionality, simply uncomment the MediaItem below.
+              The video data structure includes:
+              - mediaType: 'video'
+              - video.asset.asset.playbackId: MUX playback ID
+              - video.poster: optional poster image
+              - video.captions: optional VTT captions file
+              - video.controls: boolean for control visibility
+            */}
             <div className="hidden lg:block h-full">
-              {about.mediaItem && (
+              {about.mediaItem && about.mediaItem.mediaType === 'image' && (
                 <div className="h-full w-full">
                   <MediaItem mediaItem={about.mediaItem} className="h-full w-full" />
                 </div>
               )}
+              {/* Video temporarily hidden - uncomment to restore:
+              {about.mediaItem && about.mediaItem.mediaType === 'video' && (
+                <div className="h-full w-full">
+                  <MediaItem mediaItem={about.mediaItem} className="h-full w-full" />
+                </div>
+              )}
+              */}
             </div>
           </div>
         </div>
 
         {/* Contact - absolutely positioned at bottom for art section (desktop only) */}
         <div className="hidden lg:block absolute bottom-6 left-0 w-full">
-          <div className="max-w-7xl px-4">
-            <div className="flex gap-6 text-sm">
+          <div className="max-w-7xl px-8">
+            <div className="flex gap-6">
               <span className="text-var">Contact</span>
               <a 
                 href={`mailto:${about.email}`} 
-                className="text-var hover:text-muted transition-colors"
+                className="text-var font-light hover:text-[var(--muted)] transition-colors"
               >
                 {about.email}
               </a>

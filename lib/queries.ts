@@ -51,7 +51,7 @@ export const workBySlugQuery = groq`
       },
       alt
     },
-    heroAsset {
+    heroAsset[] {
       mediaType,
       mediaType == "image" => {
         image {
@@ -121,6 +121,8 @@ export const workBySlugQuery = groq`
       },
       alt
     },
+    hoverTextTop,
+    hoverTextBottom,
     description,
     content[] {
       ...,
@@ -473,7 +475,9 @@ export const featuredWorksQuery = groq`
         }
       },
       alt
-    }
+    },
+    hoverTextTop,
+    hoverTextBottom
   }
 `;
 
@@ -555,6 +559,9 @@ export const workPageQuery = groq`
       },
       alt
     }
+    ,
+    hoverTextTop,
+    hoverTextBottom
   }
 `;
 

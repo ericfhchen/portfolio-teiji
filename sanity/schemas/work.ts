@@ -13,6 +13,18 @@ export default defineType({
       description: 'Featured image or video for this work',
     }),
     defineField({
+      name: 'hoverTextTop',
+      title: 'Hover text 1 (above line)',
+      type: 'string',
+      description: 'Shown on section home/work page when hovering Featured/Cover media. Regular style, above the horizontal line.',
+    }),
+    defineField({
+      name: 'hoverTextBottom',
+      title: 'Hover text 2 (below line)',
+      type: 'string',
+      description: 'Shown on section home/work page when hovering Featured/Cover media. Italic style, below the horizontal line.',
+    }),
+    defineField({
       name: 'coverImage',
       title: 'Cover Media',
       type: 'mediaItem',
@@ -26,9 +38,12 @@ export default defineType({
     }),
     defineField({
       name: 'heroAsset',
-      title: 'Hero Asset',
-      type: 'mediaItem',
-      description: 'Dedicated hero image or video for the project page. If not set, will fall back to cover image.',
+      title: 'Hero Gallery',
+      type: 'array',
+      of: [{ type: 'mediaItem' }],
+      options: { sortable: true },
+      validation: (Rule) => Rule.max(10),
+      description: 'One or more images/videos for the project hero. If empty, falls back to cover media.',
     }),
     defineField({
       name: 'title',

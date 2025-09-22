@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import Image from 'next/image';
 import { VideoPlayer } from '@/components/VideoPlayer';
+import ImageWithBlur from '@/components/ImageWithBlur';
 
 interface HoverMediaProps {
   // Static media data (always present)
@@ -84,16 +84,12 @@ export default function HoverMedia({
               showMuteButton={false}
             />
           ) : (
-            <Image
+            <ImageWithBlur
               src={staticMedia.src}
               alt={staticMedia.alt}
-              fill
-              className="object-contain object-center"
-              {...(staticMedia.lqip && {
-                placeholder: "blur" as const,
-                blurDataURL: staticMedia.lqip,
-              })}
+              lqip={staticMedia.lqip}
               sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+              className="object-contain object-center"
             />
           )}
         </div>
@@ -114,16 +110,12 @@ export default function HoverMedia({
                 showMuteButton={false}
               />
             ) : (
-              <Image
+              <ImageWithBlur
                 src={hoverMedia.src}
                 alt={hoverMedia.alt}
-                fill
-                className="object-cover object-center"
-                {...(hoverMedia.lqip && {
-                  placeholder: "blur" as const,
-                  blurDataURL: hoverMedia.lqip,
-                })}
+                lqip={hoverMedia.lqip}
                 sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                className="object-cover object-center"
               />
             )}
           </div>

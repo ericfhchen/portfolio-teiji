@@ -5,7 +5,7 @@
 :root {
   --bg: #fff;
   --fg: #000;
-  --muted: #808080;
+  --muted: #999999;
   --border: #000;
   --font: 'Gerstner Programm', sans-serif;
 }
@@ -13,7 +13,7 @@
 [data-theme="design"] {
   --bg: #000;
   --fg: #fff;
-  --muted: #808080;
+  --muted: #666666;
   --border: #fff;
   --font: 'Gerstner Programm', sans-serif;
 }
@@ -135,11 +135,19 @@ h1, h2, h3, h4, h5, h6 {
   background-color: rgba(255, 255, 255, 0.1);
 }
 
-/* Slideshow cursor styles */
-.cursor-w-resize {
-  cursor: w-resize;
-}
-
-.cursor-e-resize {
-  cursor: e-resize;
+/* Mobile navigation hide/show animations */
+@media (max-width: 767px) {
+  .nav-fade-transition {
+    transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+  }
+  
+  .nav-hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+  
+  .nav-visible {
+    opacity: 1;
+    pointer-events: auto;
+  }
 }

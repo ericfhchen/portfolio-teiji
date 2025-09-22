@@ -77,6 +77,8 @@ export default async function SectionPage({
         index: idx,
         playbackId: playbackId || undefined,
         controls: video.controls,
+        hoverTextTop: work.hoverTextTop,
+        hoverTextBottom: work.hoverTextBottom,
       };
       return [feedItem];
     } else if (featuredImage?.image) {
@@ -92,6 +94,8 @@ export default async function SectionPage({
         parentTags: work.tags || [],
         description: work.description,
         index: idx,
+        hoverTextTop: work.hoverTextTop,
+        hoverTextBottom: work.hoverTextBottom,
       };
       return [feedItem];
     } else {

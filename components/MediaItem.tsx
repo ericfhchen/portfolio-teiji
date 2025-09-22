@@ -1,8 +1,10 @@
-import Image from 'next/image';
+'use client';
+
 import { getImageProps } from '@/lib/image';
 import { getPlaybackId } from '@/lib/mux';
 import { VideoLayout, VideoPlayer } from '@/components/VideoPlayer';
 import { isVerticalMedia } from '@/lib/image';
+import ImageWithBlur from '@/components/ImageWithBlur';
 
 interface MediaItemProps {
   mediaItem: {
@@ -47,16 +49,12 @@ export default function MediaItem({ mediaItem, className = '' }: MediaItemProps)
 
     return (
       <div className={`relative overflow-hidden ${className}`}>
-        <Image
+        <ImageWithBlur
           src={imageProps.src}
           alt={imageProps.alt}
-          fill
-          className="object-cover"
-          {...(imageProps.hasBlur && {
-            placeholder: "blur" as const,
-            blurDataURL: imageProps.blurDataURL,
-          })}
+          lqip={imageProps.hasBlur ? imageProps.blurDataURL : undefined}
           sizes="(max-width: 768px) 100vw, 50vw"
+          className="object-cover"
         />
       </div>
     );
@@ -84,3 +82,4 @@ export default function MediaItem({ mediaItem, className = '' }: MediaItemProps)
 
   return null;
 }
+

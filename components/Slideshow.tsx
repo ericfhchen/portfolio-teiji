@@ -2,10 +2,11 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
+import CustomCursor from './CustomCursor';
 import { FeedItem } from '@/sanity/schema';
 import { getVideoSource, shouldUseHls } from '@/lib/mux';
 import Hls from 'hls.js';
+import ImageWithBlur from '@/components/ImageWithBlur';
 
 interface SlideshowProps {
   items: FeedItem[];
@@ -19,11 +20,25 @@ export default function Slideshow({ items, section, autoPlayInterval = 5000 }: S
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(true);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Custom cursor state
+  const [cursorText, setCursorText] = useState<string>('');
+  const [showCursor, setShowCursor] = useState(false);
+  const hideTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Reset to first image if items change
   useEffect(() => {
     setCurrentIndex(0);
   }, [items]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (hideTimeoutRef.current) {
+        clearTimeout(hideTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Auto-advance functionality
   const startAutoPlay = useCallback(() => {
@@ -101,20 +116,52 @@ export default function Slideshow({ items, section, autoPlayInterval = 5000 }: S
     >
       {/* Left navigation area (left half of screen) */}
       <div 
-        className="absolute left-0 top-0 w-1/2 h-full z-20 cursor-w-resize flex items-center justify-start pl-8"
+        className="absolute left-0 top-0 w-1/2 h-full z-20 cursor-none"
         onClick={goToPrevious}
         aria-label="Previous image"
+        onMouseEnter={() => {
+          // Clear any pending hide timeout
+          if (hideTimeoutRef.current) {
+            clearTimeout(hideTimeoutRef.current);
+            hideTimeoutRef.current = null;
+          }
+          setCursorText('PREV');
+          setShowCursor(true);
+        }}
+        onMouseLeave={() => {
+          // Delay hiding to prevent flicker when moving between areas
+          hideTimeoutRef.current = setTimeout(() => {
+            setShowCursor(false);
+            setCursorText('');
+          }, 100);
+        }}
       />
       
       {/* Right navigation area (right half of screen) */}
       <div 
-        className="absolute right-0 top-0 w-1/2 h-full z-20 cursor-e-resize flex items-center justify-end pr-8"
+        className="absolute right-0 top-0 w-1/2 h-full z-20 cursor-none"
         onClick={goToNext}
         aria-label="Next image"
+        onMouseEnter={() => {
+          // Clear any pending hide timeout
+          if (hideTimeoutRef.current) {
+            clearTimeout(hideTimeoutRef.current);
+            hideTimeoutRef.current = null;
+          }
+          setCursorText('NEXT');
+          setShowCursor(true);
+        }}
+        onMouseLeave={() => {
+          // Delay hiding to prevent flicker when moving between areas
+          hideTimeoutRef.current = setTimeout(() => {
+            setShowCursor(false);
+            setCursorText('');
+          }, 100);
+        }}
       />
 
       {/* Image container */}
-      <div className="relative w-full h-full flex items-center justify-center">
+      <div className="group relative w-full h-full flex items-center justify-center">
         {/* Hairline across center */}
         <span
           aria-hidden
@@ -122,28 +169,45 @@ export default function Slideshow({ items, section, autoPlayInterval = 5000 }: S
               style={{ height: '0.5px' }}
         />
 
+        {/* Desktop-only hover texts on section home – positioned to screen edges, above image */}
+        {(currentItem.hoverTextTop || currentItem.hoverTextBottom) && (
+          <div className="hidden md:block pointer-events-none absolute inset-0 z-40">
+            {currentItem.hoverTextTop && (
+              <div
+                className={`absolute ${section === 'design' ? 'right-0 pr-8 text-right' : 'left-0 pl-8 text-left'} text-var font-normal text-base opacity-0 transition-opacity duration-200 group-hover:opacity-100`}
+                style={{ top: 'calc(50% - 2rem)' }}
+              >
+                {currentItem.hoverTextTop}
+              </div>
+            )}
+            {currentItem.hoverTextBottom && (
+              <div
+                className={`absolute ${section === 'design' ? 'right-0 pr-8 text-right' : 'left-0 pl-8 text-left'} text-var italic text-base opacity-0 transition-opacity duration-200 group-hover:opacity-100`}
+                style={{ top: 'calc(50% + 0.5rem)' }}
+              >
+                {currentItem.hoverTextBottom}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Image wrapper with padding */}
-        <div className="relative overflow-hidden p-12 lg:p-20 lg:max-w-[100dvh] mx-auto w-full h-full flex items-center justify-center">
+        <div className="relative overflow-hidden px-4 py-6 md:p-12 lg:p-20 lg:max-w-[100dvh] mx-auto w-full h-full flex items-center justify-center">
           <button
             onClick={() => handleItemClick(currentItem)}
             className="group block focus:outline-none cursor-pointer z-30 relative"
             aria-label={`Open ${currentItem.parentTitle} in lightbox`}
           >
-            <div className="relative aspect-square w-[80vmin] h-[80vmin]">
+            <div className="relative aspect-[3/4] md:aspect-square w-[85vw] md:w-[80vmin]">
               {currentItem.mediaType === 'video' && currentItem.playbackId ? (
                 <SlideshowVideoItem item={currentItem} />
               ) : currentItem.src && currentItem.src.trim() !== '' ? (
-                <Image
+                <ImageWithBlur
                   src={currentItem.src}
                   alt={currentItem.alt || ''}
-                  fill
-                  className="object-contain object-center"
-                  {...(currentItem.lqip && {
-                    placeholder: "blur" as const,
-                    blurDataURL: currentItem.lqip,
-                  })}
+                  lqip={currentItem.lqip}
                   sizes="80vmin"
-                  priority
+                  className="object-contain object-center"
                 />
               ) : (
                 <div className="absolute inset-0 flex items-center justify-center bg-gray-100 text-gray-500">
@@ -159,9 +223,12 @@ export default function Slideshow({ items, section, autoPlayInterval = 5000 }: S
               )}
             </div>
           </button>
+
         </div>
       </div>
 
+      {/* Custom cursor */}
+      <CustomCursor text={cursorText} isVisible={showCursor} />
     </div>
   );
 }
