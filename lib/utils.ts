@@ -1,3 +1,11 @@
+import { client } from './sanity.client';
+import { siteSettingsQuery } from './queries';
+
+export async function getSiteSettings() {
+  const settings = await client.fetch(siteSettingsQuery);
+  return settings;
+}
+
 export function parseSearchParams(searchParams: URLSearchParams) {
   const tags = searchParams.get('tags')?.split(',').filter(Boolean) || [];
   const item = searchParams.get('item') || null;

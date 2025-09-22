@@ -49,11 +49,11 @@ export async function generateMetadata({
   }
   
   return {
-    title: `${work.title} - ${siteTitle}`,
-    description: work.description || `${work.title} - ${work.discipline} work`,
+    title: `${work.title} — ${siteTitle}`,
+    description: work.description || `${work.title} — ${work.discipline} work`,
     openGraph: {
       title: work.title,
-      description: work.description || `${work.title} - ${work.discipline} work`,
+      description: work.description || `${work.title} — ${work.discipline} work`,
       images: metaImage ? [{ url: metaImage.src, width: 1200, height: 630 }] : [],
     },
   };

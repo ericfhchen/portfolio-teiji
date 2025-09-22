@@ -1,6 +1,7 @@
 import { client } from '@/lib/sanity.client';
 import { indexFeedQuery, indexFeedByTagsQuery, allTagsQuery } from '@/lib/queries';
 import { getImageUrl } from '@/lib/image';
+import { getSiteSettings } from '@/lib/utils';
 import { FeedItem } from '@/sanity/schema';
 import Grid from '@/components/Grid';
 import Lightbox from '@/components/Lightbox';
@@ -135,8 +136,11 @@ async function getFeedData(section: string, tags?: string[]) {
 }
 
 export async function generateMetadata({ params }: any) {
+  const siteSettings = await getSiteSettings();
+  const siteTitle = siteSettings?.title || 'Tei-ji';
+  
   return {
-    title: `${params.section.charAt(0).toUpperCase() + params.section.slice(1)} — Index — Tei-ji`,
+    title: `${params.section.charAt(0).toUpperCase() + params.section.slice(1)} — Index — ${siteTitle}`,
   };
 }
 

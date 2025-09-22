@@ -1,6 +1,7 @@
 import { client } from '@/lib/sanity.client';
 import { workPageQuery } from '@/lib/queries';
 import { getImageUrl } from '@/lib/image';
+import { getSiteSettings } from '@/lib/utils';
 import { FeedItem } from '@/sanity/schema';
 import Grid from '@/components/Grid';
 import GridLines from '@/components/GridLines';
@@ -101,8 +102,11 @@ export async function generateMetadata({
   params: Promise<{ section: string }> 
 }) {
   const { section } = await params;
+  const siteSettings = await getSiteSettings();
+  const siteTitle = siteSettings?.title || 'Tei-ji';
+  
   return {
-    title: `${section.charAt(0).toUpperCase() + section.slice(1)} — Work — Tei-ji`,
+    title: `${section.charAt(0).toUpperCase() + section.slice(1)} — Work — ${siteTitle}`,
     themeColor: section === 'design' ? '#000000' : '#ffffff',
   };
 }
