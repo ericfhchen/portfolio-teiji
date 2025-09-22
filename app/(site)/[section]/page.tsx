@@ -20,8 +20,9 @@ export async function generateMetadata({
   const siteTitle = settings?.title || 'Teiji';
   
   return {
-    title: `${section.charAt(0).toUpperCase() + section.slice(1)} — ${siteTitle}`,
-    template: null, // Disable the template for this page
+    title: {
+      absolute: `${section.charAt(0).toUpperCase() + section.slice(1)} — ${siteTitle}`,
+    },
   };
 }
 
