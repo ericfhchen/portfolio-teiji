@@ -33,7 +33,7 @@ export async function generateMetadata({
   }
 
   const settings = await getSiteSettings();
-  const siteTitle = settings?.title || 'Teiji';
+  const siteTitle = settings?.title || 'Teiji Portfolio';
   const defaultThemeColor = section === 'art' ? '#ffffff' : '#000000';
   const themeColor = settings?.themeColors?.[section] || defaultThemeColor;
   

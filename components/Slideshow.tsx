@@ -110,7 +110,7 @@ export default function Slideshow({ items, section, autoPlayInterval = 5000 }: S
 
   return (
     <div 
-      className="relative w-full h-screen overflow-hidden"
+      className="relative w-full h-[100dvh] overflow-hidden"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >

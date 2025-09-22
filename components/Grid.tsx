@@ -129,7 +129,7 @@ export default function Grid({ items, section, variant = 'index' }: GridProps) {
                 Wrapper with padding controls visual cropping and overall size constraints.
                 The button sits inside so only the actual image area is interactive.
               */}
-              <div className={`relative overflow-hidden ${variant === 'work' ? 'px-6 lg:px-12 py-4 lg:py-4' : 'p-6 lg:p-16'} ${variant !== 'work' ? 'lg:max-w-[100dvh]' : ''} mx-auto w-full`}>
+              <div className={`relative overflow-hidden ${variant === 'work' ? 'px-6 lg:px-8 py-4 lg:py-4' : 'p-6 lg:p-16'} ${variant !== 'work' ? 'lg:max-w-[100dvh]' : ''} mx-auto w-full`}>
                 {variant === 'work' ? (
                   <div className={`group relative ${variant === 'work' ? 'aspect-[16/9]' : 'aspect-square'}`}>
                     <HoverMedia
@@ -174,7 +174,7 @@ export default function Grid({ items, section, variant = 'index' }: GridProps) {
             
             {/* Text content for work variant - outside the image container */}
             {variant === 'work' && (
-              <div className="px-6 lg:px-12 pb-4 mx-auto w-full">
+              <div className="px-6 lg:px-8 pb-4 mx-auto w-full">
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
                     <div className="text-var font-normal text-sm sm:text-base">
@@ -222,7 +222,7 @@ export default function Grid({ items, section, variant = 'index' }: GridProps) {
                 style={{ height: '0.5px' }}
                 />
                 {/* Empty tile with same padding as regular tiles to maintain grid alignment */}
-                <div className={`relative overflow-hidden ${variant === 'work' ? 'px-6 lg:px-12 pt-12 pb-4 lg:pb-12' : 'p-12 lg:p-20'} ${variant !== 'work' ? 'lg:max-w-[100dvh]' : ''} mx-auto w-full`}>
+                <div className={`relative overflow-hidden ${variant === 'work' ? 'px-6 lg:px-8 pt-12 pb-4 lg:pb-12' : 'p-12 lg:p-20'} ${variant !== 'work' ? 'lg:max-w-[100dvh]' : ''} mx-auto w-full`}>
                   <div className={`relative ${variant === 'work' ? 'aspect-[16/9]' : 'aspect-square'}`} />
                 </div>
               </div>

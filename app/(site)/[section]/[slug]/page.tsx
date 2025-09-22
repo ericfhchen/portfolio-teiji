@@ -3,7 +3,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { PortableText } from '@portabletext/react';
 import { client } from '@/lib/sanity.client';
-import { workBySlugQuery, workSlugParamsQuery } from '@/lib/queries';
+import { workBySlugQuery, workSlugParamsQuery, siteSettingsQuery } from '@/lib/queries';
 import { getImageProps, isVerticalMedia, getMediaAspectRatio } from '@/lib/image';
 import RichComponents from '@/components/RichComponents';
 import Prose from '@/components/Prose';
@@ -32,6 +32,10 @@ export async function generateMetadata({
     return {};
   }
 
+  // Get site settings for title
+  const settings = await client.fetch(siteSettingsQuery, {}, { next: { revalidate: 60 } });
+  const siteTitle = settings?.title || 'Portfolio';
+
   // Handle both image and video media for metadata
   // Use first heroAsset if available, otherwise fall back to coverImage
   const metaMedia = Array.isArray(work.heroAsset) && work.heroAsset.length > 0
@@ -45,7 +49,7 @@ export async function generateMetadata({
   }
   
   return {
-    title: `${work.title} - Tei-ji`,
+    title: `${work.title} - ${siteTitle}`,
     description: work.description || `${work.title} - ${work.discipline} work`,
     openGraph: {
       title: work.title,
@@ -81,7 +85,7 @@ export default async function WorkPage({
       <div className="relative z-10 min-h-screen flex flex-col">
         {/* Hero Section - gallery supports images and videos */}
         {heroArray.length > 0 && (
-          <div className="flex-1 flex items-center justify-center">
+          <div className="flex-1 flex items-center justify-center min-h-[calc(100svh-200px)] max-h-[100svh]">
             <HeroGallery items={heroArray} title={work.title} />
           </div>
         )}

@@ -25,6 +25,7 @@ export default function Lightbox({ items, section }: LightboxProps) {
   const [cursorText, setCursorText] = useState<string>('');
   const [showCursor, setShowCursor] = useState(false);
   const hideTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [isFinePointer, setIsFinePointer] = useState(false);
   
   const { tags: activeTags, item: activeItem } = useMemo(
     () => parseSearchParams(searchParams),
@@ -38,6 +39,28 @@ export default function Lightbox({ items, section }: LightboxProps) {
         clearTimeout(hideTimeoutRef.current);
       }
     };
+  }, []);
+
+  // Detect fine pointer (desktop/mouse) to enable hover cursor effect only on desktop
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia === 'undefined') return;
+    const mq = window.matchMedia('(pointer: fine)');
+    const update = (e?: MediaQueryListEvent) => {
+      setIsFinePointer(e ? e.matches : mq.matches);
+    };
+    update();
+    if (typeof mq.addEventListener === 'function') {
+      mq.addEventListener('change', update);
+      return () => mq.removeEventListener('change', update);
+    } else {
+      // Safari fallback
+      // @ts-ignore deprecated
+      mq.addListener(update);
+      return () => {
+        // @ts-ignore deprecated
+        mq.removeListener(update);
+      };
+    }
   }, []);
 
   // Determine current route context
@@ -260,6 +283,33 @@ export default function Lightbox({ items, section }: LightboxProps) {
     };
   }, [currentItem, handleKeyDown]);
 
+  // Lock body scroll while lightbox is open
+  useEffect(() => {
+    if (!currentItem) return;
+
+    const body = document.body;
+    const scrollY = window.scrollY;
+
+    // Prevent background scroll without causing layout shift
+    body.style.position = 'fixed';
+    body.style.top = `-${scrollY}px`;
+    body.style.left = '0';
+    body.style.right = '0';
+    body.style.width = '100%';
+    body.style.overflow = 'hidden';
+
+    return () => {
+      // Restore scrolling and position
+      body.style.position = '';
+      body.style.top = '';
+      body.style.left = '';
+      body.style.right = '';
+      body.style.width = '';
+      body.style.overflow = '';
+      window.scrollTo(0, scrollY);
+    };
+  }, [currentItem]);
+
   if (!currentItem) return null;
 
   return (
@@ -336,9 +386,10 @@ export default function Lightbox({ items, section }: LightboxProps) {
                     {/* Left click area - previous gallery item */}
                     <button
                       onClick={() => navigateGallery('prev')}
-                      className="absolute left-0 top-0 w-1/3 h-full z-10 focus:outline-none cursor-none"
+                      className="absolute left-0 top-0 w-1/3 h-full z-10 focus:outline-none md:cursor-none"
                       aria-label="Previous image"
                       onMouseEnter={() => {
+                        if (!isFinePointer) return;
                         // Clear any pending hide timeout
                         if (hideTimeoutRef.current) {
                           clearTimeout(hideTimeoutRef.current);
@@ -348,6 +399,7 @@ export default function Lightbox({ items, section }: LightboxProps) {
                         setShowCursor(true);
                       }}
                       onMouseLeave={() => {
+                        if (!isFinePointer) return;
                         // Delay hiding to prevent flicker when moving between areas
                         hideTimeoutRef.current = setTimeout(() => {
                           setShowCursor(false);
@@ -359,9 +411,10 @@ export default function Lightbox({ items, section }: LightboxProps) {
                     {/* Right click area - next gallery item */}
                     <button
                       onClick={() => navigateGallery('next')}
-                      className="absolute right-0 top-0 w-1/3 h-full z-10 focus:outline-none cursor-none"
+                      className="absolute right-0 top-0 w-1/3 h-full z-10 focus:outline-none md:cursor-none"
                       aria-label="Next image"
                       onMouseEnter={() => {
+                        if (!isFinePointer) return;
                         // Clear any pending hide timeout
                         if (hideTimeoutRef.current) {
                           clearTimeout(hideTimeoutRef.current);
@@ -371,6 +424,7 @@ export default function Lightbox({ items, section }: LightboxProps) {
                         setShowCursor(true);
                       }}
                       onMouseLeave={() => {
+                        if (!isFinePointer) return;
                         // Delay hiding to prevent flicker when moving between areas
                         hideTimeoutRef.current = setTimeout(() => {
                           setShowCursor(false);
@@ -387,12 +441,12 @@ export default function Lightbox({ items, section }: LightboxProps) {
         </div>
 
         {/* Controls row - above footer */}
-        <div className="absolute bottom-16 md:bottom-16 left-0 right-0 z-20">
+        <div className="absolute bottom-4 md:bottom-20 left-0 right-0 z-20">
           <div className="flex justify-between items-center px-4">
             {/* Left: Gallery number indicator - desktop only */}
             <div className="h-4 flex items-center hidden md:flex">
               {allMediaItems.length > 1 && (
-                <div className="text-var text-sm font-light tracking-wider">
+                <div className="text-var font-light tracking-wider">
                   {currentGalleryIndex + 1}/{allMediaItems.length}
                 </div>
               )}
@@ -403,7 +457,7 @@ export default function Lightbox({ items, section }: LightboxProps) {
               {currentMediaItem.mediaType === 'video' && currentMediaItem.videoData && (
                 <button
                   onClick={toggleMute}
-                  className="text-var text-sm font-light tracking-wider hover:opacity-60 transition-opacity"
+                  className="text-var font-light tracking-wider hover:opacity-60 transition-opacity"
                 >
                   {isMuted ? 'UNMUTE' : 'MUTE'}
                 </button>
@@ -413,13 +467,13 @@ export default function Lightbox({ items, section }: LightboxProps) {
         </div>
 
         {/* Mobile controls - fixed position bottom right */}
-        <div className="fixed bottom-16 right-4 z-30 md:hidden">
+        <div className="fixed bottom-4 right-4 z-30 md:hidden">
           <div className="flex flex-col items-end gap-0">
             {/* Mute button - top */}
             {currentMediaItem.mediaType === 'video' && currentMediaItem.videoData && (
               <button
                 onClick={toggleMute}
-                className="text-var text-sm font-light tracking-wider hover:opacity-60 transition-opacity"
+                className="text-var font-light tracking-wider hover:opacity-60 transition-opacity"
               >
                 {isMuted ? 'UNMUTE' : 'MUTE'}
               </button>
@@ -427,7 +481,7 @@ export default function Lightbox({ items, section }: LightboxProps) {
             
             {/* Gallery number indicator - bottom */}
             {allMediaItems.length > 1 && (
-              <div className="text-var text-sm font-light tracking-wider">
+              <div className="text-var font-light tracking-wider">
                 {currentGalleryIndex + 1}/{allMediaItems.length}
               </div>
             )}
@@ -435,24 +489,24 @@ export default function Lightbox({ items, section }: LightboxProps) {
         </div>
 
         {/* Bottom text layout - restored to original */}
-        <div className="absolute bottom-12 md:bottom-0 left-0 right-0 z-20">
+        <div className="absolute bottom-0 left-0 right-0 z-20">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 px-4 py-4">
             {/* Left side: Year and Title/Tags */}
             <div className="grid grid-cols-[auto_1fr] gap-4 sm:gap-8">
               {/* Year column - minimal width */}
-              <div className="text-var text-sm">
+              <div className="text-var">
                 {currentItem.year || ''}
               </div>
               
               {/* Title and tags column - takes remaining space */}
               <div>
-                <div className="text-var font-normal text-sm">
+                <div className="text-var font-normal">
                   {currentItem.parentTitle}
                 </div>
                 {currentItem.parentTags.length > 0 && (
                   <div className="flex flex-wrap gap-1">
                     {currentItem.parentTags.map((tag, index) => (
-                      <span key={`${tag}-${index}`} className="text-muted font-light text-sm">
+                      <span key={`${tag}-${index}`} className="text-muted font-light">
                         <Link
                           href={`/${section}/index?tags=${encodeURIComponent(tag)}`}
                           className="hover:text-var transition-colors focus:outline-none focus:text-var"
@@ -468,7 +522,7 @@ export default function Lightbox({ items, section }: LightboxProps) {
             </div>
 
             {/* Right side: Description - hidden on mobile */}
-            <div className="text-var text-sm hidden lg:block">
+            <div className="text-var hidden lg:block">
               {currentItem.description || ''}
             </div>
           </div>

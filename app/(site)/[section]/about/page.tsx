@@ -79,11 +79,11 @@ export default async function AboutPage({
     return (
       <>
         <GridLines type="about" />
-        <div className="pt-24 pb-20 relative">
-          <div className="mx-auto px-6 md:px-8">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-12">
+        <div className="pt-24 pb-20 relative lg:fixed lg:inset-0 lg:overflow-hidden">
+          <div className="mx-auto px-6 md:px-8 lg:h-full">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-12 lg:h-full">
               {/* Left side - Bio and Services */}
-              <div className="space-y-2">
+              <div className="space-y-12 lg:space-y-12 lg:overflow-y-auto">
                 {/* Bio */}
                 {about.bio && about.bio.length > 0 && (
                   <div className="space-y-6">
@@ -110,15 +110,14 @@ export default async function AboutPage({
                     </div>
                   </div>
                 )}
-
               </div>
 
-              {/* Right side - 2-column layout with Clients and Contact */}
+              {/* Right side - 2-column layout with Clients */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
                 {/* First column - Clients */}
                 {about.clients && about.clients.length > 0 && (
                   <div className="space-y-2">
-                  <div className="text-var font-normal">Selected Clients</div>
+                    <div className="text-var font-normal">Selected Clients</div>
                     <div>
                       {about.clients.map((client) => (
                         <div key={client._key}>
@@ -141,33 +140,59 @@ export default async function AboutPage({
                     </div>
                   </div>
                 )}
-                {/* Mobile-only Contact, placed after clients */}
-                <div className="lg:hidden space-y-6">
-                  <div className="flex gap-4 sm:gap-6">
-                    <span className="text-var">Contact</span>
-                    <a 
-                      href={`mailto:${about.email}`} 
-                      className="text-var font-light hover:text-[var(--muted)] transition-colors"
-                    >
-                      {about.email}
-                    </a>
-                  </div>
-                </div>
                 {/* Second column left intentionally empty on desktop since Contact is bottom-fixed */}
               </div>
             </div>
+
+            {/* Mobile-only Contact - appears after all content */}
+            <div className="lg:hidden space-y-6 mt-12">
+              <div className="flex gap-4 sm:gap-6">
+                <span className="text-var">Contact</span>
+                <div className="flex gap-4 sm:gap-6">
+                  <a 
+                    href={`mailto:${about.email}`} 
+                    className="text-var font-light hover:text-[var(--muted)] transition-colors"
+                  >
+                    {about.email}
+                  </a>
+                  {about.instagramHandle && (
+                    <a 
+                      href={`https://instagram.com/${about.instagramHandle}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-var font-light hover:text-[var(--muted)] transition-colors"
+                    >
+                      @{about.instagramHandle}
+                    </a>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
+
           {/* Contact - absolutely positioned at bottom for design section (desktop only, match Art) */}
           <div className="hidden lg:block absolute bottom-6 left-0 w-full">
             <div className="max-w-7xl px-8">
               <div className="flex gap-6">
                 <span className="text-var">Contact</span>
-                <a 
-                  href={`mailto:${about.email}`} 
-                  className="text-var font-light hover:text-[var(--muted)] transition-colors"
-                >
-                  {about.email}
-                </a>
+                <div className="flex gap-6">
+                  <a 
+                    href={`mailto:${about.email}`} 
+                    className="text-var font-light hover:text-[var(--muted)] transition-colors"
+                  >
+                    {about.email}
+                  </a>
+                  {about.instagramHandle && (
+                    <a 
+                      href={`https://instagram.com/${about.instagramHandle}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-var font-light hover:text-[var(--muted)] transition-colors"
+                    >
+                      @{about.instagramHandle}
+                    </a>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -216,12 +241,24 @@ export default async function AboutPage({
               <div className="lg:hidden space-y-6">
                 <div className="flex gap-4 sm:gap-6">
                   <span className="text-var">Contact</span>
-                  <a 
-                    href={`mailto:${about.email}`} 
-                    className="text-var font-light hover:text-[var(--muted)] transition-colors"
-                  >
-                    {about.email}
-                  </a>
+                  <div className="flex gap-4 sm:gap-6">
+                    <a 
+                      href={`mailto:${about.email}`} 
+                      className="text-var font-light hover:text-[var(--muted)] transition-colors"
+                    >
+                      {about.email}
+                    </a>
+                    {about.instagramHandle && (
+                      <a 
+                        href={`https://instagram.com/${about.instagramHandle}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-var font-light hover:text-[var(--muted)] transition-colors"
+                      >
+                        @{about.instagramHandle}
+                      </a>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -267,12 +304,24 @@ export default async function AboutPage({
           <div className="max-w-7xl px-8">
             <div className="flex gap-6">
               <span className="text-var">Contact</span>
-              <a 
-                href={`mailto:${about.email}`} 
-                className="text-var font-light hover:text-[var(--muted)] transition-colors"
-              >
-                {about.email}
-              </a>
+              <div className="flex gap-6">
+                <a 
+                  href={`mailto:${about.email}`} 
+                  className="text-var font-light hover:text-[var(--muted)] transition-colors"
+                >
+                  {about.email}
+                </a>
+                {about.instagramHandle && (
+                  <a 
+                    href={`https://instagram.com/${about.instagramHandle}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-var font-light hover:text-[var(--muted)] transition-colors"
+                  >
+                    @{about.instagramHandle}
+                  </a>
+                )}
+              </div>
             </div>
           </div>
         </div>

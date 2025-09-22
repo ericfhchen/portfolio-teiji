@@ -12,23 +12,6 @@ export default defineType({
       description: 'Upload a video file - it will be processed by MUX',
     }),
     defineField({
-      name: 'poster',
-      title: 'Poster Image',
-      type: 'image',
-      options: {
-        hotspot: true,
-      },
-      fields: [
-        {
-          name: 'alt',
-          title: 'Alt text',
-          type: 'string',
-          description: 'Alternative text for screen readers',
-        },
-      ],
-      description: 'Optional poster image displayed before video loads',
-    }),
-    defineField({
       name: 'width',
       title: 'Video Width',
       type: 'string',
@@ -59,14 +42,12 @@ export default defineType({
   preview: {
     select: {
       title: 'playbackId',
-      poster: 'poster',
       width: 'width',
     },
-    prepare({ title, poster, width }) {
+    prepare({ title, width }) {
       return {
         title: `Video: ${title || 'No playback ID'}`,
         subtitle: `Width: ${width || 'full'}`,
-        media: poster,
       }
     },
   },

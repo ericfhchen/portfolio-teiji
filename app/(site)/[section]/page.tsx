@@ -1,5 +1,5 @@
 import { client } from '@/lib/sanity.client';
-import { featuredWorksQuery } from '@/lib/queries'; // Use the existing query
+import { featuredWorksQuery, siteSettingsQuery } from '@/lib/queries'; // Use the existing query
 import { getImageUrl } from '@/lib/image';
 import { getPlaybackId } from '@/lib/mux';
 import Slideshow from '@/components/Slideshow';
@@ -16,8 +16,11 @@ export async function generateMetadata({
   params: Promise<{ section: string }> 
 }) {
   const { section } = await params;
+  const settings = await client.fetch(siteSettingsQuery, {}, { next: { revalidate: 60 } });
+  const siteTitle = settings?.title || 'Teiji Portfolio';
+  
   return {
-    title: `${section.charAt(0).toUpperCase() + section.slice(1)} - Tei-ji`,
+    title: `${section.charAt(0).toUpperCase() + section.slice(1)} - ${siteTitle}`,
   };
 }
 

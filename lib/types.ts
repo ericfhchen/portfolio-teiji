@@ -41,6 +41,7 @@ export interface About {
   services?: string[]; // Tag names for services
   clients?: Client[];
   email: string;
+  instagramHandle?: string;
   mediaItem?: {
     mediaType: 'image' | 'video';
     image?: {

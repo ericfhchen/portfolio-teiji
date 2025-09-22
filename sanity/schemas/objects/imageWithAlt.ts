@@ -14,21 +14,14 @@ export default defineType({
       },
       validation: (Rule) => Rule.required(),
     }),
-    defineField({
-      name: 'alt',
-      title: 'Alt text',
-      type: 'string',
-      description: 'Alternative text for screen readers',
-    }),
   ],
   preview: {
     select: {
       media: 'image',
-      title: 'alt',
     },
-    prepare({ media, title }) {
+    prepare({ media }) {
       return {
-        title: title || 'Image',
+        title: 'Image',
         media,
       }
     },

@@ -7,6 +7,19 @@ export default defineType({
   type: 'document',
   fields: [
     defineField({
+      name: 'discipline',
+      title: 'Discipline',
+      type: 'string',
+      options: {
+        list: [
+          { title: 'Art', value: 'art' },
+          { title: 'Design', value: 'design' },
+        ],
+        layout: 'radio',
+      },
+      validation: (Rule) => Rule.required(),
+    }),
+    defineField({
       name: 'featuredImage',
       title: 'Featured Media',
       type: 'mediaItem',
@@ -101,24 +114,12 @@ export default defineType({
           title: 'Project Image',
         },
         {
-          type: 'imageLayout',
-          title: 'Image with Layout',
-        },
-        {
           type: 'imageDual',
           title: 'Dual Images (Side by Side)',
         },
         {
-          type: 'imageRow',
-          title: 'Image Row (2-3 images)',
-        },
-        {
           type: 'imageBleed',
           title: 'Full Bleed Image',
-        },
-        {
-          type: 'textAside',
-          title: 'Text with Aside',
         },
         {
           type: 'spacer',
@@ -144,19 +145,6 @@ export default defineType({
         },
       ],
       description: 'Select existing tags or create new ones. Tags are shared across all items.',
-    }),
-    defineField({
-      name: 'discipline',
-      title: 'Discipline',
-      type: 'string',
-      options: {
-        list: [
-          { title: 'Art', value: 'art' },
-          { title: 'Design', value: 'design' },
-        ],
-        layout: 'radio',
-      },
-      validation: (Rule) => Rule.required(),
     }),
     defineField({
       name: 'featured',
@@ -186,12 +174,10 @@ export default defineType({
       coverImage: 'coverImage',
     },
     prepare({ title, year, discipline, coverImage }) {
-      // Get media for preview - prioritize image, fall back to video poster
+      // Get media for preview - prioritize image
       let media = null;
       if (coverImage?.mediaType === 'image' && coverImage.image) {
         media = coverImage.image;
-      } else if (coverImage?.mediaType === 'video' && coverImage.video?.poster) {
-        media = coverImage.video.poster;
       }
       
       return {

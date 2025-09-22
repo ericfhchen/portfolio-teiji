@@ -146,6 +146,22 @@ export default defineType({
       validation: (Rule) => Rule.required().email(),
     }),
     defineField({
+      name: 'instagramHandle',
+      title: 'Instagram Handle',
+      type: 'string',
+      description: 'Optional Instagram handle (without @ symbol)',
+      validation: (Rule) => Rule.custom((value) => {
+        if (!value) return true; // Optional field
+        // Remove @ if user included it
+        const cleanValue = value.replace(/^@/, '');
+        // Basic validation for Instagram handle format
+        if (!/^[a-zA-Z0-9._]{1,30}$/.test(cleanValue)) {
+          return 'Instagram handle can only contain letters, numbers, periods, and underscores (max 30 characters)';
+        }
+        return true;
+      }),
+    }),
+    defineField({
       name: 'mediaItem',
       title: 'Media Item',
       type: 'mediaItem',

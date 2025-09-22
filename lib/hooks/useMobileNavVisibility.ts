@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef, useCallback } from 'react';
+import { usePathname } from 'next/navigation';
 
 interface UseMobileNavVisibilityOptions {
   idleDelay?: number; // milliseconds to wait after scroll stops
@@ -16,6 +17,7 @@ export function useMobileNavVisibility({
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastScrollY = useRef(0);
   const isInitialized = useRef(false);
+  const pathname = usePathname();
 
   const handleScroll = useCallback(() => {
     const currentScrollY = window.scrollY;
@@ -84,6 +86,21 @@ export function useMobileNavVisibility({
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  // Reset menu visibility when navigating to a new page
+  useEffect(() => {
+    // Clear any pending timeout
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+    
+    // Reset state to show menu by default on new page
+    setIsVisible(true);
+    setIsScrolling(false);
+    
+    // Update last scroll position for the new page
+    lastScrollY.current = window.scrollY;
+  }, [pathname]);
 
   return {
     isVisible,

@@ -21,8 +21,7 @@ export const workBySlugQuery = groq`
       mediaType == "image" => {
         image {
           ...,
-          "lqip": asset->metadata.lqip,
-          alt
+          "lqip": asset->metadata.lqip
         }
       },
       mediaType == "video" => {
@@ -39,25 +38,18 @@ export const workBySlugQuery = groq`
             }
           },
           controls,
-          poster {
-            ...,
-            "lqip": asset->metadata.lqip,
-            alt
-          },
           captions {
             asset
           }
         }
       },
-      alt
     },
     heroAsset[] {
       mediaType,
       mediaType == "image" => {
         image {
           ...,
-          "lqip": asset->metadata.lqip,
-          alt
+          "lqip": asset->metadata.lqip
         }
       },
       mediaType == "video" => {
@@ -74,25 +66,18 @@ export const workBySlugQuery = groq`
             }
           },
           controls,
-          poster {
-            ...,
-            "lqip": asset->metadata.lqip,
-            alt
-          },
           captions {
             asset
           }
         }
       },
-      alt
     },
     hoverMedia {
       mediaType,
       mediaType == "image" => {
         image {
           ...,
-          "lqip": asset->metadata.lqip,
-          alt
+          "lqip": asset->metadata.lqip
         }
       },
       mediaType == "video" => {
@@ -109,17 +94,11 @@ export const workBySlugQuery = groq`
             }
           },
           controls,
-          poster {
-            ...,
-            "lqip": asset->metadata.lqip,
-            alt
-          },
           captions {
             asset
           }
         }
       },
-      alt
     },
     hoverTextTop,
     hoverTextBottom,
@@ -129,14 +108,12 @@ export const workBySlugQuery = groq`
       _type == "image" => {
         ...,
         "lqip": asset->metadata.lqip,
-        alt
       },
       _type == "projectImage" => {
         ...,
         uploadedImage {
           ...,
-          "lqip": asset->metadata.lqip,
-          alt
+          "lqip": asset->metadata.lqip
         },
         indexItemRef-> {
           _id,
@@ -144,8 +121,7 @@ export const workBySlugQuery = groq`
           description,
           image {
             ...,
-            "lqip": asset->metadata.lqip,
-            alt
+            "lqip": asset->metadata.lqip
           }
         }
       },
@@ -166,15 +142,6 @@ export const workBySlugQuery = groq`
           "lqip": asset->metadata.lqip
         }
       },
-      _type == "imageRow" => {
-        ...,
-        images[] {
-          _key,
-          asset,
-          "lqip": asset->metadata.lqip,
-          alt
-        }
-      },
       _type == "imageDual" => {
         ...,
         images[] {
@@ -182,8 +149,7 @@ export const workBySlugQuery = groq`
           source,
           uploadedImage {
             ...,
-            "lqip": asset->metadata.lqip,
-            alt
+            "lqip": asset->metadata.lqip
           },
           indexItemRef-> {
             _id,
@@ -192,7 +158,6 @@ export const workBySlugQuery = groq`
             image {
               ...,
               "lqip": asset->metadata.lqip,
-              alt
             }
           }
         }
@@ -205,7 +170,6 @@ export const workBySlugQuery = groq`
             image {
               ...,
               "lqip": asset->metadata.lqip,
-              alt
             }
           },
           mediaType == "video" => {
@@ -225,28 +189,14 @@ export const workBySlugQuery = groq`
               poster {
                 ...,
                 "lqip": asset->metadata.lqip,
-                alt
               },
               captions {
                 asset
               }
             }
           },
-          alt
         }
       },
-      _type == "textAside" => {
-        ...,
-        body[] {
-          _key,
-          _type,
-          children[] {
-            _key,
-            _type,
-            text
-          }
-        }
-      }
     }
   }
 `;
@@ -265,8 +215,7 @@ export const indexFeedQuery = groq`
       mediaType == "image" => {
         image {
           ...,
-          "lqip": asset->metadata.lqip,
-          alt
+          "lqip": asset->metadata.lqip
         }
       },
       mediaType == "video" => {
@@ -282,25 +231,18 @@ export const indexFeedQuery = groq`
             }
           },
           controls,
-          poster {
-            ...,
-            "lqip": asset->metadata.lqip,
-            alt
-          },
           captions {
             asset
           }
         }
       },
-      alt
     },
     gallery[] {
       mediaType,
       mediaType == "image" => {
         image {
           ...,
-          "lqip": asset->metadata.lqip,
-          alt
+          "lqip": asset->metadata.lqip
         }
       },
       mediaType == "video" => {
@@ -316,17 +258,11 @@ export const indexFeedQuery = groq`
             }
           },
           controls,
-          poster {
-            ...,
-            "lqip": asset->metadata.lqip,
-            alt
-          },
           captions {
             asset
           }
         }
       },
-      alt
     }
   }
 `;
@@ -345,8 +281,7 @@ export const indexFeedByTagsQuery = groq`
       mediaType == "image" => {
         image {
           ...,
-          "lqip": asset->metadata.lqip,
-          alt
+          "lqip": asset->metadata.lqip
         }
       },
       mediaType == "video" => {
@@ -362,25 +297,18 @@ export const indexFeedByTagsQuery = groq`
             }
           },
           controls,
-          poster {
-            ...,
-            "lqip": asset->metadata.lqip,
-            alt
-          },
           captions {
             asset
           }
         }
       },
-      alt
     },
     gallery[] {
       mediaType,
       mediaType == "image" => {
         image {
           ...,
-          "lqip": asset->metadata.lqip,
-          alt
+          "lqip": asset->metadata.lqip
         }
       },
       mediaType == "video" => {
@@ -396,17 +324,11 @@ export const indexFeedByTagsQuery = groq`
             }
           },
           controls,
-          poster {
-            ...,
-            "lqip": asset->metadata.lqip,
-            alt
-          },
           captions {
             asset
           }
         }
       },
-      alt
     }
   }
 `;
@@ -423,12 +345,10 @@ export const siteSettingsQuery = groq`
     favicon {
       ...,
       "url": asset->url,
-      alt
     },
     ogImage {
       ...,
       "url": asset->url,
-      alt
     },
     themeColors,
     seo
@@ -446,8 +366,7 @@ export const featuredWorksQuery = groq`
       mediaType == "image" => {
         image {
           ...,
-          "lqip": asset->metadata.lqip,
-          alt
+          "lqip": asset->metadata.lqip
         }
       },
       mediaType == "video" => {
@@ -464,17 +383,11 @@ export const featuredWorksQuery = groq`
             }
           },
           controls,
-          poster {
-            ...,
-            "lqip": asset->metadata.lqip,
-            alt
-          },
           captions {
             asset
           }
         }
       },
-      alt
     },
     hoverTextTop,
     hoverTextBottom
@@ -494,8 +407,7 @@ export const workPageQuery = groq`
       mediaType == "image" => {
         image {
           ...,
-          "lqip": asset->metadata.lqip,
-          alt
+          "lqip": asset->metadata.lqip
         }
       },
       mediaType == "video" => {
@@ -512,25 +424,18 @@ export const workPageQuery = groq`
             }
           },
           controls,
-          poster {
-            ...,
-            "lqip": asset->metadata.lqip,
-            alt
-          },
           captions {
             asset
           }
         }
       },
-      alt
     },
     hoverMedia {
       mediaType,
       mediaType == "image" => {
         image {
           ...,
-          "lqip": asset->metadata.lqip,
-          alt
+          "lqip": asset->metadata.lqip
         }
       },
       mediaType == "video" => {
@@ -547,17 +452,11 @@ export const workPageQuery = groq`
             }
           },
           controls,
-          poster {
-            ...,
-            "lqip": asset->metadata.lqip,
-            alt
-          },
           captions {
             asset
           }
         }
       },
-      alt
     }
     ,
     hoverTextTop,
@@ -582,13 +481,13 @@ export const aboutQuery = groq`
       url
     },
     email,
+    instagramHandle,
     mediaItem {
       mediaType,
       mediaType == "image" => {
         image {
           ...,
-          "lqip": asset->metadata.lqip,
-          alt
+          "lqip": asset->metadata.lqip
         }
       },
       mediaType == "video" => {
@@ -605,17 +504,11 @@ export const aboutQuery = groq`
             }
           },
           controls,
-          poster {
-            ...,
-            "lqip": asset->metadata.lqip,
-            alt
-          },
           captions {
             asset
           }
         }
       },
-      alt
     }
   }
 `;

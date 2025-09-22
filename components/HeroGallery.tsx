@@ -52,14 +52,7 @@ export default function HeroGallery({ items, title }: HeroGalleryProps) {
   const displayHeight = '100%';
 
   return (
-    <div className="relative w-full">
-      {/* Horizontal hairline across the full width at vertical center */}
-      <span
-        aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-1/2 bg-[var(--border)] z-0"
-        style={{ height: '0.5px' }}
-      />
-      
+    <div className="relative w-full h-full flex items-center justify-center min-h-[60svh]">
       {/* Navigation areas - only show if multiple items */}
       {items.length > 1 && (
         <>
@@ -108,17 +101,24 @@ export default function HeroGallery({ items, title }: HeroGalleryProps) {
         </>
       )}
 
-      {/* Hero media container: full width, fixed height; media uses object-contain */}
-      <div className="relative overflow-hidden mx-auto w-full p-8 mt-12">
-        <div className="flex justify-center items-center" style={{ height: 'calc(90vh - 4rem)' }}>
+      {/* Hero media container: centered with proper aspect ratio */}
+      <div className="relative w-full h-full flex items-center justify-center p-4 md:p-8">
+        {/* Horizontal hairline across the full width at vertical center */}
+        <span
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 top-1/2 bg-[var(--border)] z-0"
+          style={{ height: '0.5px' }}
+        />
+        
+        <div className="relative w-full h-[100svh] max-w-7xl flex items-center justify-center">
           {coverImage ? (
             <div className="relative w-full h-full">
               <ImageWithBlur
                 src={coverImage.src}
                 alt={coverImage.alt}
                 lqip={coverImage.hasBlur ? coverImage.blurDataURL : undefined}
-                sizes="100vw"
-                className="object-contain object-center"
+                sizes="(max-width: 768px) 100vw, 80vw"
+                className="object-contain object-center w-full h-full"
               />
             </div>
           ) : coverVideo ? (
@@ -129,8 +129,6 @@ export default function HeroGallery({ items, title }: HeroGalleryProps) {
         </div>
       </div>
 
-      {/* Indicator dots removed as requested */}
-      
       {/* Custom cursor */}
       <CustomCursor text={cursorText} isVisible={showCursor} />
     </div>

@@ -26,14 +26,7 @@ export default defineType({
       options: {
         hotspot: true,
       },
-      fields: [
-        {
-          name: 'alt',
-          title: 'Alt text',
-          type: 'string',
-          description: 'Alternative text for screen readers',
-        },
-      ],
+      fields: [],
       hidden: ({ parent }) => parent?.mediaType !== 'image',
       validation: (Rule) => 
         Rule.custom((image, context) => {
@@ -74,12 +67,6 @@ export default defineType({
           return true;
         }),
     }),
-    defineField({
-      name: 'alt',
-      title: 'Alt Text / Description',
-      type: 'string',
-      description: 'Alternative text for screen readers (applies to both images and videos)',
-    }),
   ],
   preview: {
     select: {
@@ -87,16 +74,13 @@ export default defineType({
       image: 'image',
       poster: 'video.poster',
       playbackId: 'video.asset.playbackId',
-      alt: 'alt',
     },
-    prepare({ mediaType, image, poster, playbackId, alt }) {
+    prepare({ mediaType, image, poster, playbackId }) {
       const media = mediaType === 'image' ? image : poster;
       const title = mediaType === 'image' ? 'Image' : `Video (${playbackId || 'No ID'})`;
-      const subtitle = alt || 'No description';
       
       return {
         title,
-        subtitle,
         media,
       }
     },
