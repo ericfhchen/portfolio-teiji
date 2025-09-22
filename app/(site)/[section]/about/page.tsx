@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { client } from '@/lib/sanity.client';
-import { aboutQuery } from '@/lib/queries';
+import { aboutQuery, siteSettingsQuery } from '@/lib/queries';
 import { About } from '@/lib/types';
 import { PortableText } from '@portabletext/react';
 import GridLines from '@/components/GridLines';
@@ -53,8 +53,12 @@ export async function generateMetadata({
     return {};
   }
 
+  const settings = await client.fetch(siteSettingsQuery, {}, { next: { revalidate: 60 } });
+  const siteTitle = settings?.title || 'Teiji';
+
   return {
-    title: `About - ${section.charAt(0).toUpperCase() + section.slice(1)}`,
+    title: `About — ${section.charAt(0).toUpperCase() + section.slice(1)} — ${siteTitle}`,
+    template: null, // Disable the template for this page
   };
 }
 

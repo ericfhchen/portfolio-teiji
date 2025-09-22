@@ -17,10 +17,11 @@ export async function generateMetadata({
 }) {
   const { section } = await params;
   const settings = await client.fetch(siteSettingsQuery, {}, { next: { revalidate: 60 } });
-  const siteTitle = settings?.title || 'Teiji Portfolio';
+  const siteTitle = settings?.title || 'Teiji';
   
   return {
-    title: `${section.charAt(0).toUpperCase() + section.slice(1)} - ${siteTitle}`,
+    title: `${section.charAt(0).toUpperCase() + section.slice(1)} — ${siteTitle}`,
+    template: null, // Disable the template for this page
   };
 }
 
