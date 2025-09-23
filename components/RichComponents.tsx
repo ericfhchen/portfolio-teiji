@@ -10,8 +10,11 @@ import ImageWithBlur from '@/components/ImageWithBlur';
 const RichComponents: PortableTextComponents = {
   types: {
     image: ({ value }) => {
-      const imageProps = getImageProps(value, 1200, 800);
+      const imageProps = getImageProps(value, 1200);
       if (!imageProps) return null;
+      const dims = value?.asset?.metadata?.dimensions;
+      const iw = Math.round(dims?.width || 1200);
+      const ih = Math.round(dims?.height || 800);
 
       return (
         <div className="my-8">
@@ -25,13 +28,16 @@ const RichComponents: PortableTextComponents = {
             />
             {/* Image centered within normal content width */}
             <figure className="relative z-10 mx-4 sm:mx-6 lg:mx-8 flex justify-center">
-              <div className="relative aspect-[3/2] w-full max-w-4xl overflow-hidden ">
+              <div className="w-full max-w-4xl">
                 <ImageWithBlur
                   src={imageProps.src}
                   alt=""
                   lqip={imageProps.hasBlur ? imageProps.blurDataURL : undefined}
                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px"
-                  className="object-cover"
+                  className="w-full h-auto"
+                  fill={false}
+                  width={iw}
+                  height={ih}
                 />
               </div>
             </figure>
@@ -138,20 +144,24 @@ const RichComponents: PortableTextComponents = {
       }
       
       if (media.mediaType === 'image' && media.image) {
-        const imageProps = getImageProps(media.image, 1600, 900);
+        const dims = media.image?.asset?.metadata?.dimensions;
+        const iw = Math.round(dims?.width || 1600);
+        const ih = Math.round(dims?.height || 900);
+        const imageProps = getImageProps(media.image, iw);
         if (!imageProps) return null;
 
       return (
         <div className="my-12 -mx-4 sm:-mx-6 lg:-mx-8">
-          <div className="relative aspect-[16/9] w-full overflow-hidden">
-            <ImageWithBlur
-              src={imageProps.src}
-              alt=""
-              lqip={imageProps.hasBlur ? imageProps.blurDataURL : undefined}
-              sizes="100vw"
-              className="object-cover"
-            />
-          </div>
+          <ImageWithBlur
+            src={imageProps.src}
+            alt=""
+            lqip={imageProps.hasBlur ? imageProps.blurDataURL : undefined}
+            sizes="100vw"
+            className="w-full h-auto"
+            fill={false}
+            width={iw}
+            height={ih}
+          />
         </div>
       );
       }
@@ -184,12 +194,16 @@ const RichComponents: PortableTextComponents = {
         layout === 'small' ? 400 : layout === 'medium' ? 800 : 1200
       );
       if (!imageProps) return null;
+      const dims = imageToRender?.asset?.metadata?.dimensions;
+      const iw = Math.round(dims?.width || (layout === 'small' ? 400 : layout === 'medium' ? 800 : 1200));
+      const ih = Math.round(dims?.height || (layout === 'small' ? 300 : layout === 'medium' ? 600 : 800));
       
       // Define layout styles (same as your existing imageLayout)
       const layoutStyles = {
         full: 'w-full max-w-4xl',
-        medium: 'w-full max-w-[60%]',
-        small: 'w-full max-w-[40%]',
+        // Mobile-first: small→60% (sm:40%), medium→80% (sm:60%), full→100%
+        medium: 'w-full max-w-[80%] sm:max-w-[60%]',
+        small: 'w-full max-w-[60%] sm:max-w-[40%]',
       };
       
       return (
@@ -204,13 +218,16 @@ const RichComponents: PortableTextComponents = {
             />
             {/* Image centered within normal content width with layout sizing */}
             <figure className="relative z-10 mx-4 sm:mx-6 lg:mx-8 flex justify-center">
-              <div className={`relative aspect-[3/2] overflow-hidden ${layoutStyles[layout as keyof typeof layoutStyles] || layoutStyles.full}`}>
+              <div className={`${layoutStyles[layout as keyof typeof layoutStyles] || layoutStyles.full}`}>
                 <ImageWithBlur
                   src={imageProps.src}
                   alt=""
                   lqip={imageProps.hasBlur ? imageProps.blurDataURL : undefined}
                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px"
-                  className="object-cover"
+                  className="w-full h-auto"
+                  fill={false}
+                  width={iw}
+                  height={ih}
                 />
               </div>
             </figure>

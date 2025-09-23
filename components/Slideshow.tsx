@@ -207,7 +207,7 @@ export default function Slideshow({ items, section, autoPlayInterval = 5000 }: S
                   alt={currentItem.alt || ''}
                   lqip={currentItem.lqip}
                   sizes="80vmin"
-                  className="object-contain object-center"
+                  className="object-contain object-center shadow-none"
                 />
               ) : (
                 <div className="absolute inset-0 flex items-center justify-center bg-gray-100 text-gray-500">

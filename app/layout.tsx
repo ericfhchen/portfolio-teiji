@@ -76,8 +76,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" data-theme="art">
-      <body className="bg-var text-var">{children}</body>
+    <html lang="en">
+      <body>{children}</body>
     </html>
   );
 }

@@ -60,18 +60,11 @@ export default async function SectionLayout({
   }
 
   return (
-    <>
-      <script
-        dangerouslySetInnerHTML={{
-          __html: `document.documentElement.setAttribute('data-theme', '${validatedSection}');`,
-        }}
-      />
-      <div data-theme={validatedSection} className="bg-var text-var min-h-screen pb-16">
-        <Suspense fallback={<div className="h-16" />}>
-          <Header currentSection={validatedSection} />
-        </Suspense>
-        <main>{children}</main>
-      </div>
-    </>
+    <div data-theme={validatedSection} className="bg-var text-var min-h-screen pb-16">
+      <Suspense fallback={<div className="h-16" />}>
+        <Header currentSection={validatedSection} />
+      </Suspense>
+      <main>{children}</main>
+    </div>
   );
 }

@@ -125,6 +125,11 @@ h1, h2, h3, h4, h5, h6 {
   outline-offset: 2px;
 }
 
+/* Remove default shadows from images */
+img {
+  box-shadow: none !important;
+}
+
 /* Lightbox specific styles - removed unused backdrop styles */
 
 /* Mobile navigation hide/show animations */

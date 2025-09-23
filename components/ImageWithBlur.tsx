@@ -58,7 +58,7 @@ export default function ImageWithBlur({
             src={lqip}
             alt=""
             {...(fill ? { fill: true } : { width, height })}
-            className={`${className} opacity-100 blur-sm`}
+            className={`${className} opacity-100 blur-sm shadow-none`}
             sizes={sizes}
             aria-hidden="true"
           />
