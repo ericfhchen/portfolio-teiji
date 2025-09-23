@@ -110,7 +110,7 @@ export default async function SectionPage({
   });
 
   return (
-    <div className="-mb-16">
+    <div className="-mb-16 max-md:fixed max-md:inset-0 max-md:overflow-hidden">
       <GridLines type="home" />
       <div className="relative z-10">
         <h1 className="sr-only">{section}</h1>
