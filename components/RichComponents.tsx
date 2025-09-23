@@ -200,7 +200,7 @@ const RichComponents: PortableTextComponents = {
       
       // Define layout styles (same as your existing imageLayout)
       const layoutStyles = {
-        full: 'w-full max-w-6xl',
+        full: 'w-full max-w-8xl',
         // Mobile-first: small→60% (sm:40%), medium→80% (sm:60%), full→100%
         medium: 'w-full max-w-[80%] sm:max-w-[60%]',
         small: 'w-full max-w-[60%] sm:max-w-[40%]',
