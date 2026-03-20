@@ -134,19 +134,14 @@ export function VideoPlayer({ video, objectFit = 'contain', isVertical = false, 
       hlsRef.current = null;
     }
 
-    // Check if browser supports HLS natively (Safari)
-    if (video.canPlayType('application/vnd.apple.mpegurl')) {
-      video.src = videoSource.src;
-    } else if (Hls.isSupported()) {
-      // Use HLS.js for Chrome and other browsers
+    // Prefer HLS.js when available (Chrome returns "maybe" for HLS canPlayType but can't actually play it)
+    if (Hls.isSupported()) {
+      let mediaErrorRecoveries = 0;
+
       const hls = new Hls({
         enableWorker: false,
-        lowLatencyMode: true,
       });
-      
-      hls.loadSource(videoSource.src);
-      hls.attachMedia(video);
-      
+
       hls.on(Hls.Events.MANIFEST_PARSED, () => {
         if (autoPlay) {
           video.play().catch(() => {
@@ -154,15 +149,36 @@ export function VideoPlayer({ video, objectFit = 'contain', isVertical = false, 
           });
         }
       });
-      
+
       hls.on(Hls.Events.ERROR, (event, data) => {
         if (data.fatal) {
           switch (data.type) {
             case Hls.ErrorTypes.NETWORK_ERROR:
-              hls.startLoad();
+              // Destroy and recreate — startLoad() alone can't fix a closed MediaSource
+              hls.destroy();
+              hlsRef.current = null;
+              const retry = new Hls({ enableWorker: false });
+              retry.loadSource(videoSource.src);
+              retry.attachMedia(video);
+              retry.on(Hls.Events.MANIFEST_PARSED, () => {
+                if (autoPlay) {
+                  video.play().catch(() => {});
+                }
+              });
+              retry.on(Hls.Events.ERROR, (e, d) => {
+                if (d.fatal) {
+                  retry.destroy();
+                }
+              });
+              hlsRef.current = retry;
               break;
             case Hls.ErrorTypes.MEDIA_ERROR:
-              hls.recoverMediaError();
+              if (mediaErrorRecoveries < 2) {
+                mediaErrorRecoveries++;
+                hls.recoverMediaError();
+              } else {
+                hls.destroy();
+              }
               break;
             default:
               hls.destroy();
@@ -170,8 +186,14 @@ export function VideoPlayer({ video, objectFit = 'contain', isVertical = false, 
           }
         }
       });
-      
+
+      hls.loadSource(videoSource.src);
+      hls.attachMedia(video);
+
       hlsRef.current = hls;
+    } else if (video.canPlayType('application/vnd.apple.mpegurl') === 'probably') {
+      // Native HLS (Safari) — only trust "probably", not "maybe"
+      video.src = videoSource.src;
     }
 
     return () => {

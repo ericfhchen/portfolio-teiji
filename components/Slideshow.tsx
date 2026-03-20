@@ -272,52 +272,78 @@ function SlideshowVideoItem({ item }: { item: FeedItem }) {
     };
     const handleError = () => setVideoError(true);
 
-    // Check if browser supports HLS natively (Safari)
-    if (video.canPlayType('application/vnd.apple.mpegurl')) {
-      video.src = videoSource.src;
+    // Prefer HLS.js when available (Chrome returns "maybe" for HLS canPlayType but can't actually play it)
+    if (Hls.isSupported()) {
+      let mediaErrorRecoveries = 0;
 
-      video.addEventListener('loadedmetadata', handleLoadedMetadata);
-      video.addEventListener('canplay', handleCanPlay);
-      video.addEventListener('error', handleError);
-    } else if (Hls.isSupported()) {
-      // Use HLS.js for Chrome and other browsers
       const hls = new Hls({
         enableWorker: false,
-        lowLatencyMode: true,
       });
-      
-      hls.loadSource(videoSource.src);
-      hls.attachMedia(video);
-      
+
       hls.on(Hls.Events.MANIFEST_PARSED, () => {
         setIsVideoReady(true);
+        setVideoError(false);
         video.play().catch(() => {
           // Autoplay prevented, user will need to interact
         });
       });
-      
+
+      hls.on(Hls.Events.FRAG_LOADED, () => {
+        // Reset error state once data is actually flowing
+        setVideoError(false);
+      });
+
       hls.on(Hls.Events.ERROR, (event, data) => {
         if (data.fatal) {
-          setVideoError(true);
           switch (data.type) {
             case Hls.ErrorTypes.NETWORK_ERROR:
-              hls.startLoad();
+              // Destroy and recreate — startLoad() alone can't fix a closed MediaSource
+              hls.destroy();
+              hlsRef.current = null;
+              const retry = new Hls({ enableWorker: false });
+              retry.loadSource(videoSource.src);
+              retry.attachMedia(video);
+              retry.on(Hls.Events.MANIFEST_PARSED, () => {
+                setIsVideoReady(true);
+                setVideoError(false);
+                video.play().catch(() => {});
+              });
+              retry.on(Hls.Events.ERROR, (e, d) => {
+                if (d.fatal) {
+                  setVideoError(true);
+                  retry.destroy();
+                }
+              });
+              hlsRef.current = retry;
               break;
             case Hls.ErrorTypes.MEDIA_ERROR:
-              hls.recoverMediaError();
+              if (mediaErrorRecoveries < 2) {
+                mediaErrorRecoveries++;
+                hls.recoverMediaError();
+              } else {
+                setVideoError(true);
+                hls.destroy();
+              }
               break;
             default:
+              setVideoError(true);
               hls.destroy();
               break;
           }
         }
       });
-      
-      video.addEventListener('error', () => {
-        setVideoError(true);
-      });
-      
+
+      hls.loadSource(videoSource.src);
+      hls.attachMedia(video);
+
       hlsRef.current = hls;
+    } else if (video.canPlayType('application/vnd.apple.mpegurl') === 'probably') {
+      // Native HLS (Safari) — only trust "probably", not "maybe"
+      video.src = videoSource.src;
+
+      video.addEventListener('loadedmetadata', handleLoadedMetadata);
+      video.addEventListener('canplay', handleCanPlay);
+      video.addEventListener('error', handleError);
     }
 
     return () => {
