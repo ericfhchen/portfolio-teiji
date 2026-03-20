@@ -172,6 +172,57 @@ export const workBySlugQuery = groq`
           }
         }
       },
+      _type == "imageTriple" => {
+        ...,
+        images[] {
+          _key,
+          source,
+          uploadedImage {
+            ...,
+            "lqip": asset->metadata.lqip
+          },
+          indexItemRef-> {
+            _id,
+            title,
+            description,
+            featuredMedia {
+              mediaType,
+              mediaType == "image" => {
+                image {
+                  ...,
+                  "lqip": asset->metadata.lqip,
+                }
+              }
+            }
+          }
+        }
+      },
+      _type == "imageGrid" => {
+        ...,
+        images[] {
+          _key,
+          source,
+          colSpan,
+          uploadedImage {
+            ...,
+            "lqip": asset->metadata.lqip
+          },
+          indexItemRef-> {
+            _id,
+            title,
+            description,
+            featuredMedia {
+              mediaType,
+              mediaType == "image" => {
+                image {
+                  ...,
+                  "lqip": asset->metadata.lqip,
+                }
+              }
+            }
+          }
+        }
+      },
       _type == "imageBleed" => {
         ...,
         media {

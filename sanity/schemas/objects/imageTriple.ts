@@ -1,8 +1,8 @@
 import { defineType, defineField } from 'sanity'
 
 export default defineType({
-  name: 'imageDual',
-  title: 'Dual Images (Side by Side)',
+  name: 'imageTriple',
+  title: 'Triple Images (Side by Side)',
   type: 'object',
   fields: [
     defineField({
@@ -102,7 +102,7 @@ export default defineType({
           },
         },
       ],
-      validation: (Rule) => Rule.required().min(2).max(2).error('Must have exactly 2 images'),
+      validation: (Rule) => Rule.required().min(3).max(3).error('Must have exactly 3 images'),
     }),
 
     defineField({
@@ -119,7 +119,7 @@ export default defineType({
         ],
         layout: 'dropdown',
       },
-      initialValue: '60%',
+      initialValue: '80%',
     }),
 
     defineField({
@@ -179,11 +179,11 @@ export default defineType({
       caption: 'caption',
     },
     prepare({ image1Upload, image1IndexImage, image1Source, width, customWidth, caption }) {
-      const widthLabel = width === 'custom' && customWidth ? `${customWidth}%` : (width || '60%');
+      const widthLabel = width === 'custom' && customWidth ? `${customWidth}%` : (width || '80%');
       const previewImage = image1Source === 'reference' ? image1IndexImage : image1Upload;
 
       return {
-        title: `Dual Images (${widthLabel})`,
+        title: `Triple Images (${widthLabel})`,
         subtitle: caption || 'Side by side layout',
         media: previewImage,
       };

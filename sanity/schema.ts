@@ -7,7 +7,9 @@ import siteSettings from './schemas/siteSettings'
 import about from './schemas/about'
 import imageWithAlt from './schemas/objects/imageWithAlt'
 import imageDual from './schemas/objects/imageDual'
+import imageTriple from './schemas/objects/imageTriple'
 import imageBleed from './schemas/objects/imageBleed'
+import imageGrid from './schemas/objects/imageGrid'
 import projectImage from './schemas/objects/projectImage'
 import spacer from './schemas/objects/spacer'
 import videoMux from './schemas/objects/videoMux'
@@ -65,7 +67,9 @@ export const schema: { types: SchemaTypeDefinition[] } = {
     // Objects
     imageWithAlt,
     imageDual,
+    imageTriple,
     imageBleed,
+    imageGrid,
     projectImage,
     spacer,
     videoMux,

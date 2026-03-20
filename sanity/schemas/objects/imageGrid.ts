@@ -1,8 +1,8 @@
 import { defineType, defineField } from 'sanity'
 
 export default defineType({
-  name: 'imageDual',
-  title: 'Dual Images (Side by Side)',
+  name: 'imageGrid',
+  title: 'Image Grid',
   type: 'object',
   fields: [
     defineField({
@@ -74,6 +74,14 @@ export default defineType({
                 },
               },
             },
+            {
+              name: 'colSpan',
+              title: 'Column Span',
+              type: 'number',
+              description: 'Number of columns this image spans (1–4)',
+              initialValue: 1,
+              validation: (Rule) => Rule.min(1).max(4),
+            },
           ],
           preview: {
             select: {
@@ -81,28 +89,54 @@ export default defineType({
               uploadedImage: 'uploadedImage',
               indexItem: 'indexItemRef.title',
               indexItemImage: 'indexItemRef.image',
+              colSpan: 'colSpan',
             },
-            prepare({ source, uploadedImage, indexItem, indexItemImage }) {
+            prepare({ source, uploadedImage, indexItem, indexItemImage, colSpan }) {
+              const spanLabel = colSpan && colSpan > 1 ? ` (span ${colSpan})` : '';
               if (source === 'reference' && indexItem) {
                 return {
-                  title: `Referenced: ${indexItem}`,
+                  title: `Referenced: ${indexItem}${spanLabel}`,
                   media: indexItemImage,
                 };
               } else if (source === 'upload') {
                 return {
-                  title: 'Uploaded Image',
+                  title: `Uploaded Image${spanLabel}`,
                   media: uploadedImage,
                 };
               }
               return {
-                title: 'Image',
+                title: `Image${spanLabel}`,
                 media: uploadedImage || indexItemImage,
               };
             },
           },
         },
       ],
-      validation: (Rule) => Rule.required().min(2).max(2).error('Must have exactly 2 images'),
+      validation: (Rule) => Rule.required().min(2).max(12),
+    }),
+
+    defineField({
+      name: 'columns',
+      title: 'Columns',
+      type: 'number',
+      description: 'Number of grid columns (2–4)',
+      initialValue: 2,
+      validation: (Rule) => Rule.required().min(2).max(4),
+    }),
+
+    defineField({
+      name: 'gap',
+      title: 'Gap',
+      type: 'string',
+      options: {
+        list: [
+          { title: 'Small (1rem)', value: 'small' },
+          { title: 'Medium (2rem)', value: 'medium' },
+          { title: 'Large (4rem)', value: 'large' },
+        ],
+        layout: 'dropdown',
+      },
+      initialValue: 'medium',
     }),
 
     defineField({
@@ -119,7 +153,7 @@ export default defineType({
         ],
         layout: 'dropdown',
       },
-      initialValue: '60%',
+      initialValue: '100%',
     }),
 
     defineField({
@@ -150,7 +184,7 @@ export default defineType({
       name: 'caption',
       title: 'Caption',
       type: 'string',
-      description: 'Optional caption to display below the images',
+      description: 'Optional caption to display below the grid',
     }),
 
     defineField({
@@ -174,17 +208,15 @@ export default defineType({
       image1Upload: 'images.0.uploadedImage',
       image1IndexImage: 'images.0.indexItemRef.image',
       image1Source: 'images.0.source',
-      width: 'width',
-      customWidth: 'customWidth',
+      columns: 'columns',
       caption: 'caption',
     },
-    prepare({ image1Upload, image1IndexImage, image1Source, width, customWidth, caption }) {
-      const widthLabel = width === 'custom' && customWidth ? `${customWidth}%` : (width || '60%');
+    prepare({ image1Upload, image1IndexImage, image1Source, columns, caption }) {
       const previewImage = image1Source === 'reference' ? image1IndexImage : image1Upload;
 
       return {
-        title: `Dual Images (${widthLabel})`,
-        subtitle: caption || 'Side by side layout',
+        title: `Image Grid (${columns || 2} columns)`,
+        subtitle: caption || 'Grid layout',
         media: previewImage,
       };
     },

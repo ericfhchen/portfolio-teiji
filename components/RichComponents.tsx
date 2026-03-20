@@ -7,6 +7,50 @@ import ImageWithGrid from '@/components/ImageWithGrid';
 import { VideoLayout, VideoBleed } from '@/components/VideoPlayer';
 import ImageWithBlur from '@/components/ImageWithBlur';
 
+// --- Layout helpers ---
+
+function getWidthStyle(width?: string, customWidth?: number, fallback = '100%'): string {
+  if (width === 'custom' && customWidth) return `${customWidth}%`;
+  if (width && width !== 'custom') return width;
+  return fallback;
+}
+
+// Backwards compat: map old layout values to width percentages
+function legacyLayoutToWidth(layout?: string): string {
+  if (layout === 'full') return '100%';
+  if (layout === 'medium') return '60%';
+  if (layout === 'small') return '40%';
+  return '100%';
+}
+
+const alignmentClass: Record<string, string> = {
+  left: 'justify-start',
+  center: 'justify-center',
+  right: 'justify-end',
+};
+
+const captionAlignClass: Record<string, string> = {
+  left: 'text-left',
+  center: 'text-center',
+  right: 'text-right',
+};
+
+const gapClass: Record<string, string> = {
+  small: 'gap-4',
+  medium: 'gap-8',
+  large: 'gap-16',
+};
+
+// Helper to get image source from an image item (shared by dual/triple/grid)
+function getImageSource(imageItem: any) {
+  if (imageItem.source === 'reference' && imageItem.indexItemRef?.featuredMedia?.image) {
+    return { image: imageItem.indexItemRef.featuredMedia.image };
+  } else if (imageItem.source === 'upload' && imageItem.uploadedImage) {
+    return { image: imageItem.uploadedImage };
+  }
+  return null;
+}
+
 const RichComponents: PortableTextComponents = {
   types: {
     image: ({ value }) => {
@@ -48,44 +92,34 @@ const RichComponents: PortableTextComponents = {
 
 
     imageDual: ({ value }) => {
-      const { images, caption } = value;
+      const { images, caption, width, customWidth, alignment, captionPosition } = value;
       if (!images?.length || images.length !== 2) return null;
 
-      // Helper function to get the appropriate image source
-      const getImageSource = (imageItem: any) => {
-        if (imageItem.source === 'reference' && imageItem.indexItemRef?.featuredMedia?.image) {
-          return {
-            image: imageItem.indexItemRef.featuredMedia.image,
-          };
-        } else if (imageItem.source === 'upload' && imageItem.uploadedImage) {
-          return {
-            image: imageItem.uploadedImage,
-          };
-        }
-        return null;
-      };
+      const resolvedWidth = getWidthStyle(width, customWidth, '60%');
+      const justifyClass = alignmentClass[alignment] || 'justify-center';
+      const capClass = captionAlignClass[captionPosition] || 'text-center';
 
       return (
         <div className="my-8">
-          {/* Full-width container that breaks out of prose constraints */}
           <div className="relative -mx-4 sm:-mx-6 lg:-mx-8">
-            {/* Full-width horizontal line at vertical center, behind images */}
             <span
               aria-hidden
               className="pointer-events-none absolute inset-x-0 top-1/2 bg-[var(--border)] z-0"
             style={{ height: '0.5px' }}
             />
-            {/* Images centered within normal content width */}
-            <figure className="relative z-10 max-w-7xl mx-auto flex justify-center">
-              <div className="w-full max-w-[90%] sm:max-w-[60%]">
+            <figure className={`relative z-10 max-w-7xl mx-auto flex ${justifyClass}`}>
+              <div className="w-full" style={{ maxWidth: resolvedWidth }}>
                 <div className="grid grid-cols-2 gap-4 sm:gap-16">
                   {images
                     .map((imageItem: any, index: number) => {
                       const imageSource = getImageSource(imageItem);
                       if (!imageSource) return null;
-                      
-                      const imageProps = getImageProps(imageSource.image, 400);
+
+                      const imageProps = getImageProps(imageSource.image, 1200);
                       if (!imageProps) return null;
+                      const dims = imageSource.image?.asset?.metadata?.dimensions;
+                      const iw = Math.round(dims?.width || 1200);
+                      const ih = Math.round(dims?.height || 800);
 
                       return (
                         <div key={imageItem._key || `dual-image-${index}`} className="relative overflow-hidden">
@@ -96,8 +130,8 @@ const RichComponents: PortableTextComponents = {
                             sizes="(max-width: 768px) 40vw, 30vw"
                             className="w-full h-auto"
                             fill={false}
-                            width={400}
-                            height={300}
+                            width={iw}
+                            height={ih}
                           />
                         </div>
                       );
@@ -108,24 +142,154 @@ const RichComponents: PortableTextComponents = {
             </figure>
           </div>
           {caption && (
-            <figcaption className="mt-2 text-sm text-muted text-center">
+            <figcaption className={`mt-2 text-sm text-muted ${capClass}`}>
               {caption}
             </figcaption>
           )}
         </div>
       );
     },
-    
+
+    imageTriple: ({ value }) => {
+      const { images, caption, width, customWidth, alignment, captionPosition } = value;
+      if (!images?.length || images.length !== 3) return null;
+
+      const resolvedWidth = getWidthStyle(width, customWidth, '80%');
+      const justifyClass = alignmentClass[alignment] || 'justify-center';
+      const capClass = captionAlignClass[captionPosition] || 'text-center';
+
+      return (
+        <div className="my-8">
+          <div className="relative -mx-4 sm:-mx-6 lg:-mx-8">
+            <span
+              aria-hidden
+              className="pointer-events-none absolute inset-x-0 top-1/2 bg-[var(--border)] z-0"
+              style={{ height: '0.5px' }}
+            />
+            <figure className={`relative z-10 max-w-7xl mx-auto flex ${justifyClass}`}>
+              <div className="w-full" style={{ maxWidth: resolvedWidth }}>
+                <div className="grid grid-cols-3 gap-4 sm:gap-16">
+                  {images
+                    .map((imageItem: any, index: number) => {
+                      const imageSource = getImageSource(imageItem);
+                      if (!imageSource) return null;
+
+                      const imageProps = getImageProps(imageSource.image, 800);
+                      if (!imageProps) return null;
+                      const dims = imageSource.image?.asset?.metadata?.dimensions;
+                      const iw = Math.round(dims?.width || 800);
+                      const ih = Math.round(dims?.height || 600);
+
+                      return (
+                        <div key={imageItem._key || `triple-image-${index}`} className="relative overflow-hidden">
+                          <ImageWithBlur
+                            src={imageProps.src}
+                            alt=""
+                            lqip={imageProps.hasBlur ? imageProps.blurDataURL : undefined}
+                            sizes="(max-width: 768px) 30vw, 25vw"
+                            className="w-full h-auto"
+                            fill={false}
+                            width={iw}
+                            height={ih}
+                          />
+                        </div>
+                      );
+                    })
+                    .filter(Boolean)}
+                </div>
+              </div>
+            </figure>
+          </div>
+          {caption && (
+            <figcaption className={`mt-2 text-sm text-muted ${capClass}`}>
+              {caption}
+            </figcaption>
+          )}
+        </div>
+      );
+    },
+
+    imageGrid: ({ value }) => {
+      const { images, columns, gap, caption, width, customWidth, alignment, captionPosition } = value;
+      if (!images?.length || images.length < 2) return null;
+
+      const cols = columns || 2;
+      const resolvedWidth = getWidthStyle(width, customWidth, '100%');
+      const justifyClass = alignmentClass[alignment] || 'justify-center';
+      const capClass = captionAlignClass[captionPosition] || 'text-center';
+      const gapCls = gapClass[gap] || 'gap-8';
+
+      const gridColsClass: Record<number, string> = {
+        2: 'grid-cols-2',
+        3: 'grid-cols-3',
+        4: 'grid-cols-4',
+      };
+
+      return (
+        <div className="my-8">
+          <div className="relative -mx-4 sm:-mx-6 lg:-mx-8">
+            <span
+              aria-hidden
+              className="pointer-events-none absolute inset-x-0 top-1/2 bg-[var(--border)] z-0"
+              style={{ height: '0.5px' }}
+            />
+            <figure className={`relative z-10 max-w-7xl mx-auto flex ${justifyClass}`}>
+              <div className="w-full" style={{ maxWidth: resolvedWidth }}>
+                <div className={`grid ${gridColsClass[cols] || 'grid-cols-2'} ${gapCls}`}>
+                  {images
+                    .map((imageItem: any, index: number) => {
+                      const imageSource = getImageSource(imageItem);
+                      if (!imageSource) return null;
+
+                      const imageProps = getImageProps(imageSource.image, 1200);
+                      if (!imageProps) return null;
+                      const dims = imageSource.image?.asset?.metadata?.dimensions;
+                      const iw = Math.round(dims?.width || 1200);
+                      const ih = Math.round(dims?.height || 800);
+
+                      const span = imageItem.colSpan && imageItem.colSpan > 1 ? imageItem.colSpan : undefined;
+
+                      return (
+                        <div
+                          key={imageItem._key || `grid-image-${index}`}
+                          className="relative overflow-hidden"
+                          style={span ? { gridColumn: `span ${span}` } : undefined}
+                        >
+                          <ImageWithBlur
+                            src={imageProps.src}
+                            alt=""
+                            lqip={imageProps.hasBlur ? imageProps.blurDataURL : undefined}
+                            sizes={`(max-width: 768px) ${Math.round(100 / cols)}vw, ${Math.round(80 / cols)}vw`}
+                            className="w-full h-auto"
+                            fill={false}
+                            width={iw}
+                            height={ih}
+                          />
+                        </div>
+                      );
+                    })
+                    .filter(Boolean)}
+                </div>
+              </div>
+            </figure>
+          </div>
+          {caption && (
+            <figcaption className={`mt-2 text-sm text-muted ${capClass}`}>
+              {caption}
+            </figcaption>
+          )}
+        </div>
+      );
+    },
+
     videoMux: ({ value }) => {
-      // console.log('🎥 videoMux component received value:', value);
       const playbackIdToUse = getPlaybackId(value);
       if (!playbackIdToUse) {
         console.error('No valid playback ID found in video data:', value);
-        return null; // Return null instead of error div to avoid layout issues
+        return null;
       }
-      
+
       try {
-        // Use VideoLayout component for consistent vertical handling
         return <VideoLayout video={value} layout="full" alt="" isPortableText={true} />;
       } catch (error) {
         console.error('Error rendering video:', error);
@@ -136,13 +300,13 @@ const RichComponents: PortableTextComponents = {
 
     imageBleed: ({ value }) => {
       const { media } = value;
-      
+
       if (!media) return null;
-      
+
       if (media.mediaType === 'video' && media.video) {
         return <VideoBleed video={media.video} alt="" />;
       }
-      
+
       if (media.mediaType === 'image' && media.image) {
         const dims = media.image?.asset?.metadata?.dimensions;
         const iw = Math.round(dims?.width || 1600);
@@ -165,60 +329,52 @@ const RichComponents: PortableTextComponents = {
         </div>
       );
       }
-      
-      // Fallback if neither image nor video
+
       return null;
     },
 
-    
+
     projectImage: ({ value }) => {
-      const { source, uploadedImage, indexItemRef, layout, caption } = value;
-      
+      const { source, uploadedImage, indexItemRef, layout, width, customWidth, alignment, caption, captionPosition } = value;
+
       let imageToRender = null;
       let displayCaption = caption;
-      
+
       if (source === 'upload' && uploadedImage) {
         imageToRender = uploadedImage;
       } else if (source === 'reference' && indexItemRef?.featuredMedia?.image) {
         imageToRender = indexItemRef.featuredMedia.image;
-        // Use index item description as fallback caption if no custom caption
         if (!displayCaption && indexItemRef.description) {
           displayCaption = indexItemRef.description;
         }
       }
-      
+
       if (!imageToRender) return null;
-      
-      const imageProps = getImageProps(
-        imageToRender, 
-        layout === 'small' ? 400 : layout === 'medium' ? 800 : 1200
-      );
+
+      // Resolve width: prefer new width field, fall back to legacy layout field
+      const resolvedWidth = width
+        ? getWidthStyle(width, customWidth, '100%')
+        : legacyLayoutToWidth(layout);
+
+      const justifyClass = alignmentClass[alignment] || 'justify-center';
+      const capClass = captionAlignClass[captionPosition] || 'text-center';
+
+      const imageProps = getImageProps(imageToRender, 2400);
       if (!imageProps) return null;
       const dims = imageToRender?.asset?.metadata?.dimensions;
-      const iw = Math.round(dims?.width || (layout === 'small' ? 400 : layout === 'medium' ? 800 : 1200));
-      const ih = Math.round(dims?.height || (layout === 'small' ? 300 : layout === 'medium' ? 600 : 800));
-      
-      // Define layout styles (same as your existing imageLayout)
-      const layoutStyles = {
-        full: 'w-full max-w-8xl',
-        // Mobile-first: small→60% (sm:40%), medium→80% (sm:60%), full→100%
-        medium: 'w-full max-w-[80%] sm:max-w-[60%]',
-        small: 'w-full max-w-[60%] sm:max-w-[40%]',
-      };
-      
+      const iw = Math.round(dims?.width || 1200);
+      const ih = Math.round(dims?.height || 800);
+
       return (
         <div className="my-8">
-          {/* Full-width container that breaks out of prose constraints */}
           <div className="relative -mx-4 sm:-mx-6 lg:-mx-8">
-            {/* Full-width horizontal line at vertical center, behind image */}
             <span
               aria-hidden
               className="pointer-events-none absolute inset-x-0 top-1/2 bg-[var(--border)] z-0"
             style={{ height: '0.5px' }}
             />
-            {/* Image centered within normal content width with layout sizing */}
-            <figure className="relative z-10 mx-4 sm:mx-6 lg:mx-8 flex justify-center">
-              <div className={`${layoutStyles[layout as keyof typeof layoutStyles] || layoutStyles.full}`}>
+            <figure className={`relative z-10 mx-4 sm:mx-6 lg:mx-8 flex ${justifyClass}`}>
+              <div className="w-full" style={{ maxWidth: resolvedWidth }}>
                 <ImageWithBlur
                   src={imageProps.src}
                   alt=""
@@ -233,22 +389,28 @@ const RichComponents: PortableTextComponents = {
             </figure>
           </div>
           {displayCaption && (
-            <figcaption className="mt-2 text-sm text-muted text-center">
+            <figcaption className={`mt-2 text-sm text-muted ${capClass}`}>
               {displayCaption}
             </figcaption>
           )}
-          
+
         </div>
       );
     },
 
     spacer: ({ value }) => {
-      // Always use 8rem height (value.height will always be '8rem')
-      const spacerClass = 'h-32'; // 8rem
+      // Support both new number field and legacy string value
+      let heightRem = 8;
+      if (typeof value.height === 'number') {
+        heightRem = value.height;
+      } else if (typeof value.height === 'string') {
+        const parsed = parseFloat(value.height);
+        if (!isNaN(parsed)) heightRem = parsed;
+      }
 
       return (
-        <div 
-          className={spacerClass}
+        <div
+          style={{ height: `${heightRem}rem` }}
           aria-hidden="true"
         />
       );

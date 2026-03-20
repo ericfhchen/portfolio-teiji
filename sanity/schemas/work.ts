@@ -118,8 +118,16 @@ export default defineType({
           title: 'Dual Images (Side by Side)',
         },
         {
+          type: 'imageTriple',
+          title: 'Triple Images (Side by Side)',
+        },
+        {
           type: 'imageBleed',
           title: 'Full Bleed Image',
+        },
+        {
+          type: 'imageGrid',
+          title: 'Image Grid',
         },
         {
           type: 'spacer',

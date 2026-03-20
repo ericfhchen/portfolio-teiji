@@ -7,24 +7,22 @@ export default defineType({
   fields: [
     defineField({
       name: 'height',
-      title: 'Height',
-      type: 'string',
-      options: {
-        list: [
-          { title: '8rem', value: '8rem' },
-        ],
-        layout: 'dropdown',
-      },
-      initialValue: '8rem',
-      validation: (Rule) => Rule.required(),
+      title: 'Height (rem)',
+      type: 'number',
+      description: 'Spacer height in rem units (1–20)',
+      initialValue: 8,
+      validation: (Rule) => Rule.required().min(1).max(20),
     }),
   ],
   preview: {
-    prepare() {
+    select: {
+      height: 'height',
+    },
+    prepare({ height }) {
       return {
         title: 'Spacer',
-        subtitle: 'Height: 8rem',
-        media: () => '↕️',
+        subtitle: `Height: ${height || 8}rem`,
+        media: () => null,
       };
     },
   },

@@ -19,7 +19,7 @@ export default defineType({
       initialValue: 'upload',
       validation: (Rule) => Rule.required(),
     }),
-    
+
     // Direct upload option
     defineField({
       name: 'uploadedImage',
@@ -32,12 +32,12 @@ export default defineType({
       hidden: ({ parent }) => parent?.source !== 'upload',
       validation: (Rule) => Rule.custom((value, context) => {
         const parent = context.parent as any;
-        return parent?.source === 'upload' && !value 
-          ? 'Please upload an image' 
+        return parent?.source === 'upload' && !value
+          ? 'Please upload an image'
           : true;
       }),
     }),
-    
+
     // Reference to Index Item
     defineField({
       name: 'indexItemRef',
@@ -47,13 +47,12 @@ export default defineType({
       hidden: ({ parent }) => parent?.source !== 'reference',
       validation: (Rule) => Rule.custom((value, context) => {
         const parent = context.parent as any;
-        return parent?.source === 'reference' && !value 
-          ? 'Please select an index item' 
+        return parent?.source === 'reference' && !value
+          ? 'Please select an index item'
           : true;
       }),
       options: {
         filter: ({ document }) => {
-          // Only show index items from the same discipline as the current work
           if (document && document.discipline) {
             return {
               filter: 'discipline == $discipline',
@@ -64,63 +63,100 @@ export default defineType({
         },
       },
     }),
-    
-    // Layout options (consistent with your existing imageLayout)
+
     defineField({
-      name: 'layout',
-      title: 'Layout',
+      name: 'width',
+      title: 'Width',
       type: 'string',
       options: {
         list: [
-          { title: 'Full Width (100%)', value: 'full' },
-          { title: 'Medium Width (60%)', value: 'medium' },
-          { title: 'Small Width (40%)', value: 'small' },
+          { title: '40%', value: '40%' },
+          { title: '60%', value: '60%' },
+          { title: '80%', value: '80%' },
+          { title: '100%', value: '100%' },
+          { title: 'Custom', value: 'custom' },
+        ],
+        layout: 'dropdown',
+      },
+      initialValue: '100%',
+    }),
+
+    defineField({
+      name: 'customWidth',
+      title: 'Custom Width (%)',
+      type: 'number',
+      description: 'Enter a custom width between 20 and 100',
+      validation: (Rule) => Rule.min(20).max(100),
+      hidden: ({ parent }) => parent?.width !== 'custom',
+    }),
+
+    defineField({
+      name: 'alignment',
+      title: 'Alignment',
+      type: 'string',
+      options: {
+        list: [
+          { title: 'Left', value: 'left' },
+          { title: 'Center', value: 'center' },
+          { title: 'Right', value: 'right' },
         ],
         layout: 'radio',
       },
-      initialValue: 'full',
-      validation: (Rule) => Rule.required(),
+      initialValue: 'center',
     }),
-    
+
     defineField({
       name: 'caption',
       title: 'Caption',
       type: 'string',
       description: 'Optional caption to display below the image',
     }),
+
+    defineField({
+      name: 'captionPosition',
+      title: 'Caption Position',
+      type: 'string',
+      options: {
+        list: [
+          { title: 'Left', value: 'left' },
+          { title: 'Center', value: 'center' },
+          { title: 'Right', value: 'right' },
+        ],
+        layout: 'radio',
+      },
+      initialValue: 'center',
+      hidden: ({ parent }) => !parent?.caption,
+    }),
   ],
-  
+
   preview: {
     select: {
       source: 'source',
       uploadedMedia: 'uploadedImage',
       indexItem: 'indexItemRef.title',
       indexItemMedia: 'indexItemRef.image',
-      layout: 'layout',
+      width: 'width',
+      customWidth: 'customWidth',
       caption: 'caption',
     },
-    prepare({ source, uploadedMedia, indexItem, indexItemMedia, layout, caption }) {
-      const layoutLabels = {
-        full: 'Full Width',
-        medium: '60% Width',  
-        small: '40% Width',
-      };
-      
+    prepare({ source, uploadedMedia, indexItem, indexItemMedia, width, customWidth, caption }) {
+      const widthLabel = width === 'custom' && customWidth ? `${customWidth}%` : (width || '100%');
+
       let title = 'Project Image';
       let media = uploadedMedia;
-      
+
       if (source === 'reference' && indexItem) {
         title = `Referenced: ${indexItem}`;
         media = indexItemMedia;
       } else if (source === 'upload') {
         title = caption || 'Uploaded Image';
       }
-      
+
       return {
         title,
-        subtitle: layoutLabels[layout as keyof typeof layoutLabels] || layout,
+        subtitle: `Width: ${widthLabel}`,
         media,
       };
     },
   },
-}); 
+});
