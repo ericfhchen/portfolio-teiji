@@ -157,10 +157,10 @@ export default async function SectionIndexPage({ params, searchParams }: { param
       <Filters tags={allTags as string[]} section={section} />
       <div className="relative z-10 pt-20 sm:pt-10">
         <Grid items={feedItems} section={section} variant="index" />
-        {resolvedSearchParams.item && (
-          <Lightbox items={feedItems} section={section} />
-        )}
       </div>
+      {resolvedSearchParams.item && (
+        <Lightbox items={feedItems} section={section} />
+      )}
     </>
   );
 }

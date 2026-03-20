@@ -81,7 +81,7 @@ export default function HeroGallery({ items, title }: HeroGalleryProps) {
         <span
           aria-hidden
           className="pointer-events-none absolute inset-x-0 top-1/2 bg-[var(--border)] z-0"
-          style={{ height: '0.5px' }}
+          style={{ height: '1px', transform: 'scaleY(0.333)', transformOrigin: '0 0' }}
         />
         
         <div className="relative w-full h-[100svh] py-20 max-w-7xl flex items-center justify-center">

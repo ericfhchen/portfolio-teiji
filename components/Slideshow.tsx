@@ -172,7 +172,7 @@ export default function Slideshow({ items, section, autoPlayInterval = 5000 }: S
         <span
           aria-hidden
           className="pointer-events-none absolute inset-x-0 top-1/2 bg-[var(--border)] z-10"
-              style={{ height: '0.5px' }}
+              style={{ height: '1px', transform: 'scaleY(0.333)', transformOrigin: '0 0' }}
         />
 
         {/* Desktop-only hover texts on section home – positioned to screen edges, above image */}

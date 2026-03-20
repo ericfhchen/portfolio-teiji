@@ -75,7 +75,7 @@ const RichComponents: PortableTextComponents = {
             <span
               aria-hidden
               className="pointer-events-none absolute inset-x-0 top-1/2 bg-[var(--border)] z-0"
-            style={{ height: '0.5px' }}
+            style={{ height: '1px', transform: 'scaleY(0.333)', transformOrigin: '0 0' }}
             />
             {/* Image centered within normal content width */}
             <figure className="relative z-10 mx-4 sm:mx-6 lg:mx-8 flex justify-center">
@@ -111,7 +111,7 @@ const RichComponents: PortableTextComponents = {
             <span
               aria-hidden
               className="pointer-events-none absolute inset-x-0 top-1/2 bg-[var(--border)] z-0"
-            style={{ height: '0.5px' }}
+            style={{ height: '1px', transform: 'scaleY(0.333)', transformOrigin: '0 0' }}
             />
             <figure className="relative z-10 max-w-7xl mx-auto">
               <div className="grid grid-cols-2 gap-4 sm:gap-16">
@@ -171,7 +171,7 @@ const RichComponents: PortableTextComponents = {
             <span
               aria-hidden
               className="pointer-events-none absolute inset-x-0 top-1/2 bg-[var(--border)] z-0"
-              style={{ height: '0.5px' }}
+              style={{ height: '1px', transform: 'scaleY(0.333)', transformOrigin: '0 0' }}
             />
             <figure className="relative z-10 max-w-7xl mx-auto">
               <div className="grid grid-cols-3 gap-4 sm:gap-16">
@@ -240,7 +240,7 @@ const RichComponents: PortableTextComponents = {
             <span
               aria-hidden
               className="pointer-events-none absolute inset-x-0 top-1/2 bg-[var(--border)] z-0"
-              style={{ height: '0.5px' }}
+              style={{ height: '1px', transform: 'scaleY(0.333)', transformOrigin: '0 0' }}
             />
             <figure className={`relative z-10 max-w-7xl mx-auto flex ${justifyClass}`}>
               <div className="w-full" style={{ maxWidth: resolvedWidth }}>
@@ -380,7 +380,7 @@ const RichComponents: PortableTextComponents = {
             <span
               aria-hidden
               className="pointer-events-none absolute inset-x-0 top-1/2 bg-[var(--border)] z-0"
-            style={{ height: '0.5px' }}
+            style={{ height: '1px', transform: 'scaleY(0.333)', transformOrigin: '0 0' }}
             />
             <figure className={`relative z-10 mx-4 sm:mx-6 lg:mx-8 flex ${justifyClass}`}>
               <div className="w-full" style={{ maxWidth: resolvedWidth }}>

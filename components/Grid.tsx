@@ -122,7 +122,7 @@ export default function Grid({ items, section, variant = 'index' }: GridProps) {
               <span
                 aria-hidden
                 className="pointer-events-none absolute inset-x-0 top-1/2 bg-[var(--border)] z-0"
-              style={{ height: '0.5px' }}
+              style={{ height: '1px', transform: 'scaleY(0.333)', transformOrigin: '0 0' }}
               />
 
               {/*
@@ -219,7 +219,7 @@ export default function Grid({ items, section, variant = 'index' }: GridProps) {
                 <span
                   aria-hidden
                   className="pointer-events-none absolute inset-x-0 top-1/2 bg-[var(--border)] z-0"
-                style={{ height: '0.5px' }}
+                style={{ height: '1px', transform: 'scaleY(0.333)', transformOrigin: '0 0' }}
                 />
                 {/* Empty tile with same padding as regular tiles to maintain grid alignment */}
                 <div className={`relative overflow-hidden ${variant === 'work' ? 'px-6 lg:px-8 pt-12 pb-4 lg:pb-12' : 'p-12 lg:p-20'} ${variant !== 'work' ? 'lg:max-w-[100dvh]' : ''} mx-auto w-full`}>

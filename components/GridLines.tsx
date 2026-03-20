@@ -37,16 +37,16 @@ export default function GridLines({ type }: GridLinesProps) {
         <div
           key={`mobile-${index}`}
           className="absolute top-0 bottom-0 bg-[var(--border)] lg:hidden"
-          style={{ left: `${position}%`, width: '0.5px' }}
+          style={{ left: `${position}%`, width: '1px', transform: 'scaleX(0.333)', transformOrigin: '0 0' }}
         />
       ))}
-      
+
       {/* Desktop lines (visible on large screens) */}
       {desktopLines.map((position, index) => (
         <div
           key={`desktop-${index}`}
           className="absolute top-0 bottom-0 bg-[var(--border)] hidden lg:block"
-          style={{ left: `${position}%`, width: '0.5px' }}
+          style={{ left: `${position}%`, width: '1px', transform: 'scaleX(0.333)', transformOrigin: '0 0' }}
         />
       ))}
     </div>

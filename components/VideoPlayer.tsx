@@ -30,7 +30,7 @@ export function VideoLayout({ video, layout, caption, alt, isPortableText = fals
         <span
           aria-hidden
           className="pointer-events-none absolute inset-x-0 top-1/2 bg-[var(--border)] z-0"
-        style={{ height: '0.5px' }}
+        style={{ height: '1px', transform: 'scaleY(0.333)', transformOrigin: '0 0' }}
         />
         {/* Video centered within normal content width with layout sizing */}
         <figure className="relative z-10 mx-4 sm:mx-6 lg:mx-8 flex justify-center">

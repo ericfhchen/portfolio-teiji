@@ -327,8 +327,8 @@ export default function Lightbox({ items, section }: LightboxProps) {
       {/* Single vertical grid line in the center */}
       <div className="fixed inset-0 pointer-events-none z-0">
         <div
-          className="absolute top-0 bottom-0 border-r border-var"
-          style={{ left: '50%', borderWidth: '0.5px' }}
+          className="absolute top-0 bottom-0 bg-[var(--border)]"
+          style={{ left: '50%', width: '1px', transform: 'scaleX(0.333)', transformOrigin: '0 0' }}
         />
       </div>
 
@@ -348,7 +348,7 @@ export default function Lightbox({ items, section }: LightboxProps) {
             <span
               aria-hidden
               className="pointer-events-none absolute inset-x-0 top-1/2 bg-[var(--border)] z-0"
-            style={{ height: '0.5px' }}
+            style={{ height: '1px', transform: 'scaleY(0.333)', transformOrigin: '0 0' }}
             />
             
             {/* Work tile container - matching Grid component exactly */}
