@@ -7,7 +7,7 @@ import Grid from '@/components/Grid';
 import GridLines from '@/components/GridLines';
 
 async function getWorkData(section: string) {
-  const featured = await client.fetch(workPageQuery, { section });
+  const featured = await client.fetch(workPageQuery, { section }, { next: { revalidate: 60 } });
 
   // Helper function to process media item
   const processMediaItem = (mediaItem: any) => {
@@ -23,7 +23,7 @@ async function getWorkData(section: string) {
       videoData = mediaItem.video;
       // Use poster image if available, otherwise use MUX thumbnail
       if (videoData?.poster) {
-        src = getImageUrl(videoData.poster, 800);
+        src = getImageUrl(videoData.poster, 1600);
         lqip = videoData.poster.lqip || '';
         alt = videoData.poster.alt || '';
       } else if (videoData?.asset?.asset?.playbackId) {
@@ -40,7 +40,7 @@ async function getWorkData(section: string) {
         alt = mediaItem.alt || '';
       }
     } else if (mediaItem.mediaType === 'image' && mediaItem.image) {
-      src = getImageUrl(mediaItem.image, 800);
+      src = getImageUrl(mediaItem.image, 1600);
       lqip = mediaItem.image.lqip || '';
       alt = mediaItem.image.alt || '';
     }
@@ -78,7 +78,7 @@ async function getWorkData(section: string) {
       // Video-specific fields
       ...(staticMedia?.videoData && {
         playbackId: staticMedia.videoData?.asset?.asset?.playbackId || staticMedia.videoData?.asset?.playbackId,
-        poster: staticMedia.videoData?.poster ? getImageUrl(staticMedia.videoData.poster, 800) : undefined,
+        poster: staticMedia.videoData?.poster ? getImageUrl(staticMedia.videoData.poster, 1600) : undefined,
         controls: staticMedia.videoData?.controls ?? false,
         videoData: staticMedia.videoData,
       }),
@@ -133,7 +133,7 @@ export default async function WorkPage({
               variant="work" 
             />
           ) : (
-            <div className="text-centerpy-12">
+            <div className="text-center py-12">
               <p className="text-muted">No featured works found.</p>
             </div>
           )}

@@ -2,12 +2,12 @@ import { urlFor } from './sanity.client';
 
 export function getImageProps(
   image: any,
-  width: number = 800,
+  width: number = 1600,
   height?: number
 ) {
   if (!image?.asset) return null;
 
-  let builder = urlFor(image).width(width);
+  let builder = urlFor(image).width(width).quality(85).auto('format');
   
   if (height) {
     builder = builder.height(height);
@@ -29,11 +29,13 @@ export function getImageProps(
   };
 }
 
-export function getImageUrl(image: any, width: number = 800) {
+export function getImageUrl(image: any, width: number = 1600) {
   if (!image?.asset) return '';
-  
+
   return urlFor(image)
     .width(width)
+    .quality(85)
+    .auto('format')
     .fit('crop')
     .crop(image.hotspot ? 'focalpoint' : 'center')
     .url();

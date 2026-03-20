@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import CustomCursor from './CustomCursor';
 import { FeedItem } from '@/sanity/schema';
-import { getVideoSource, shouldUseHls } from '@/lib/mux';
+import { getVideoSource } from '@/lib/mux';
 import Hls from 'hls.js';
 import ImageWithBlur from '@/components/ImageWithBlur';
 
@@ -115,9 +115,12 @@ export default function Slideshow({ items, section, autoPlayInterval = 5000 }: S
       onMouseLeave={handleMouseLeave}
     >
       {/* Left navigation area (left half of screen) */}
-      <div 
+      <div
         className="absolute left-0 top-0 w-1/2 h-full z-20 cursor-none"
+        role="button"
+        tabIndex={0}
         onClick={goToPrevious}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); goToPrevious(); } }}
         aria-label="Previous image"
         onMouseEnter={() => {
           // Clear any pending hide timeout
@@ -138,9 +141,12 @@ export default function Slideshow({ items, section, autoPlayInterval = 5000 }: S
       />
       
       {/* Right navigation area (right half of screen) */}
-      <div 
+      <div
         className="absolute right-0 top-0 w-1/2 h-full z-20 cursor-none"
+        role="button"
+        tabIndex={0}
         onClick={goToNext}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); goToNext(); } }}
         aria-label="Next image"
         onMouseEnter={() => {
           // Clear any pending hide timeout
@@ -258,24 +264,21 @@ function SlideshowVideoItem({ item }: { item: FeedItem }) {
     setIsVideoReady(false);
     setVideoError(false);
 
+    const handleLoadedMetadata = () => setIsVideoReady(true);
+    const handleCanPlay = () => {
+      video.play().catch(() => {
+        // Autoplay prevented, user will need to interact
+      });
+    };
+    const handleError = () => setVideoError(true);
+
     // Check if browser supports HLS natively (Safari)
     if (video.canPlayType('application/vnd.apple.mpegurl')) {
       video.src = videoSource.src;
-      
-      // For Safari, we can detect when the video is ready
-      video.addEventListener('loadedmetadata', () => {
-        setIsVideoReady(true);
-      });
-      
-      video.addEventListener('canplay', () => {
-        video.play().catch(() => {
-          // Autoplay prevented, user will need to interact
-        });
-      });
-      
-      video.addEventListener('error', () => {
-        setVideoError(true);
-      });
+
+      video.addEventListener('loadedmetadata', handleLoadedMetadata);
+      video.addEventListener('canplay', handleCanPlay);
+      video.addEventListener('error', handleError);
     } else if (Hls.isSupported()) {
       // Use HLS.js for Chrome and other browsers
       const hls = new Hls({
@@ -322,6 +325,9 @@ function SlideshowVideoItem({ item }: { item: FeedItem }) {
         hlsRef.current.destroy();
         hlsRef.current = null;
       }
+      video.removeEventListener('loadedmetadata', handleLoadedMetadata);
+      video.removeEventListener('canplay', handleCanPlay);
+      video.removeEventListener('error', handleError);
     };
   }, [videoSource?.src, shouldShowVideo]);
 

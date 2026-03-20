@@ -44,7 +44,7 @@ export default function MediaItem({ mediaItem, className = '' }: MediaItemProps)
   const { mediaType, alt } = mediaItem;
 
   if (mediaType === 'image' && mediaItem.image) {
-    const imageProps = getImageProps(mediaItem.image, 800, 600);
+    const imageProps = getImageProps(mediaItem.image, 1600);
     if (!imageProps) return null;
 
     return (

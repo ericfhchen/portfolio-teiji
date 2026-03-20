@@ -7,7 +7,7 @@ import { FeedItem } from '@/sanity/schema';
 import GridLines from '@/components/GridLines';
 
 async function getFeaturedData(section: string) {
-  return client.fetch(featuredWorksQuery, { section });
+  return client.fetch(featuredWorksQuery, { section }, { next: { revalidate: 60 } });
 }
 
 export async function generateMetadata({ 
@@ -63,10 +63,10 @@ export default async function SectionPage({
       // For videos, use MUX thumbnail as fallback if no poster
       let posterSrc = '';
       if (video.poster) {
-        posterSrc = getImageUrl(video.poster, 800);
+        posterSrc = getImageUrl(video.poster, 2400);
       } else if (playbackId) {
         // Use MUX thumbnail as fallback poster
-        posterSrc = `https://image.mux.com/${playbackId}/thumbnail.jpg?width=800&fit_mode=preserve`;
+        posterSrc = `https://image.mux.com/${playbackId}/thumbnail.jpg?width=2400&fit_mode=preserve`;
       }
       
       const feedItem: FeedItem = {
@@ -91,7 +91,7 @@ export default async function SectionPage({
       const feedItem: FeedItem = {
         _id: work._id,
         mediaType: 'image' as const,
-        src: getImageUrl(featuredImage.image, 800),
+        src: getImageUrl(featuredImage.image, 2400),
         alt: featuredImage.image.alt || featuredImage.alt || '',
         lqip: featuredImage.image.lqip || '',
         parentSlug: work.slug,

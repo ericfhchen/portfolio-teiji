@@ -2,7 +2,6 @@
 
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { getVideoSourceFromMux, getPlaybackId } from '@/lib/mux';
-import { client } from '@/lib/sanity.client';
 import { isVerticalMedia } from '@/lib/image';
 import Hls from 'hls.js';
 
@@ -94,35 +93,35 @@ export function VideoPlayer({ video, objectFit = 'contain', isVertical = false, 
   autoPlay?: boolean;
   showMuteButton?: boolean;
 }) {
-  // Early validation before any hooks
-  const playbackId = getPlaybackId(video);
-  if (!playbackId) {
-    return null;
-  }
-
-  let videoSource;
-  try {
-    videoSource = getVideoSourceFromMux(video);
-    if (!videoSource?.src) {
-      return null;
-    }
-  } catch (error) {
-    return null;
-  }
-
-  // Get captions URL if available
-  let captionsUrl = '';
-  if (video.captions?.asset?._ref) {
-    const assetId = video.captions.asset._ref.replace('file-', '').replace('-vtt', '');
-    captionsUrl = `https://cdn.sanity.io/files/${client.config().projectId}/${client.config().dataset}/${assetId}.vtt`;
-  }
-
-  // Now declare hooks after all validation and data processing
+  // Hooks must be declared unconditionally (Rules of Hooks)
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
   const [actualDimensions, setActualDimensions] = useState<{width: number, height: number} | null>(null);
+
+  // Validation after hooks
+  const playbackId = getPlaybackId(video);
+
+  let videoSource;
+  try {
+    videoSource = getVideoSourceFromMux(video);
+  } catch {
+    videoSource = null;
+  }
+
+  // Get captions URL if available
+  const projectIdEnv = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || '';
+  const datasetEnv = process.env.NEXT_PUBLIC_SANITY_DATASET || 'production';
+  let captionsUrl = '';
+  if (video.captions?.asset?._ref) {
+    const assetId = video.captions.asset._ref.replace('file-', '').replace('-vtt', '');
+    captionsUrl = `https://cdn.sanity.io/files/${projectIdEnv}/${datasetEnv}/${assetId}.vtt`;
+  }
+
+  if (!playbackId || !videoSource?.src) {
+    return null;
+  }
 
   // Setup HLS.js for Chrome
   useEffect(() => {

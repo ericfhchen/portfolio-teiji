@@ -38,7 +38,7 @@ async function getFeedData(section: string, tags?: string[]) {
         const videoData = mediaData.video;
         // Use poster image if available, otherwise use MUX thumbnail
         if (videoData?.poster) {
-          src = getImageUrl(videoData.poster, 800);
+          src = getImageUrl(videoData.poster, 1600);
           lqip = videoData.poster.lqip || '';
           alt = videoData.poster.alt || '';
         } else if (videoData?.asset?.asset?.playbackId) {
@@ -51,7 +51,7 @@ async function getFeedData(section: string, tags?: string[]) {
           alt = mediaData.alt || '';
         }
       } else if (mediaData?.mediaType === 'image' && mediaData.image) {
-        src = getImageUrl(mediaData.image, 800);
+        src = getImageUrl(mediaData.image, 1600);
         lqip = mediaData.image.lqip || '';
         alt = mediaData.image.alt || '';
       }
@@ -72,7 +72,7 @@ async function getFeedData(section: string, tags?: string[]) {
         // Video-specific fields
         ...(isVideo && {
           playbackId: mediaData.video?.asset?.asset?.playbackId,
-          poster: mediaData.video?.poster ? getImageUrl(mediaData.video.poster, 800) : undefined,
+          poster: mediaData.video?.poster ? getImageUrl(mediaData.video.poster, 1600) : undefined,
           controls: mediaData.video?.controls ?? false,
           videoData: mediaData.video, // Store raw video data for VideoPlayer
         }),
@@ -90,7 +90,7 @@ async function getFeedData(section: string, tags?: string[]) {
           if (galleryIsVideo) {
             const galleryVideoData = galleryMedia.video;
             if (galleryVideoData?.poster) {
-              gallerySrc = getImageUrl(galleryVideoData.poster, 800);
+              gallerySrc = getImageUrl(galleryVideoData.poster, 1600);
               galleryLqip = galleryVideoData.poster.lqip || '';
               galleryAlt = galleryVideoData.poster.alt || '';
             } else if (galleryVideoData?.asset?.asset?.playbackId) {
@@ -98,7 +98,7 @@ async function getFeedData(section: string, tags?: string[]) {
               galleryAlt = galleryMedia.alt || '';
             }
           } else if (galleryMedia?.mediaType === 'image' && galleryMedia.image) {
-            gallerySrc = getImageUrl(galleryMedia.image, 800);
+            gallerySrc = getImageUrl(galleryMedia.image, 1600);
             galleryLqip = galleryMedia.image.lqip || '';
             galleryAlt = galleryMedia.image.alt || '';
           }
@@ -111,7 +111,7 @@ async function getFeedData(section: string, tags?: string[]) {
             // Video-specific fields
             ...(galleryIsVideo && {
               playbackId: galleryMedia.video?.asset?.asset?.playbackId,
-              poster: galleryMedia.video?.poster ? getImageUrl(galleryMedia.video.poster, 800) : undefined,
+              poster: galleryMedia.video?.poster ? getImageUrl(galleryMedia.video.poster, 1600) : undefined,
               controls: galleryMedia.video?.controls ?? false,
               videoData: galleryMedia.video,
             }),
@@ -135,27 +135,30 @@ async function getFeedData(section: string, tags?: string[]) {
   return { feedItems, allTags };
 }
 
-export async function generateMetadata({ params }: any) {
+export async function generateMetadata({ params }: { params: Promise<{ section: string }> }) {
+  const { section } = await params;
   const siteSettings = await getSiteSettings();
   const siteTitle = siteSettings?.title || 'Tei-ji';
-  
+
   return {
-    title: `${params.section.charAt(0).toUpperCase() + params.section.slice(1)} — Index — ${siteTitle}`,
+    title: `${section.charAt(0).toUpperCase() + section.slice(1)} — Index — ${siteTitle}`,
   };
 }
 
-export default async function SectionIndexPage({ params, searchParams }: any) {
-  const tags = searchParams.tags?.split(',').filter(Boolean) || [];
-  const { feedItems, allTags } = await getFeedData(params.section, tags.length > 0 ? tags : undefined);
+export default async function SectionIndexPage({ params, searchParams }: { params: Promise<{ section: string }>; searchParams: Promise<{ tags?: string; item?: string }> }) {
+  const { section } = await params;
+  const resolvedSearchParams = await searchParams;
+  const tags = resolvedSearchParams.tags?.split(',').filter(Boolean) || [];
+  const { feedItems, allTags } = await getFeedData(section, tags.length > 0 ? tags : undefined);
 
   return (
     <>
       <GridLines type="index" />
-      <Filters tags={allTags as string[]} section={params.section} />
+      <Filters tags={allTags as string[]} section={section} />
       <div className="relative z-10 pt-20 sm:pt-10">
-        <Grid items={feedItems} section={params.section} variant="index" />
-        {searchParams.item && (
-          <Lightbox items={feedItems} section={params.section} />
+        <Grid items={feedItems} section={section} variant="index" />
+        {resolvedSearchParams.item && (
+          <Lightbox items={feedItems} section={section} />
         )}
       </div>
     </>

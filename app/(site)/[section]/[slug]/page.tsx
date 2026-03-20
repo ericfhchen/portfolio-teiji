@@ -1,10 +1,9 @@
 import { notFound } from 'next/navigation';
-import Image from 'next/image';
 import Link from 'next/link';
 import { PortableText } from '@portabletext/react';
 import { client } from '@/lib/sanity.client';
 import { workBySlugQuery, workSlugParamsQuery, siteSettingsQuery } from '@/lib/queries';
-import { getImageProps, isVerticalMedia, getMediaAspectRatio } from '@/lib/image';
+import { getImageProps, isVerticalMedia } from '@/lib/image';
 import RichComponents from '@/components/RichComponents';
 import Prose from '@/components/Prose';
 import GridLines from '@/components/GridLines';
@@ -26,8 +25,8 @@ export async function generateMetadata({
   params: Promise<{ section: string; slug: string }> 
 }) {
   const { section, slug } = await params;
-  const work = await client.fetch(workBySlugQuery, { section, slug });
-  
+  const work = await client.fetch(workBySlugQuery, { section, slug }, { next: { revalidate: 60 } });
+
   if (!work) {
     return {};
   }
@@ -65,8 +64,8 @@ export default async function WorkPage({
   params: Promise<{ section: string; slug: string }> 
 }) {
   const { section, slug } = await params;
-  const work = await client.fetch(workBySlugQuery, { section, slug });
-  
+  const work = await client.fetch(workBySlugQuery, { section, slug }, { next: { revalidate: 60 } });
+
   if (!work) {
     notFound();
   }

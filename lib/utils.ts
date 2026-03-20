@@ -2,7 +2,7 @@ import { client } from './sanity.client';
 import { siteSettingsQuery } from './queries';
 
 export async function getSiteSettings() {
-  const settings = await client.fetch(siteSettingsQuery);
+  const settings = await client.fetch(siteSettingsQuery, {}, { next: { revalidate: 60 } });
   return settings;
 }
 

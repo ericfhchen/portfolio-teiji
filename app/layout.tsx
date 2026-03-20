@@ -60,7 +60,7 @@ export async function generateMetadata(): Promise<Metadata> {
     viewport: {
       width: 'device-width',
       initialScale: 1,
-      userScalable: false,
+      userScalable: true,
     },
     other: {
       'screen-orientation': 'portrait',

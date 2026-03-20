@@ -64,7 +64,7 @@ export default function HeroGallery({ items, title }: HeroGalleryProps) {
   let coverImage = null;
   let coverVideo = null;
   if (currentItem?.mediaType === 'image' && currentItem.image) {
-    coverImage = getImageProps(currentItem.image, 1600); // Remove the 900 height
+    coverImage = getImageProps(currentItem.image, 3200);
   } else if (currentItem?.mediaType === 'video' && currentItem.video) {
     coverVideo = currentItem.video;
   }
@@ -90,9 +90,12 @@ export default function HeroGallery({ items, title }: HeroGalleryProps) {
               {/* Navigation areas - only show if multiple items, limited to media height */}
               {items.length > 1 && (
                 <>
-                  <div 
+                  <div
                     className="absolute left-0 top-16 bottom-16 w-1/2 z-20 md:cursor-none md:top-0 md:bottom-0"
+                    role="button"
+                    tabIndex={0}
                     onClick={goToPrevious}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); goToPrevious(); } }}
                     aria-label="Previous image"
                     onMouseEnter={() => {
                       if (!isFinePointer) return;
@@ -113,9 +116,12 @@ export default function HeroGallery({ items, title }: HeroGalleryProps) {
                       }, 100);
                     }}
                   />
-                  <div 
+                  <div
                     className="absolute right-0 top-16 bottom-16 w-1/2 z-20 md:cursor-none md:top-0 md:bottom-0"
+                    role="button"
+                    tabIndex={0}
                     onClick={goToNext}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); goToNext(); } }}
                     aria-label="Next image"
                     onMouseEnter={() => {
                       if (!isFinePointer) return;
@@ -144,6 +150,7 @@ export default function HeroGallery({ items, title }: HeroGalleryProps) {
                 lqip={coverImage.hasBlur ? coverImage.blurDataURL : undefined}
                 sizes="(max-width: 768px) 100vw, 80vw"
                 className="object-contain object-center w-full h-full"
+                priority
               />
             </div>
           ) : coverVideo ? (
@@ -151,9 +158,12 @@ export default function HeroGallery({ items, title }: HeroGalleryProps) {
               {/* Navigation areas - only show if multiple items, limited to media height */}
               {items.length > 1 && (
                 <>
-                  <div 
+                  <div
                     className="absolute left-0 top-16 bottom-16 w-1/2 z-20 md:cursor-none md:top-0 md:bottom-0"
+                    role="button"
+                    tabIndex={0}
                     onClick={goToPrevious}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); goToPrevious(); } }}
                     aria-label="Previous image"
                     onMouseEnter={() => {
                       if (!isFinePointer) return;
@@ -174,9 +184,12 @@ export default function HeroGallery({ items, title }: HeroGalleryProps) {
                       }, 100);
                     }}
                   />
-                  <div 
+                  <div
                     className="absolute right-0 top-16 bottom-16 w-1/2 z-20 md:cursor-none md:top-0 md:bottom-0"
+                    role="button"
+                    tabIndex={0}
                     onClick={goToNext}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); goToNext(); } }}
                     aria-label="Next image"
                     onMouseEnter={() => {
                       if (!isFinePointer) return;

@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { useState } from 'react';
+import { useState, useRef, useCallback } from 'react';
 
 interface ImageWithBlurProps {
   src: string;
@@ -15,26 +15,33 @@ interface ImageWithBlurProps {
   priority?: boolean;
 }
 
-export default function ImageWithBlur({ 
-  src, 
-  alt, 
-  lqip, 
-  sizes, 
-  className, 
-  fill = true, 
-  width, 
+export default function ImageWithBlur({
+  src,
+  alt,
+  lqip,
+  sizes,
+  className,
+  fill = true,
+  width,
   height,
-  priority 
+  priority
 }: ImageWithBlurProps) {
   const [imageLoaded, setImageLoaded] = useState(false);
+  const loadStartRef = useRef(performance.now());
+
+  const handleLoad = useCallback(() => {
+    const elapsed = performance.now() - loadStartRef.current;
+    console.log(`[ImageWithBlur] Loaded in ${Math.round(elapsed)}ms: ${src.substring(0, 80)}...`);
+    setImageLoaded(true);
+  }, [src]);
 
   const imageProps: any = {
     src,
     alt,
-    className,
+    className: `${className} transition-opacity duration-500 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`,
     sizes,
     placeholder: "empty",
-    onLoad: () => setImageLoaded(true),
+    onLoad: handleLoad,
   };
 
   if (priority) {
@@ -48,22 +55,26 @@ export default function ImageWithBlur({
     imageProps.height = height;
   }
 
+  // Use a relative wrapper to contain the absolute blur overlay
+  // When fill mode, the wrapper itself must be absolute to fill parent
   return (
-    <>
+    <div className="relative" style={fill ? { position: 'absolute', inset: 0 } : undefined}>
       <Image {...imageProps} />
       {/* Blur placeholder that matches image dimensions */}
-      {lqip && !imageLoaded && (
-        <div className="absolute inset-0 flex items-center justify-center">
+      {lqip && (
+        <div
+          className={`absolute inset-0 overflow-hidden transition-opacity duration-500 ${imageLoaded ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
+        >
           <Image
             src={lqip}
             alt=""
             {...(fill ? { fill: true } : { width, height })}
-            className={`${className} opacity-100 blur-sm shadow-none`}
+            className={`${className} blur-xl scale-110`}
             sizes={sizes}
             aria-hidden="true"
           />
         </div>
       )}
-    </>
+    </div>
   );
 }
