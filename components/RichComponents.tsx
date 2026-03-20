@@ -41,6 +41,13 @@ const gapClass: Record<string, string> = {
   large: 'gap-16',
 };
 
+// For multi-image layouts: align images toward the center gap
+function getCellAlignment(index: number, totalCols: number): string {
+  if (index === 0) return 'justify-end';
+  if (index === totalCols - 1) return 'justify-start';
+  return 'justify-center';
+}
+
 // Helper to get image source from an image item (shared by dual/triple/grid)
 function getImageSource(imageItem: any) {
   if (imageItem.source === 'reference' && imageItem.indexItemRef?.featuredMedia?.image) {
@@ -92,11 +99,10 @@ const RichComponents: PortableTextComponents = {
 
 
     imageDual: ({ value }) => {
-      const { images, caption, width, customWidth, alignment, captionPosition } = value;
+      const { images, caption, width, customWidth, captionPosition } = value;
       if (!images?.length || images.length !== 2) return null;
 
       const resolvedWidth = getWidthStyle(width, customWidth, '60%');
-      const justifyClass = alignmentClass[alignment] || 'justify-center';
       const capClass = captionAlignClass[captionPosition] || 'text-center';
 
       return (
@@ -107,22 +113,24 @@ const RichComponents: PortableTextComponents = {
               className="pointer-events-none absolute inset-x-0 top-1/2 bg-[var(--border)] z-0"
             style={{ height: '0.5px' }}
             />
-            <figure className={`relative z-10 max-w-7xl mx-auto flex ${justifyClass}`}>
-              <div className="w-full" style={{ maxWidth: resolvedWidth }}>
-                <div className="grid grid-cols-2 gap-4 sm:gap-16">
-                  {images
-                    .map((imageItem: any, index: number) => {
-                      const imageSource = getImageSource(imageItem);
-                      if (!imageSource) return null;
+            <figure className="relative z-10 max-w-7xl mx-auto">
+              <div className="grid grid-cols-2 gap-4 sm:gap-16">
+                {images
+                  .map((imageItem: any, index: number) => {
+                    const imageSource = getImageSource(imageItem);
+                    if (!imageSource) return null;
 
-                      const imageProps = getImageProps(imageSource.image, 1200);
-                      if (!imageProps) return null;
-                      const dims = imageSource.image?.asset?.metadata?.dimensions;
-                      const iw = Math.round(dims?.width || 1200);
-                      const ih = Math.round(dims?.height || 800);
+                    const imageProps = getImageProps(imageSource.image, 1200);
+                    if (!imageProps) return null;
+                    const dims = imageSource.image?.asset?.metadata?.dimensions;
+                    const iw = Math.round(dims?.width || 1200);
+                    const ih = Math.round(dims?.height || 800);
 
-                      return (
-                        <div key={imageItem._key || `dual-image-${index}`} className="relative overflow-hidden">
+                    const cellAlign = getCellAlignment(index, 2);
+
+                    return (
+                      <div key={imageItem._key || `dual-image-${index}`} className={`flex ${cellAlign}`}>
+                        <div className="relative overflow-hidden" style={{ width: resolvedWidth }}>
                           <ImageWithBlur
                             src={imageProps.src}
                             alt=""
@@ -134,10 +142,10 @@ const RichComponents: PortableTextComponents = {
                             height={ih}
                           />
                         </div>
-                      );
-                    })
-                    .filter(Boolean)}
-                </div>
+                      </div>
+                    );
+                  })
+                  .filter(Boolean)}
               </div>
             </figure>
           </div>
@@ -151,11 +159,10 @@ const RichComponents: PortableTextComponents = {
     },
 
     imageTriple: ({ value }) => {
-      const { images, caption, width, customWidth, alignment, captionPosition } = value;
+      const { images, caption, width, customWidth, captionPosition } = value;
       if (!images?.length || images.length !== 3) return null;
 
       const resolvedWidth = getWidthStyle(width, customWidth, '80%');
-      const justifyClass = alignmentClass[alignment] || 'justify-center';
       const capClass = captionAlignClass[captionPosition] || 'text-center';
 
       return (
@@ -166,22 +173,24 @@ const RichComponents: PortableTextComponents = {
               className="pointer-events-none absolute inset-x-0 top-1/2 bg-[var(--border)] z-0"
               style={{ height: '0.5px' }}
             />
-            <figure className={`relative z-10 max-w-7xl mx-auto flex ${justifyClass}`}>
-              <div className="w-full" style={{ maxWidth: resolvedWidth }}>
-                <div className="grid grid-cols-3 gap-4 sm:gap-16">
-                  {images
-                    .map((imageItem: any, index: number) => {
-                      const imageSource = getImageSource(imageItem);
-                      if (!imageSource) return null;
+            <figure className="relative z-10 max-w-7xl mx-auto">
+              <div className="grid grid-cols-3 gap-4 sm:gap-16">
+                {images
+                  .map((imageItem: any, index: number) => {
+                    const imageSource = getImageSource(imageItem);
+                    if (!imageSource) return null;
 
-                      const imageProps = getImageProps(imageSource.image, 800);
-                      if (!imageProps) return null;
-                      const dims = imageSource.image?.asset?.metadata?.dimensions;
-                      const iw = Math.round(dims?.width || 800);
-                      const ih = Math.round(dims?.height || 600);
+                    const imageProps = getImageProps(imageSource.image, 800);
+                    if (!imageProps) return null;
+                    const dims = imageSource.image?.asset?.metadata?.dimensions;
+                    const iw = Math.round(dims?.width || 800);
+                    const ih = Math.round(dims?.height || 600);
 
-                      return (
-                        <div key={imageItem._key || `triple-image-${index}`} className="relative overflow-hidden">
+                    const cellAlign = getCellAlignment(index, 3);
+
+                    return (
+                      <div key={imageItem._key || `triple-image-${index}`} className={`flex ${cellAlign}`}>
+                        <div className="relative overflow-hidden" style={{ width: resolvedWidth }}>
                           <ImageWithBlur
                             src={imageProps.src}
                             alt=""
@@ -193,10 +202,10 @@ const RichComponents: PortableTextComponents = {
                             height={ih}
                           />
                         </div>
-                      );
-                    })
-                    .filter(Boolean)}
-                </div>
+                      </div>
+                    );
+                  })
+                  .filter(Boolean)}
               </div>
             </figure>
           </div>
