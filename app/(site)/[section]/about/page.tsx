@@ -7,6 +7,10 @@ import { PortableText } from '@portabletext/react';
 import GridLines from '@/components/GridLines';
 import MediaItem from '@/components/MediaItem';
 
+export async function generateStaticParams() {
+  return [{ section: 'art' }, { section: 'design' }];
+}
+
 const validSections = ['art', 'design'] as const;
 type Section = typeof validSections[number];
 

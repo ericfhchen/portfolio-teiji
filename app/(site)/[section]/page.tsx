@@ -6,6 +6,10 @@ import Slideshow from '@/components/Slideshow';
 import { FeedItem } from '@/sanity/schema';
 import GridLines from '@/components/GridLines';
 
+export async function generateStaticParams() {
+  return [{ section: 'art' }, { section: 'design' }];
+}
+
 async function getFeaturedData(section: string) {
   return client.fetch(featuredWorksQuery, { section }, { next: { revalidate: 60 } });
 }

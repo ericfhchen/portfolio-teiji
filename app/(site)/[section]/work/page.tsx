@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { client } from '@/lib/sanity.client';
 import { workPageQuery } from '@/lib/queries';
 import { getImageUrl } from '@/lib/image';
@@ -5,6 +6,10 @@ import { getSiteSettings } from '@/lib/utils';
 import { FeedItem } from '@/sanity/schema';
 import Grid from '@/components/Grid';
 import GridLines from '@/components/GridLines';
+
+export async function generateStaticParams() {
+  return [{ section: 'art' }, { section: 'design' }];
+}
 
 async function getWorkData(section: string) {
   const featured = await client.fetch(workPageQuery, { section }, { next: { revalidate: 60 } });
@@ -127,11 +132,13 @@ export default async function WorkPage({
         <div className="pt-20 pb-8 min-h-screen h-full flex items-center justify-center">
           
           {feedItems.length > 0 ? (
-            <Grid 
-              items={feedItems} 
-              section={section} 
-              variant="work" 
-            />
+            <Suspense>
+              <Grid
+                items={feedItems}
+                section={section}
+                variant="work"
+              />
+            </Suspense>
           ) : (
             <div className="text-center py-12">
               <p className="text-muted">No featured works found.</p>

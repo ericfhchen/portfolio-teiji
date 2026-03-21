@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { client } from '@/lib/sanity.client';
 import { indexFeedQuery, indexFeedByTagsQuery, allTagsQuery } from '@/lib/queries';
 import { getImageUrl } from '@/lib/image';
@@ -7,6 +8,10 @@ import Grid from '@/components/Grid';
 import Lightbox from '@/components/Lightbox';
 import GridLines from '@/components/GridLines';
 import Filters from '@/components/Filters';
+
+export async function generateStaticParams() {
+  return [{ section: 'art' }, { section: 'design' }];
+}
 
 async function getFeedData(section: string, tags?: string[]) {
   const query = tags && tags.length > 0 ? indexFeedByTagsQuery : indexFeedQuery;
@@ -154,12 +159,18 @@ export default async function SectionIndexPage({ params, searchParams }: { param
   return (
     <>
       <GridLines type="index" />
-      <Filters tags={allTags as string[]} section={section} />
+      <Suspense>
+        <Filters tags={allTags as string[]} section={section} />
+      </Suspense>
       <div className="relative z-10 pt-20 sm:pt-10">
-        <Grid items={feedItems} section={section} variant="index" />
+        <Suspense>
+          <Grid items={feedItems} section={section} variant="index" />
+        </Suspense>
       </div>
       {resolvedSearchParams.item && (
-        <Lightbox items={feedItems} section={section} />
+        <Suspense>
+          <Lightbox items={feedItems} section={section} />
+        </Suspense>
       )}
     </>
   );

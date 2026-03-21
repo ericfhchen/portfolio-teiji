@@ -42,6 +42,7 @@ export default function Header({ currentSection }: HeaderProps) {
           {/* Art */}
           <Link
             href="/art"
+            prefetch={true}
             className={`w-24 text-center text-base font-normal transition-colors ${
               currentSection === 'art' ? 'text-var' : 'text-muted hover:text-var'
             }`}
@@ -52,6 +53,7 @@ export default function Header({ currentSection }: HeaderProps) {
           {/* Design */}
           <Link
             href="/design"
+            prefetch={true}
             className={`w-24 text-center text-base font-normal transition-colors ${
               currentSection === 'design' ? 'text-var' : 'text-muted hover:text-var'
             }`}
@@ -69,24 +71,27 @@ export default function Header({ currentSection }: HeaderProps) {
         md:top-0 ${currentSection === 'art' ? 'md:left-0' : 'md:right-0'}
         transition-all duration-300 ${isVisible ? 'max-md:opacity-100 max-md:translate-y-0' : 'max-md:opacity-0 max-md:translate-y-2'}`}>
         <div className="flex items-center h-full max-md:justify-between max-md:w-full max-md:px-6 md:gap-16 lg:gap-24 md:px-8">
-          <Link 
-            href={`/${currentSection}/work`} 
+          <Link
+            href={`/${currentSection}/work`}
+            prefetch={true}
             className={`text-base font-normal transition-colors ${
               currentRoute === 'work' ? 'text-var' : 'text-muted hover:text-var'
             }`}
           >
             Work
           </Link>
-          <Link 
-            href={`/${currentSection}/index`} 
+          <Link
+            href={`/${currentSection}/index`}
+            prefetch={true}
             className={`text-base font-normal transition-colors ${
               currentRoute === 'index' ? 'text-var' : 'text-muted hover:text-var'
             }`}
           >
             Index
           </Link>
-          <Link 
-            href={`/${currentSection}/about`} 
+          <Link
+            href={`/${currentSection}/about`}
+            prefetch={true}
             className={`text-base font-normal transition-colors ${
               currentRoute === 'about' ? 'text-var' : 'text-muted hover:text-var'
             }`}
