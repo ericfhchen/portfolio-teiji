@@ -515,47 +515,58 @@ export default function Lightbox({ items, section }: LightboxProps) {
           </div>
         </div>
 
-        {/* Mobile controls - fixed position bottom right */}
-        <div className="fixed bottom-4 right-4 z-30 md:hidden">
-          <div className="flex flex-col items-end gap-0">
-            {/* Mute button - top, only if video has audio */}
-            {currentMediaItem.mediaType === 'video' && currentMediaItem.videoData && hasAudio && (
-              <button
-                onClick={toggleMute}
-                className="text-var font-light tracking-wider hover:opacity-60 transition-opacity"
-              >
-                {isMuted ? 'UNMUTE' : 'MUTE'}
-              </button>
-            )}
-            
-            {/* Gallery number indicator - bottom */}
-            {allMediaItems.length > 1 && (
-              <div className="text-var font-light tracking-wider">
-                {currentGalleryIndex + 1}/{allMediaItems.length}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Navigation chevrons – mobile only, above bottom text */}
-        {allMediaItems.length > 1 && (
-          <div className="md:hidden pointer-events-none absolute inset-x-0 z-20 flex justify-center gap-6"
-            style={{ bottom: 'calc(5rem + env(safe-area-inset-bottom, 0px))' }}>
-            <svg aria-hidden className="w-2 h-4" viewBox="0 0 12 24" fill="none"
-              stroke="var(--fg)" strokeWidth="0.75" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="10,2 2,12 10,22" />
-            </svg>
-            <svg aria-hidden className="w-2 h-4" viewBox="0 0 12 24" fill="none"
-              stroke="var(--fg)" strokeWidth="0.75" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="2,2 10,12 2,22" />
-            </svg>
-          </div>
-        )}
-
-        {/* Bottom text layout - restored to original */}
+        {/* Bottom text layout */}
         <div className="absolute bottom-0 left-0 right-0 z-20">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 px-4 py-4"
+          <div className="relative grid grid-cols-1 lg:grid-cols-2 gap-16 px-4 py-4"
             style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom, 1rem))' }}>
+            {/* Mobile controls - top-right aligned with year/title */}
+            <div className="absolute top-[1.5rem] right-4 z-30 md:hidden">
+              <div className="flex flex-col items-end gap-1">
+                {/* Mute button */}
+                {currentMediaItem.mediaType === 'video' && currentMediaItem.videoData && hasAudio && (
+                  <button
+                    onClick={toggleMute}
+                    className="text-var font-light tracking-wider hover:opacity-60 transition-opacity"
+                  >
+                    {isMuted ? 'UNMUTE' : 'MUTE'}
+                  </button>
+                )}
+
+                {/* Navigation chevrons – above counter */}
+                {allMediaItems.length > 1 && (
+                  <div className="flex justify-center gap-3">
+                    <button
+                      onClick={() => navigateGallery('prev')}
+                      aria-label="Previous image"
+                      className="px-1 py-0"
+                    >
+                      <svg aria-hidden className="w-2 h-4" viewBox="0 0 12 24" fill="none"
+                        stroke="var(--fg)" strokeWidth="0.75" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="10,2 2,12 10,22" />
+                      </svg>
+                    </button>
+                    <button
+                      onClick={() => navigateGallery('next')}
+                      aria-label="Next image"
+                      className="px-1 py-0"
+                    >
+                      <svg aria-hidden className="w-2 h-4" viewBox="0 0 12 24" fill="none"
+                        stroke="var(--fg)" strokeWidth="0.75" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="2,2 10,12 2,22" />
+                      </svg>
+                    </button>
+                  </div>
+                )}
+
+                {/* Gallery number indicator */}
+                {allMediaItems.length > 1 && (
+                  <div className="text-var font-light tracking-wider">
+                    {currentGalleryIndex + 1}/{allMediaItems.length}
+                  </div>
+                )}
+              </div>
+            </div>
+
             {/* Left side: Year and Title/Tags */}
             <div className="grid grid-cols-[auto_1fr] gap-4 sm:gap-8">
               {/* Year column - minimal width */}
