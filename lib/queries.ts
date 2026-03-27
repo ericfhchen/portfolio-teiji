@@ -152,8 +152,10 @@ export const workBySlugQuery = groq`
         images[] {
           _key,
           source,
+          alt,
           uploadedImage {
             ...,
+            alt,
             "lqip": asset->metadata.lqip
           },
           indexItemRef-> {
@@ -177,8 +179,10 @@ export const workBySlugQuery = groq`
         images[] {
           _key,
           source,
+          alt,
           uploadedImage {
             ...,
+            alt,
             "lqip": asset->metadata.lqip
           },
           indexItemRef-> {
@@ -203,8 +207,10 @@ export const workBySlugQuery = groq`
           _key,
           source,
           colSpan,
+          alt,
           uploadedImage {
             ...,
+            alt,
             "lqip": asset->metadata.lqip
           },
           indexItemRef-> {
@@ -222,6 +228,9 @@ export const workBySlugQuery = groq`
             }
           }
         }
+      },
+      _type == "iframeEmbed" => {
+        ...,
       },
       _type == "imageBleed" => {
         ...,
@@ -417,7 +426,7 @@ export const siteSettingsQuery = groq`
 `;
 
 export const featuredWorksQuery = groq`
-  *[_type == "work" && discipline == $section && featured == true] | order(order asc, year desc) {
+  *[_type == "work" && discipline == $section && featuredHome == true] | order(homeOrder asc, year desc) {
     _id,
     title,
     "slug": slug.current,
@@ -456,7 +465,7 @@ export const featuredWorksQuery = groq`
 `;
 
 export const workPageQuery = groq`
-  *[_type == "work" && discipline == $section && featured == true] | order(order asc, year desc) {
+  *[_type == "work" && discipline == $section && featuredWork == true] | order(workOrder asc, year desc) {
     _id,
     title,
     "slug": slug.current,
@@ -543,33 +552,10 @@ export const aboutQuery = groq`
     },
     email,
     instagramHandle,
-    mediaItem {
-      mediaType,
-      mediaType == "image" => {
-        image {
-          ...,
-          "lqip": asset->metadata.lqip
-        }
-      },
-      mediaType == "video" => {
-        video {
-          // Properly dereference the MUX asset
-          asset {
-            ...,
-            asset-> {
-              ...,
-              playbackId,
-              data,
-              status,
-              assetId
-            }
-          },
-          controls,
-          captions {
-            asset
-          }
-        }
-      },
+    gallery[] {
+      ...,
+      "lqip": asset->metadata.lqip,
+      "dimensions": asset->metadata.dimensions
     }
   }
 `;

@@ -42,32 +42,14 @@ export interface About {
   clients?: Client[];
   email: string;
   instagramHandle?: string;
-  mediaItem?: {
-    mediaType: 'image' | 'video';
-    image?: {
-      asset: any;
-      lqip?: string;
-      alt?: string;
-    };
-    video?: {
-      asset: {
-        asset: {
-          playbackId: string;
-          data: any;
-          status: string;
-          assetId: string;
-        };
-      };
-      controls?: boolean;
-      poster?: {
-        asset: any;
-        lqip?: string;
-        alt?: string;
-      };
-      captions?: {
-        asset: any;
-      };
-    };
+  gallery?: {
+    _key: string;
+    asset: any;
     alt?: string;
-  };
+    lqip?: string;
+    dimensions?: {
+      width: number;
+      height: number;
+    };
+  }[];
 }

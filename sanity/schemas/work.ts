@@ -1,5 +1,4 @@
 import { defineType, defineField } from 'sanity'
-import { orderRankField, orderRankOrdering } from '@sanity/orderable-document-list'
 
 export default defineType({
   name: 'work',
@@ -87,7 +86,34 @@ export default defineType({
     defineField({
       name: 'description',
       title: 'Description',
-      type: 'text',
+      type: 'array',
+      of: [
+        {
+          type: 'block',
+          styles: [{ title: 'Normal', value: 'normal' }],
+          marks: {
+            decorators: [
+              { title: 'Strong', value: 'strong' },
+              { title: 'Emphasis', value: 'em' },
+            ],
+            annotations: [
+              {
+                name: 'link',
+                type: 'object',
+                title: 'Link',
+                fields: [
+                  {
+                    name: 'href',
+                    type: 'url',
+                    title: 'URL',
+                    validation: (Rule: any) => Rule.uri({ allowRelative: true, scheme: ['http', 'https', 'mailto'] }),
+                  },
+                ],
+              },
+            ],
+          },
+        },
+      ],
     }),
     defineField({
       name: 'content',
@@ -137,6 +163,10 @@ export default defineType({
           type: 'videoMux',
           title: 'Video (MUX)',
         },
+        {
+          type: 'iframeEmbed',
+          title: 'Iframe Embed',
+        },
       ],
     }),
     defineField({
@@ -155,13 +185,33 @@ export default defineType({
       description: 'Select existing tags or create new ones. Tags are shared across all items.',
     }),
     defineField({
-      name: 'featured',
-      title: 'Featured',
+      name: 'featuredHome',
+      title: 'Featured on Home',
       type: 'boolean',
-      description: 'Toggle to appear on section pages',
+      description: 'Show on section home page slideshow',
       initialValue: false,
     }),
-    orderRankField({ type: 'work' }),
+    defineField({
+      name: 'homeOrder',
+      title: 'Home Order',
+      type: 'number',
+      description: 'Display order on the home page (lower = first)',
+      hidden: ({ parent }) => !parent?.featuredHome,
+    }),
+    defineField({
+      name: 'featuredWork',
+      title: 'Featured on Work',
+      type: 'boolean',
+      description: 'Show on section work page grid',
+      initialValue: false,
+    }),
+    defineField({
+      name: 'workOrder',
+      title: 'Work Order',
+      type: 'number',
+      description: 'Display order on the work page (lower = first)',
+      hidden: ({ parent }) => !parent?.featuredWork,
+    }),
     defineField({
       name: 'slug',
       title: 'Slug',
@@ -196,7 +246,6 @@ export default defineType({
     },
   },
   orderings: [
-    orderRankOrdering,
     {
       title: 'Year, Newest',
       name: 'yearDesc',

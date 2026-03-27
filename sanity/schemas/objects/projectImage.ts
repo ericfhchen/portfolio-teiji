@@ -91,6 +91,32 @@ export default defineType({
     }),
 
     defineField({
+      name: 'mobileWidth',
+      title: 'Mobile Width (optional)',
+      type: 'string',
+      description: 'Width on mobile only. If not set, uses the desktop width above.',
+      options: {
+        list: [
+          { title: '40%', value: '40%' },
+          { title: '60%', value: '60%' },
+          { title: '80%', value: '80%' },
+          { title: '100%', value: '100%' },
+          { title: 'Custom', value: 'custom' },
+        ],
+        layout: 'dropdown',
+      },
+    }),
+
+    defineField({
+      name: 'mobileCustomWidth',
+      title: 'Mobile Custom Width (%)',
+      type: 'number',
+      description: 'Enter a custom mobile width between 20 and 100',
+      validation: (Rule) => Rule.min(20).max(100),
+      hidden: ({ parent }) => parent?.mobileWidth !== 'custom',
+    }),
+
+    defineField({
       name: 'alignment',
       title: 'Alignment',
       type: 'string',

@@ -14,6 +14,7 @@ import projectImage from './schemas/objects/projectImage'
 import spacer from './schemas/objects/spacer'
 import videoMux from './schemas/objects/videoMux'
 import mediaItem from './schemas/objects/mediaItem'
+import iframeEmbed from './schemas/objects/iframeEmbed'
 
 export interface MediaItemData {
   mediaType: 'image' | 'video';
@@ -74,5 +75,6 @@ export const schema: { types: SchemaTypeDefinition[] } = {
     spacer,
     videoMux,
     mediaItem,
+    iframeEmbed,
   ],
 }

@@ -33,6 +33,21 @@ export default defineType({
               { title: 'Strong', value: 'strong' },
               { title: 'Emphasis', value: 'em' },
             ],
+            annotations: [
+              {
+                name: 'link',
+                type: 'object',
+                title: 'Link',
+                fields: [
+                  {
+                    name: 'href',
+                    type: 'url',
+                    title: 'URL',
+                    validation: (Rule: any) => Rule.uri({ allowRelative: true, scheme: ['http', 'https', 'mailto'] }),
+                  },
+                ],
+              },
+            ],
           },
         },
       ],
@@ -68,6 +83,21 @@ export default defineType({
                       { title: 'Strong', value: 'strong' },
                       { title: 'Emphasis', value: 'em' },
                       { title: 'Muted', value: 'muted' },
+                    ],
+                    annotations: [
+                      {
+                        name: 'link',
+                        type: 'object',
+                        title: 'Link',
+                        fields: [
+                          {
+                            name: 'href',
+                            type: 'url',
+                            title: 'URL',
+                            validation: (Rule: any) => Rule.uri({ allowRelative: true, scheme: ['http', 'https', 'mailto'] }),
+                          },
+                        ],
+                      },
                     ],
                   },
                 },
@@ -162,10 +192,31 @@ export default defineType({
       }),
     }),
     defineField({
+      name: 'gallery',
+      title: 'Image Gallery (Art)',
+      type: 'array',
+      of: [
+        {
+          type: 'image',
+          options: { hotspot: true },
+          fields: [
+            {
+              name: 'alt',
+              title: 'Alt Text',
+              type: 'string',
+            },
+          ],
+        },
+      ],
+      description: 'Images for the right side of the Art about page. Different aspect ratios are supported.',
+      hidden: ({ document }) => document?.discipline !== 'art',
+    }),
+    defineField({
       name: 'mediaItem',
-      title: 'Media Item',
+      title: 'Media Item (legacy)',
       type: 'mediaItem',
-      description: 'Optional media item to display on the about page (right side on desktop, below content on mobile)',
+      description: 'Legacy field — use Gallery instead',
+      hidden: true,
     }),
   ],
   preview: {

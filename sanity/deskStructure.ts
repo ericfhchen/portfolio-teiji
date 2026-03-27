@@ -13,22 +13,22 @@ export const deskStructure = (S: any, context: any) =>
         )
         .icon(() => '⚙️'),
       S.divider(),
-      orderableDocumentListDeskItem({
-        type: 'work',
-        title: 'Work (Art)',
-        id: 'orderable-work-art',
-        filter: `discipline == "art"`,
-        S,
-        context,
-      }),
-      orderableDocumentListDeskItem({
-        type: 'work',
-        title: 'Work (Design)',
-        id: 'orderable-work-design',
-        filter: `discipline == "design"`,
-        S,
-        context,
-      }),
+      S.listItem()
+        .title('Work (Art)')
+        .child(
+          S.documentList()
+            .title('Work (Art)')
+            .filter('_type == "work" && discipline == "art"')
+            .defaultOrdering([{ field: 'year', direction: 'desc' }])
+        ),
+      S.listItem()
+        .title('Work (Design)')
+        .child(
+          S.documentList()
+            .title('Work (Design)')
+            .filter('_type == "work" && discipline == "design"')
+            .defaultOrdering([{ field: 'year', direction: 'desc' }])
+        ),
       S.divider(),
       orderableDocumentListDeskItem({
         type: 'indexItem',
