@@ -74,10 +74,36 @@ export default function HeroGallery({ items, title }: HeroGalleryProps) {
     });
   }, [items]);
 
+  // Touch swipe handling
+  const touchStartX = useRef<number | null>(null);
+  const touchStartY = useRef<number | null>(null);
+
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+  }, []);
+
+  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+    if (touchStartX.current === null || touchStartY.current === null) return;
+    const dx = e.changedTouches[0].clientX - touchStartX.current;
+    const dy = e.changedTouches[0].clientY - touchStartY.current;
+    touchStartX.current = null;
+    touchStartY.current = null;
+    // Only trigger if horizontal swipe is dominant and exceeds threshold
+    if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) {
+      if (dx < 0) goToNext();
+      else goToPrevious();
+    }
+  }, [goToNext, goToPrevious]);
+
   if (items.length === 0) return null;
 
   return (
-    <div className="relative w-full h-full flex items-center justify-center min-h-[60svh]">
+    <div
+      className="relative w-full h-full flex items-center justify-center min-h-[60svh]"
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+    >
       {/* Hero media container: centered with proper aspect ratio */}
       <div className="relative w-full h-full flex items-center justify-center p-4 md:p-8">
         {/* Horizontal hairline across the full width at vertical center */}
