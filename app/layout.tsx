@@ -2,7 +2,7 @@ import '@/styles/globals.css';
 import { client } from '@/lib/sanity.client';
 import { siteSettingsQuery } from '@/lib/queries';
 import { SiteSettings } from '@/lib/types';
-import { Metadata } from 'next';
+import { Metadata, Viewport } from 'next';
 
 async function getSiteSettings(): Promise<SiteSettings | null> {
   try {
@@ -12,6 +12,13 @@ async function getSiteSettings(): Promise<SiteSettings | null> {
     return null;
   }
 }
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  userScalable: true,
+  viewportFit: 'cover',
+};
 
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await getSiteSettings();
@@ -57,11 +64,6 @@ export async function generateMetadata(): Promise<Metadata> {
       shortcut: settings.favicon.url,
       apple: settings.favicon.url,
     } : undefined,
-    viewport: {
-      width: 'device-width',
-      initialScale: 1,
-      userScalable: true,
-    },
     other: {
       'screen-orientation': 'portrait',
     },

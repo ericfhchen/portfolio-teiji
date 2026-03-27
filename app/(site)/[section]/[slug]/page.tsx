@@ -11,6 +11,14 @@ import ExpandableDescription from '@/components/ExpandableDescription';
 import { VideoPlayer } from '@/components/VideoPlayer';
 import HeroGallery from '@/components/HeroGallery';
 
+function toPlainText(blocks: any[] | undefined): string {
+  if (!blocks || !Array.isArray(blocks)) return '';
+  return blocks
+    .filter((b: any) => b._type === 'block')
+    .map((b: any) => b.children?.map((c: any) => c.text).join('') || '')
+    .join(' ');
+}
+
 export async function generateStaticParams() {
   const slugs = await client.fetch(workSlugParamsQuery);
   return slugs.map((item: any) => ({
@@ -49,10 +57,10 @@ export async function generateMetadata({
   
   return {
     title: `${work.title} — ${siteTitle}`,
-    description: work.description || `${work.title} — ${work.discipline} work`,
+    description: toPlainText(work.description) || `${work.title} — ${work.discipline} work`,
     openGraph: {
       title: work.title,
-      description: work.description || `${work.title} — ${work.discipline} work`,
+      description: toPlainText(work.description) || `${work.title} — ${work.discipline} work`,
       images: metaImage ? [{ url: metaImage.src, width: 1200, height: 630 }] : [],
     },
   };

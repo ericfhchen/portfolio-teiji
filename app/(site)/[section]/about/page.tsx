@@ -5,7 +5,9 @@ import { aboutQuery, siteSettingsQuery } from '@/lib/queries';
 import { About } from '@/lib/types';
 import { PortableText } from '@portabletext/react';
 import GridLines from '@/components/GridLines';
-import MediaItem from '@/components/MediaItem';
+import ImageWithBlur from '@/components/ImageWithBlur';
+import { getImageProps } from '@/lib/image';
+import FinalResearchCredit from '@/components/FinalResearchCredit';
 
 export async function generateStaticParams() {
   return [{ section: 'art' }, { section: 'design' }];
@@ -33,16 +35,19 @@ const portableTextComponents = {
     strong: ({ children }: any) => <strong className="font-normal">{children}</strong>,
     em: ({ children }: any) => <em className="italic">{children}</em>,
     muted: ({ children }: any) => <span className="text-muted">{children}</span>,
-    link: ({ children, value }: any) => (
-      <a 
-        href={value?.href} 
-        className="text-var hover:text-[var(--muted)] transition-colors"
-        target={value?.blank ? '_blank' : undefined}
-        rel={value?.blank ? 'noopener noreferrer' : undefined}
-      >
-        {children}
-      </a>
-    ),
+    link: ({ children, value }: any) => {
+      const href = value?.href || '';
+      const isExternal = href.startsWith('http') || href.startsWith('mailto');
+      return (
+        <a
+          href={href}
+          className="text-var hover:text-[var(--muted)] transition-colors"
+          {...(isExternal ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+        >
+          {children}
+        </a>
+      );
+    },
   },
 };
 
@@ -87,11 +92,11 @@ export default async function AboutPage({
     return (
       <>
         <GridLines type="about" />
-        <div className="pt-24 pb-20 relative lg:fixed lg:inset-0 lg:overflow-hidden">
+        <div className="pt-24 pb-20 relative lg:pt-0 lg:pb-0 lg:fixed lg:inset-0 lg:overflow-hidden">
           <div className="mx-auto px-6 md:px-8 lg:h-full">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-12 lg:h-full">
               {/* Left side - Bio and Services */}
-              <div className="space-y-12 lg:space-y-12 lg:overflow-y-auto">
+              <div className="space-y-12 lg:space-y-12 lg:pt-24 lg:pb-20 lg:overflow-y-auto">
                 {/* Bio */}
                 {about.bio && about.bio.length > 0 && (
                   <div className="space-y-6">
@@ -118,6 +123,7 @@ export default async function AboutPage({
                     </div>
                   </div>
                 )}
+
               </div>
 
               {/* Right side - 2-column layout with Clients */}
@@ -153,18 +159,18 @@ export default async function AboutPage({
             </div>
 
             {/* Mobile-only Contact - appears after all content */}
-            <div className="lg:hidden space-y-6 mt-12">
-              <div className="flex gap-4 sm:gap-6">
+            <div className="lg:hidden space-y-4 mt-12">
+              <div className="flex gap-4 sm:gap-6 flex-wrap">
                 <span className="text-var">Contact</span>
                 <div className="flex gap-4 sm:gap-6">
-                  <a 
-                    href={`mailto:${about.email}`} 
+                  <a
+                    href={`mailto:${about.email}`}
                     className="text-var font-light hover:text-[var(--muted)] transition-colors"
                   >
                     {about.email}
                   </a>
                   {about.instagramHandle && (
-                    <a 
+                    <a
                       href={`https://instagram.com/${about.instagramHandle}`}
                       target="_blank"
                       rel="noopener noreferrer"
@@ -175,32 +181,34 @@ export default async function AboutPage({
                   )}
                 </div>
               </div>
+              <FinalResearchCredit />
             </div>
           </div>
 
           {/* Contact - absolutely positioned at bottom for design section (desktop only, match Art) */}
-          <div className="hidden lg:block absolute bottom-6 left-0 w-full">
-            <div className="max-w-7xl px-8">
+          <div className="hidden lg:block absolute bottom-6 left-0 w-full px-8">
+            <div className="relative flex gap-6 items-baseline">
+              <span className="text-var">Contact</span>
               <div className="flex gap-6">
-                <span className="text-var">Contact</span>
-                <div className="flex gap-6">
-                  <a 
-                    href={`mailto:${about.email}`} 
+                <a
+                  href={`mailto:${about.email}`}
+                  className="text-var font-light hover:text-[var(--muted)] transition-colors"
+                >
+                  {about.email}
+                </a>
+                {about.instagramHandle && (
+                  <a
+                    href={`https://instagram.com/${about.instagramHandle}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="text-var font-light hover:text-[var(--muted)] transition-colors"
                   >
-                    {about.email}
+                    @{about.instagramHandle}
                   </a>
-                  {about.instagramHandle && (
-                    <a 
-                      href={`https://instagram.com/${about.instagramHandle}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-var font-light hover:text-[var(--muted)] transition-colors"
-                    >
-                      @{about.instagramHandle}
-                    </a>
-                  )}
-                </div>
+                )}
+              </div>
+              <div className="absolute right-[50%] pr-6">
+                <FinalResearchCredit />
               </div>
             </div>
           </div>
@@ -211,13 +219,13 @@ export default async function AboutPage({
 
   // Art section layout (existing layout)
   return (
-    <div className="fixed inset-0 overflow-hidden">
+    <div className="pt-24 pb-20 relative lg:pt-0 lg:pb-0 lg:fixed lg:inset-0 lg:overflow-hidden">
       <GridLines type="about" />
-      <div className="h-full relative">
-        <div className="mx-auto px-6 md:px-8 h-full">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24 h-full">
+      <div className="lg:h-full relative">
+        <div className="mx-auto px-6 md:px-8 lg:h-full">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24 lg:h-full">
             {/* Left side - Bio, CV, and Contact (mobile) */}
-            <div className="space-y-12 mt-24 overflow-y-auto">
+            <div className="space-y-12 lg:pt-24 lg:pb-20 lg:overflow-y-auto">
               {/* Bio */}
               {about.bio && about.bio.length > 0 && (
                 <div className="space-y-6">
@@ -246,18 +254,18 @@ export default async function AboutPage({
               )}
 
               {/* Contact - visible on mobile, hidden on desktop */}
-              <div className="lg:hidden space-y-6">
-                <div className="flex gap-4 sm:gap-6">
+              <div className="lg:hidden space-y-4">
+                <div className="flex gap-4 sm:gap-6 flex-wrap">
                   <span className="text-var">Contact</span>
                   <div className="flex gap-4 sm:gap-6">
-                    <a 
-                      href={`mailto:${about.email}`} 
+                    <a
+                      href={`mailto:${about.email}`}
                       className="text-var font-light hover:text-[var(--muted)] transition-colors"
                     >
                       {about.email}
                     </a>
                     {about.instagramHandle && (
-                      <a 
+                      <a
                         href={`https://instagram.com/${about.instagramHandle}`}
                         target="_blank"
                         rel="noopener noreferrer"
@@ -268,68 +276,66 @@ export default async function AboutPage({
                     )}
                   </div>
                 </div>
+                <FinalResearchCredit />
               </div>
             </div>
 
-            {/* Right side - Media item for art section */}
-            {/* 
-              VIDEO IMPLEMENTATION (temporarily hidden):
-              The MediaItem component supports both images and videos through the mediaType property.
-              Video implementation includes:
-              - VideoPlayer component with HLS.js support for Chrome and native HLS for Safari
-              - MUX video hosting with playbackId
-              - Autoplay, loop, mute controls
-              - Captions support
-              - Responsive sizing and object-fit options
-              
-              To restore video functionality, simply uncomment the MediaItem below.
-              The video data structure includes:
-              - mediaType: 'video'
-              - video.asset.asset.playbackId: MUX playback ID
-              - video.poster: optional poster image
-              - video.captions: optional VTT captions file
-              - video.controls: boolean for control visibility
-            */}
-            <div className="hidden lg:block h-full">
-              {about.mediaItem && about.mediaItem.mediaType === 'image' && (
-                <div className="h-full w-full">
-                  <MediaItem mediaItem={about.mediaItem} className="h-full w-full" />
+            {/* Right side - Image gallery for art section */}
+            <div className="hidden lg:block pt-24 overflow-y-auto pb-20 min-h-0">
+              {about.gallery && about.gallery.length > 0 && (
+                <div className="flex flex-col items-start gap-4">
+                  {about.gallery.map((image: any, index: number) => {
+                    const imageProps = getImageProps(image, 1200);
+                    if (!imageProps) return null;
+                    const dims = image.dimensions;
+                    const iw = Math.round(dims?.width || 1200);
+                    const ih = Math.round(dims?.height || 800);
+
+                    return (
+                      <div key={image._key || `gallery-${index}`} className="w-full">
+                        <ImageWithBlur
+                          src={imageProps.src}
+                          alt={image.alt || ''}
+                          lqip={imageProps.hasBlur ? imageProps.blurDataURL : undefined}
+                          sizes="(max-width: 1024px) 100vw, 50vw"
+                          className="w-full h-auto"
+                          fill={false}
+                          width={iw}
+                          height={ih}
+                        />
+                      </div>
+                    );
+                  })}
                 </div>
               )}
-              {/* Video temporarily hidden - uncomment to restore:
-              {about.mediaItem && about.mediaItem.mediaType === 'video' && (
-                <div className="h-full w-full">
-                  <MediaItem mediaItem={about.mediaItem} className="h-full w-full" />
-                </div>
-              )}
-              */}
             </div>
           </div>
         </div>
 
         {/* Contact - absolutely positioned at bottom for art section (desktop only) */}
-        <div className="hidden lg:block absolute bottom-6 left-0 w-full">
-          <div className="max-w-7xl px-8">
+        <div className="hidden lg:block absolute bottom-6 left-0 w-full px-8">
+          <div className="relative flex gap-6 items-baseline">
+            <span className="text-var">Contact</span>
             <div className="flex gap-6">
-              <span className="text-var">Contact</span>
-              <div className="flex gap-6">
-                <a 
-                  href={`mailto:${about.email}`} 
+              <a
+                href={`mailto:${about.email}`}
+                className="text-var font-light hover:text-[var(--muted)] transition-colors"
+              >
+                {about.email}
+              </a>
+              {about.instagramHandle && (
+                <a
+                  href={`https://instagram.com/${about.instagramHandle}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="text-var font-light hover:text-[var(--muted)] transition-colors"
                 >
-                  {about.email}
+                  @{about.instagramHandle}
                 </a>
-                {about.instagramHandle && (
-                  <a 
-                    href={`https://instagram.com/${about.instagramHandle}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-var font-light hover:text-[var(--muted)] transition-colors"
-                  >
-                    @{about.instagramHandle}
-                  </a>
-                )}
-              </div>
+              )}
+            </div>
+            <div className="absolute right-[50%] pr-6">
+              <FinalResearchCredit />
             </div>
           </div>
         </div>
