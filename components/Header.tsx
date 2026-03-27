@@ -33,7 +33,7 @@ export default function Header({ currentSection }: HeaderProps) {
   return (
     <>
       {/* Top Header - Section Switcher only */}
-      <header className={`pointer-events-none fixed inset-x-0 top-0 z-[100] transition-all duration-300 ${isVisible ? 'max-md:opacity-100 max-md:translate-y-0' : 'max-md:opacity-0 max-md:-translate-y-2'}`}>
+      <header className={`pointer-events-none fixed inset-x-0 top-0 z-[100] mix-blend-difference transition-all duration-300 ${isVisible ? 'max-md:opacity-100 max-md:translate-y-0' : 'max-md:opacity-0 max-md:-translate-y-2'}`}>
         {/* Section Switcher — centered */}
         <nav
           className="h-16 pointer-events-auto flex items-center absolute left-1/2 -translate-x-1/2"
@@ -44,7 +44,7 @@ export default function Header({ currentSection }: HeaderProps) {
             href="/art"
             prefetch={true}
             className={`w-24 text-center text-base font-normal transition-colors ${
-              currentSection === 'art' ? 'text-var' : 'text-muted hover:text-var'
+              currentSection === 'art' ? 'text-white' : 'text-white/50 hover:text-white'
             }`}
           >
             Art
@@ -55,7 +55,7 @@ export default function Header({ currentSection }: HeaderProps) {
             href="/design"
             prefetch={true}
             className={`w-24 text-center text-base font-normal transition-colors ${
-              currentSection === 'design' ? 'text-var' : 'text-muted hover:text-var'
+              currentSection === 'design' ? 'text-white' : 'text-white/50 hover:text-white'
             }`}
           >
             Design
@@ -66,16 +66,17 @@ export default function Header({ currentSection }: HeaderProps) {
       </header>
 
       {/* Primary Navigation - Position responsive: bottom on mobile, top corners on desktop */}
-      <nav className={`pointer-events-auto fixed z-[100] h-12 md:h-16 
+      <nav className={`pointer-events-auto fixed z-[100] md:h-16 mix-blend-difference
         max-md:inset-x-0 max-md:bottom-0
         md:top-0 ${currentSection === 'art' ? 'md:left-0' : 'md:right-0'}
         transition-all duration-300 ${isVisible ? 'max-md:opacity-100 max-md:translate-y-0' : 'max-md:opacity-0 max-md:translate-y-2'}`}>
-        <div className="flex items-center h-full max-md:justify-between max-md:w-full max-md:px-6 md:gap-16 lg:gap-24 md:px-8">
+        <div className="flex items-center max-md:h-12 h-full max-md:w-full max-md:px-4 md:gap-16 lg:gap-24 md:px-8"
+          style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
           <Link
             href={`/${currentSection}/work`}
             prefetch={true}
-            className={`text-base font-normal transition-colors ${
-              currentRoute === 'work' ? 'text-var' : 'text-muted hover:text-var'
+            className={`max-md:flex-1 max-md:text-left text-base font-normal transition-colors ${
+              currentRoute === 'work' ? 'text-white' : 'text-white/50 hover:text-white'
             }`}
           >
             Work
@@ -83,8 +84,8 @@ export default function Header({ currentSection }: HeaderProps) {
           <Link
             href={`/${currentSection}/index`}
             prefetch={true}
-            className={`text-base font-normal transition-colors ${
-              currentRoute === 'index' ? 'text-var' : 'text-muted hover:text-var'
+            className={`max-md:flex-1 max-md:text-center text-base font-normal transition-colors ${
+              currentRoute === 'index' ? 'text-white' : 'text-white/50 hover:text-white'
             }`}
           >
             Index
@@ -92,8 +93,8 @@ export default function Header({ currentSection }: HeaderProps) {
           <Link
             href={`/${currentSection}/about`}
             prefetch={true}
-            className={`text-base font-normal transition-colors ${
-              currentRoute === 'about' ? 'text-var' : 'text-muted hover:text-var'
+            className={`max-md:flex-1 max-md:text-right text-base font-normal transition-colors ${
+              currentRoute === 'about' ? 'text-white' : 'text-white/50 hover:text-white'
             }`}
           >
             About

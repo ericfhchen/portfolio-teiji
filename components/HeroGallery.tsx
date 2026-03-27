@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { VideoPlayer } from './VideoPlayer';
 import CustomCursor from './CustomCursor';
 import { getImageProps } from '@/lib/image';
@@ -13,7 +13,7 @@ interface HeroGalleryProps {
 
 export default function HeroGallery({ items, title }: HeroGalleryProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
-  
+
   // Custom cursor state
   const [cursorText, setCursorText] = useState<string>('');
   const [showCursor, setShowCursor] = useState(false);
@@ -58,20 +58,23 @@ export default function HeroGallery({ items, title }: HeroGalleryProps) {
     }
   }, []);
 
+  useEffect(() => {
+    console.log(`[HERO_GALLERY] ${items.length} items | current=${currentIndex} | title="${title}"`);
+  }, [items.length, currentIndex, title]);
+
+  // Pre-resolve all image props so they stay in DOM
+  const resolvedItems = useMemo(() => {
+    return items.map((item, i) => {
+      if (item?.mediaType === 'image' && item.image) {
+        return { type: 'image' as const, imageProps: getImageProps(item.image, 3200), index: i };
+      } else if (item?.mediaType === 'video' && item.video) {
+        return { type: 'video' as const, video: item.video, index: i };
+      }
+      return { type: 'empty' as const, index: i };
+    });
+  }, [items]);
+
   if (items.length === 0) return null;
-
-  const currentItem = items[currentIndex];
-  let coverImage = null;
-  let coverVideo = null;
-  if (currentItem?.mediaType === 'image' && currentItem.image) {
-    coverImage = getImageProps(currentItem.image, 3200);
-  } else if (currentItem?.mediaType === 'video' && currentItem.video) {
-    coverVideo = currentItem.video;
-  }
-
-  // Use full container size - let object-contain handle the fitting
-  const displayWidth = '100%';
-  const displayHeight = '100%';
 
   return (
     <div className="relative w-full h-full flex items-center justify-center min-h-[60svh]">
@@ -83,140 +86,133 @@ export default function HeroGallery({ items, title }: HeroGalleryProps) {
           className="pointer-events-none absolute inset-x-0 top-1/2 bg-[var(--border)] z-0"
           style={{ height: '1px', transform: 'scaleY(0.333)', transformOrigin: '0 0' }}
         />
-        
+
         <div className="relative w-full h-[100svh] py-20 max-w-7xl flex items-center justify-center">
-          {coverImage ? (
-            <div className="relative w-full h-full">
-              {/* Navigation areas - only show if multiple items, limited to media height */}
-              {items.length > 1 && (
-                <>
-                  <div
-                    className="absolute left-0 top-16 bottom-16 w-1/2 z-20 md:cursor-none md:top-0 md:bottom-0"
-                    role="button"
-                    tabIndex={0}
-                    onClick={goToPrevious}
-                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); goToPrevious(); } }}
-                    aria-label="Previous image"
-                    onMouseEnter={() => {
-                      if (!isFinePointer) return;
-                      // Clear any pending hide timeout
-                      if (hideTimeoutRef.current) {
-                        clearTimeout(hideTimeoutRef.current);
-                        hideTimeoutRef.current = null;
-                      }
-                      setCursorText('PREV');
-                      setShowCursor(true);
-                    }}
-                    onMouseLeave={() => {
-                      if (!isFinePointer) return;
-                      // Delay hiding to prevent flicker when moving between areas
-                      hideTimeoutRef.current = setTimeout(() => {
-                        setShowCursor(false);
-                        setCursorText('');
-                      }, 100);
-                    }}
-                  />
-                  <div
-                    className="absolute right-0 top-16 bottom-16 w-1/2 z-20 md:cursor-none md:top-0 md:bottom-0"
-                    role="button"
-                    tabIndex={0}
-                    onClick={goToNext}
-                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); goToNext(); } }}
-                    aria-label="Next image"
-                    onMouseEnter={() => {
-                      if (!isFinePointer) return;
-                      // Clear any pending hide timeout
-                      if (hideTimeoutRef.current) {
-                        clearTimeout(hideTimeoutRef.current);
-                        hideTimeoutRef.current = null;
-                      }
-                      setCursorText('NEXT');
-                      setShowCursor(true);
-                    }}
-                    onMouseLeave={() => {
-                      if (!isFinePointer) return;
-                      // Delay hiding to prevent flicker when moving between areas
-                      hideTimeoutRef.current = setTimeout(() => {
-                        setShowCursor(false);
-                        setCursorText('');
-                      }, 100);
-                    }}
-                  />
-                </>
-              )}
-              <ImageWithBlur
-                src={coverImage.src}
-                alt={coverImage.alt}
-                lqip={coverImage.hasBlur ? coverImage.blurDataURL : undefined}
-                sizes="(max-width: 768px) 100vw, 80vw"
-                className="object-contain object-center w-full h-full"
-                priority
+          {/* Pre-render ALL gallery items, toggle visibility.
+              First item is relative (sets container size), rest are absolute overlays.
+              All get the same py-20 padding so images never touch top/bottom. */}
+          {resolvedItems.map((resolved, i) => {
+            const isActive = resolved.index === currentIndex;
+            const isFirst = i === 0;
+
+            const wrapperClassName = `w-full h-full transition-opacity duration-300 ${isActive ? 'opacity-100' : 'opacity-0 pointer-events-none'}`;
+            const wrapperStyle: React.CSSProperties = {
+              position: isFirst ? 'relative' : 'absolute',
+              inset: isFirst ? undefined : 0,
+              paddingTop: isFirst ? undefined : '5rem',
+              paddingBottom: isFirst ? undefined : '5rem',
+            };
+
+            if (resolved.type === 'image' && resolved.imageProps) {
+              return (
+                <div key={resolved.index} className={wrapperClassName} style={wrapperStyle}>
+                  <div className="relative w-full h-full">
+                    <ImageWithBlur
+                      src={resolved.imageProps.src}
+                      alt={resolved.imageProps.alt}
+                      lqip={resolved.imageProps.hasBlur ? resolved.imageProps.blurDataURL : undefined}
+                      sizes="(max-width: 768px) 100vw, 80vw"
+                      className="object-contain object-center w-full h-full"
+                      priority={resolved.index === 0}
+                    />
+                  </div>
+                </div>
+              );
+            }
+
+            if (resolved.type === 'video') {
+              return (
+                <div key={resolved.index} className={wrapperClassName} style={wrapperStyle}>
+                  <div className="relative w-full h-full">
+                    <VideoPlayer video={resolved.video} objectFit="contain" isVertical={false} />
+                  </div>
+                </div>
+              );
+            }
+
+            return null;
+          })}
+
+          {/* Navigation areas - only show if multiple items */}
+          {items.length > 1 && (
+            <>
+              <div
+                className="absolute left-0 top-16 bottom-16 w-1/2 z-20 md:cursor-none md:top-0 md:bottom-0"
+                role="button"
+                tabIndex={0}
+                onClick={goToPrevious}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); goToPrevious(); } }}
+                aria-label="Previous image"
+                onMouseEnter={() => {
+                  if (!isFinePointer) return;
+                  if (hideTimeoutRef.current) {
+                    clearTimeout(hideTimeoutRef.current);
+                    hideTimeoutRef.current = null;
+                  }
+                  setCursorText('PREV');
+                  setShowCursor(true);
+                }}
+                onMouseLeave={() => {
+                  if (!isFinePointer) return;
+                  hideTimeoutRef.current = setTimeout(() => {
+                    setShowCursor(false);
+                    setCursorText('');
+                  }, 100);
+                }}
               />
-            </div>
-          ) : coverVideo ? (
-            <div className="relative w-full h-full">
-              {/* Navigation areas - only show if multiple items, limited to media height */}
-              {items.length > 1 && (
-                <>
-                  <div
-                    className="absolute left-0 top-16 bottom-16 w-1/2 z-20 md:cursor-none md:top-0 md:bottom-0"
-                    role="button"
-                    tabIndex={0}
-                    onClick={goToPrevious}
-                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); goToPrevious(); } }}
-                    aria-label="Previous image"
-                    onMouseEnter={() => {
-                      if (!isFinePointer) return;
-                      // Clear any pending hide timeout
-                      if (hideTimeoutRef.current) {
-                        clearTimeout(hideTimeoutRef.current);
-                        hideTimeoutRef.current = null;
-                      }
-                      setCursorText('PREV');
-                      setShowCursor(true);
-                    }}
-                    onMouseLeave={() => {
-                      if (!isFinePointer) return;
-                      // Delay hiding to prevent flicker when moving between areas
-                      hideTimeoutRef.current = setTimeout(() => {
-                        setShowCursor(false);
-                        setCursorText('');
-                      }, 100);
-                    }}
-                  />
-                  <div
-                    className="absolute right-0 top-16 bottom-16 w-1/2 z-20 md:cursor-none md:top-0 md:bottom-0"
-                    role="button"
-                    tabIndex={0}
-                    onClick={goToNext}
-                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); goToNext(); } }}
-                    aria-label="Next image"
-                    onMouseEnter={() => {
-                      if (!isFinePointer) return;
-                      // Clear any pending hide timeout
-                      if (hideTimeoutRef.current) {
-                        clearTimeout(hideTimeoutRef.current);
-                        hideTimeoutRef.current = null;
-                      }
-                      setCursorText('NEXT');
-                      setShowCursor(true);
-                    }}
-                    onMouseLeave={() => {
-                      if (!isFinePointer) return;
-                      // Delay hiding to prevent flicker when moving between areas
-                      hideTimeoutRef.current = setTimeout(() => {
-                        setShowCursor(false);
-                        setCursorText('');
-                      }, 100);
-                    }}
-                  />
-                </>
-              )}
-              <VideoPlayer video={coverVideo} objectFit="contain" isVertical={false} />
-            </div>
-          ) : null}
+              <div
+                className="absolute right-0 top-16 bottom-16 w-1/2 z-20 md:cursor-none md:top-0 md:bottom-0"
+                role="button"
+                tabIndex={0}
+                onClick={goToNext}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); goToNext(); } }}
+                aria-label="Next image"
+                onMouseEnter={() => {
+                  if (!isFinePointer) return;
+                  if (hideTimeoutRef.current) {
+                    clearTimeout(hideTimeoutRef.current);
+                    hideTimeoutRef.current = null;
+                  }
+                  setCursorText('NEXT');
+                  setShowCursor(true);
+                }}
+                onMouseLeave={() => {
+                  if (!isFinePointer) return;
+                  hideTimeoutRef.current = setTimeout(() => {
+                    setShowCursor(false);
+                    setCursorText('');
+                  }, 100);
+                }}
+              />
+            </>
+          )}
         </div>
       </div>
+
+      {/* Counter – mobile only, left-aligned above footer nav */}
+      {items.length > 1 && (
+        <div className="md:hidden pointer-events-none absolute left-4 z-30"
+          style={{ top: 'calc(100svh - 2.5rem - env(safe-area-inset-bottom, 0px))', transform: 'translateY(-100%)' }}>
+          <span className="text-var font-light tracking-wider">
+            {currentIndex + 1}/{items.length}
+          </span>
+        </div>
+      )}
+
+      {/* Navigation chevrons – mobile only, centered above footer nav */}
+      {items.length > 1 && (
+        <div className="md:hidden pointer-events-none absolute inset-x-0 z-30 flex justify-center gap-6"
+          style={{ top: 'calc(100svh - 2.5rem - env(safe-area-inset-bottom, 0px))', transform: 'translateY(-100%)' }}>
+          <svg aria-hidden className="w-2 h-4" viewBox="0 0 12 24" fill="none"
+            stroke="var(--fg)" strokeWidth="0.75" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="10,2 2,12 10,22" />
+          </svg>
+          <svg aria-hidden className="w-2 h-4" viewBox="0 0 12 24" fill="none"
+            stroke="var(--fg)" strokeWidth="0.75" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="2,2 10,12 2,22" />
+          </svg>
+        </div>
+      )}
 
       {/* Custom cursor */}
       <CustomCursor text={cursorText} isVisible={showCursor} />

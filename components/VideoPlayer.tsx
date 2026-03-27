@@ -3,15 +3,16 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { getVideoSourceFromMux, getPlaybackId } from '@/lib/mux';
 import { isVerticalMedia } from '@/lib/image';
+import CustomCursor from './CustomCursor';
 import Hls from 'hls.js';
 
 
 // VideoLayout component for layout-aware video rendering
-export function VideoLayout({ video, layout, caption, alt, isPortableText = false }: { 
-  video: any; 
-  layout: string; 
-  caption?: string; 
-  alt?: string; 
+export function VideoLayout({ video, layout, caption, alt, isPortableText = false }: {
+  video: any;
+  layout: string;
+  caption?: string;
+  alt?: string;
   isPortableText?: boolean;
 }) {
   const layoutStyles = {
@@ -35,29 +36,29 @@ export function VideoLayout({ video, layout, caption, alt, isPortableText = fals
         {/* Video centered within normal content width with layout sizing */}
         <figure className="relative z-10 mx-4 sm:mx-6 lg:mx-8 flex justify-center">
           <div className={`relative ${
-            isPortableText 
-              ? video?.width === 'half' 
-                ? 'w-full md:w-1/2' 
+            isPortableText
+              ? video?.width === 'half'
+                ? 'w-full md:w-1/2'
                 : 'w-full md:w-full md:max-w-4xl'
-              : isVertical 
-                ? 'max-h-[60vh]' 
+              : isVertical
+                ? 'max-h-[60vh]'
                 : 'aspect-[3/2]'
           } overflow-hidden ${
-            isPortableText 
-              ? '' 
+            isPortableText
+              ? ''
               : layoutStyles[layout as keyof typeof layoutStyles] || layoutStyles.full
           }`}>
-            <VideoPlayer 
-              video={video} 
-              objectFit="contain" 
-              isVertical={isVertical} 
+            <VideoPlayer
+              video={video}
+              objectFit="contain"
+              isVertical={isVertical}
               showMuteButton={!isPortableText}
             />
           </div>
         </figure>
       </div>
-      
-      
+
+
       {(caption || alt) && (
         <figcaption className="mt-2 text-sm text-muted text-center">
           {caption || alt}
@@ -70,7 +71,7 @@ export function VideoLayout({ video, layout, caption, alt, isPortableText = fals
 // VideoBleed component for full-bleed video rendering
 export function VideoBleed({ video, alt }: { video: any; alt?: string }) {
   const isVertical = isVerticalMedia(video);
-  
+
   return (
     <div className="my-12 -mx-4 sm:-mx-6 lg:-mx-8">
       <div className={`relative w-full overflow-hidden ${isVertical ? 'max-h-[80vh]' : 'aspect-[16/9]'}`}>
@@ -85,20 +86,65 @@ export function VideoBleed({ video, alt }: { video: any; alt?: string }) {
   );
 }
 
+// Detect whether a video element has an audio track
+function detectHasAudio(video: HTMLVideoElement): boolean {
+  // WebKit/Chrome: mozHasAudio or webkitAudioDecodedByteCount
+  if ((video as any).mozHasAudio !== undefined) {
+    return (video as any).mozHasAudio;
+  }
+  if ((video as any).webkitAudioDecodedByteCount !== undefined) {
+    return (video as any).webkitAudioDecodedByteCount > 0;
+  }
+  // Standard: audioTracks API
+  if ((video as any).audioTracks !== undefined) {
+    return (video as any).audioTracks.length > 0;
+  }
+  // Fallback: assume has audio (safe default to show mute button)
+  return true;
+}
+
 // VideoPlayer component
-export function VideoPlayer({ video, objectFit = 'contain', isVertical = false, autoPlay = true, showMuteButton = true }: { 
-  video: any; 
+export function VideoPlayer({ video, objectFit = 'contain', isVertical = false, autoPlay = true, showMuteButton = true, onHasAudioDetected }: {
+  video: any;
   objectFit?: 'contain' | 'cover' | 'fill' | 'none' | 'scale-down';
   isVertical?: boolean;
   autoPlay?: boolean;
   showMuteButton?: boolean;
+  onHasAudioDetected?: (hasAudio: boolean) => void;
 }) {
   // Hooks must be declared unconditionally (Rules of Hooks)
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
+  const [hasAudio, setHasAudio] = useState<boolean | null>(null);
   const [actualDimensions, setActualDimensions] = useState<{width: number, height: number} | null>(null);
+
+  // Custom cursor for play/pause
+  const [cursorText, setCursorText] = useState<string>('');
+  const [showCursor, setShowCursor] = useState(false);
+  const [isFinePointer, setIsFinePointer] = useState(false);
+
+  // Detect fine pointer
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia === 'undefined') return;
+    const mq = window.matchMedia('(pointer: fine)');
+    const update = (e?: MediaQueryListEvent) => {
+      setIsFinePointer(e ? e.matches : mq.matches);
+    };
+    update();
+    if (typeof mq.addEventListener === 'function') {
+      mq.addEventListener('change', update);
+      return () => mq.removeEventListener('change', update);
+    } else {
+      // @ts-ignore deprecated
+      mq.addListener(update);
+      return () => {
+        // @ts-ignore deprecated
+        mq.removeListener(update);
+      };
+    }
+  }, []);
 
   // Validation after hooks
   const playbackId = getPlaybackId(video);
@@ -217,7 +263,7 @@ export function VideoPlayer({ video, objectFit = 'contain', isVertical = false, 
     }
   }, [autoPlay]);
 
-  // Capture actual video dimensions when metadata loads
+  // Capture actual video dimensions and detect audio when metadata loads
   useEffect(() => {
     const videoElement = videoRef.current;
     if (!videoElement) return;
@@ -230,9 +276,33 @@ export function VideoPlayer({ video, objectFit = 'contain', isVertical = false, 
       setActualDimensions(dims);
     };
 
+    // Detect audio after some data has loaded
+    const handleLoadedData = () => {
+      const audioDetected = detectHasAudio(videoElement);
+      setHasAudio(audioDetected);
+      onHasAudioDetected?.(audioDetected);
+    };
+
+    // For HLS.js, also check after playing starts (webkitAudioDecodedByteCount needs playback)
+    const handleTimeUpdate = () => {
+      if (hasAudio === null && videoElement.currentTime > 0.1) {
+        const audioDetected = detectHasAudio(videoElement);
+        setHasAudio(audioDetected);
+        onHasAudioDetected?.(audioDetected);
+        // Remove listener once detected
+        videoElement.removeEventListener('timeupdate', handleTimeUpdate);
+      }
+    };
+
     videoElement.addEventListener('loadedmetadata', handleLoadedMetadata);
-    return () => videoElement.removeEventListener('loadedmetadata', handleLoadedMetadata);
-  }, []);
+    videoElement.addEventListener('loadeddata', handleLoadedData);
+    videoElement.addEventListener('timeupdate', handleTimeUpdate);
+    return () => {
+      videoElement.removeEventListener('loadedmetadata', handleLoadedMetadata);
+      videoElement.removeEventListener('loadeddata', handleLoadedData);
+      videoElement.removeEventListener('timeupdate', handleTimeUpdate);
+    };
+  }, [hasAudio, onHasAudioDetected]);
 
   const handleVideoClick = useCallback(() => {
     if (!videoRef.current) return;
@@ -249,19 +319,45 @@ export function VideoPlayer({ video, objectFit = 'contain', isVertical = false, 
   const toggleMute = useCallback((e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent video click when clicking unmute button
     if (!videoRef.current) return;
-    
+
     videoRef.current.muted = !videoRef.current.muted;
     setIsMuted(videoRef.current.muted);
   }, []);
 
+  const handleMouseEnter = useCallback(() => {
+    if (!isFinePointer) return;
+    setCursorText(isPlaying ? 'PAUSE' : 'PLAY');
+    setShowCursor(true);
+  }, [isFinePointer, isPlaying]);
+
+  const handleMouseLeave = useCallback(() => {
+    setShowCursor(false);
+    setCursorText('');
+  }, []);
+
+  // Update cursor text when play state changes while hovering
+  useEffect(() => {
+    if (showCursor) {
+      setCursorText(isPlaying ? 'PAUSE' : 'PLAY');
+    }
+  }, [isPlaying, showCursor]);
 
   // Use height-constrained approach for vertical videos
-  const actuallyVertical = actualDimensions 
-    ? actualDimensions.height > actualDimensions.width 
+  const actuallyVertical = actualDimensions
+    ? actualDimensions.height > actualDimensions.width
     : isVertical;
 
+  // Only show mute if showMuteButton prop is true AND audio is detected
+  const shouldShowMute = showMuteButton && hasAudio === true;
+
   return (
-    <div className="relative group cursor-pointer w-full h-full" onClick={handleVideoClick} data-video-container>
+    <div
+      className="relative group w-full h-full md:cursor-none"
+      onClick={handleVideoClick}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+      data-video-container
+    >
       <video
         ref={videoRef}
         className={`w-full h-full object-${objectFit}`}
@@ -284,9 +380,9 @@ export function VideoPlayer({ video, objectFit = 'contain', isVertical = false, 
         )}
         Your browser does not support the video tag.
       </video>
-      
-      {/* Unmute button - positioned at bottom right on desktop, below video on mobile */}
-      {showMuteButton && (
+
+      {/* Unmute button - only shown when video has audio */}
+      {shouldShowMute && (
         <>
           {/* Mobile: button below video */}
           <button
@@ -296,7 +392,7 @@ export function VideoPlayer({ video, objectFit = 'contain', isVertical = false, 
           >
             {isMuted ? 'UNMUTE' : 'MUTE'}
           </button>
-          
+
           {/* Desktop: button overlaying bottom right */}
           <button
             onClick={toggleMute}
@@ -307,6 +403,9 @@ export function VideoPlayer({ video, objectFit = 'contain', isVertical = false, 
           </button>
         </>
       )}
+
+      {/* Custom PLAY/PAUSE cursor */}
+      <CustomCursor text={cursorText} isVisible={showCursor} />
     </div>
   );
 }

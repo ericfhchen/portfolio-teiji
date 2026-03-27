@@ -45,26 +45,28 @@ export default function Filters({ tags, section }: FiltersProps) {
 
   return (
     <nav
-      className={`h-12 pointer-events-auto flex items-center gap-4 sm:gap-6 px-6 md:px-8 fixed top-12 z-50 left-0 justify-start ${
-        section === 'art' ? 'lg:left-0 lg:justify-start' : 'lg:right-0 lg:justify-end'
+      className={`h-12 pointer-events-auto flex items-center gap-4 sm:gap-6 px-6 md:px-8 fixed top-12 z-50 overflow-x-auto flex-nowrap scrollbar-hide ${
+        section === 'art'
+          ? 'left-0 right-0 lg:right-auto justify-start'
+          : 'left-0 right-0 lg:right-auto justify-start'
       }`}
     >
       {/* All tag */}
       <button
         onClick={() => handleTagToggle('All')}
-        className={`text-sm font-normal transition-colors ${
+        className={`text-sm font-normal transition-colors shrink-0 ${
           activeTags.length === 0 ? 'text-var' : 'text-muted hover:text-var'
         }`}
       >
         All
       </button>
-      
+
       {/* Individual tags */}
       {tags.map((tag, index) => (
         <button
           key={`${tag}-${index}`}
           onClick={() => handleTagToggle(tag)}
-          className={`text-sm font-normal transition-colors ${
+          className={`text-sm font-normal transition-colors shrink-0 ${
             activeTags.includes(tag) ? 'text-var' : 'text-muted hover:text-var'
           }`}
         >

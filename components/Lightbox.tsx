@@ -26,7 +26,8 @@ export default function Lightbox({ items, section }: LightboxProps) {
   const [showCursor, setShowCursor] = useState(false);
   const hideTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [isFinePointer, setIsFinePointer] = useState(false);
-  
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
+
   const { tags: activeTags, item: activeItem } = useMemo(
     () => parseSearchParams(searchParams),
     [searchParams]
@@ -94,6 +95,7 @@ export default function Lightbox({ items, section }: LightboxProps) {
   
   // Video mute state
   const [isMuted, setIsMuted] = useState(true);
+  const [hasAudio, setHasAudio] = useState(false);
 
   // Get all media items for current feed item (main item + gallery)
   const allMediaItems = useMemo(() => {
@@ -133,9 +135,10 @@ export default function Lightbox({ items, section }: LightboxProps) {
 
   const currentMediaItem = allMediaItems[currentGalleryIndex] || allMediaItems[0];
 
-  // Reset gallery index when feed item changes
+  // Reset gallery index and audio state when feed item changes
   useEffect(() => {
     setCurrentGalleryIndex(0);
+    setHasAudio(false);
   }, [currentItem?._id]);
 
   const close = useCallback(() => {
@@ -171,6 +174,22 @@ export default function Lightbox({ items, section }: LightboxProps) {
       }
     });
   }, [allMediaItems]);
+
+  // Swipe handlers for gallery navigation
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    touchStartRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+  }, []);
+
+  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+    if (!touchStartRef.current) return;
+    const dx = e.changedTouches[0].clientX - touchStartRef.current.x;
+    const dy = e.changedTouches[0].clientY - touchStartRef.current.y;
+    touchStartRef.current = null;
+    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) {
+      if (dx < 0) navigateGallery('next');
+      else navigateGallery('prev');
+    }
+  }, [navigateGallery]);
 
   // Navigate to different feed items
   const navigate = useCallback((direction: 'prev' | 'next') => {
@@ -287,28 +306,35 @@ export default function Lightbox({ items, section }: LightboxProps) {
   useEffect(() => {
     if (!currentItem) return;
 
-    const body = document.body;
     const scrollY = window.scrollY;
+    const html = document.documentElement;
 
-    // Prevent background scroll without causing layout shift
-    body.style.position = 'fixed';
-    body.style.top = `-${scrollY}px`;
-    body.style.left = '0';
-    body.style.right = '0';
-    body.style.width = '100%';
-    body.style.overflow = 'hidden';
+    // Prevent background scroll — use overflow on html to avoid
+    // disrupting body positioning (which breaks iOS Safari translucent bar)
+    html.style.overflow = 'hidden';
+    document.body.style.overflow = 'hidden';
+    // Maintain scroll position visually via negative margin
+    document.body.style.marginTop = `-${scrollY}px`;
 
     return () => {
-      // Restore scrolling and position
-      body.style.position = '';
-      body.style.top = '';
-      body.style.left = '';
-      body.style.right = '';
-      body.style.width = '';
-      body.style.overflow = '';
+      html.style.overflow = '';
+      document.body.style.overflow = '';
+      document.body.style.marginTop = '';
       window.scrollTo(0, scrollY);
     };
   }, [currentItem]);
+
+  useEffect(() => {
+    if (!currentItem) return;
+    console.log(`[LIGHTBOX] item="${currentItem.parentTitle}" | gallery=${allMediaItems.length} items | showing=${currentGalleryIndex + 1}/${allMediaItems.length} | type=${currentMediaItem?.mediaType}`);
+  }, [currentItem, allMediaItems.length, currentGalleryIndex]);
+
+  // Log preload activity
+  useEffect(() => {
+    if (currentIndex === -1) return;
+    const preloadCount = allMediaItems.length - 1 + (items.length > 1 ? 2 : 0);
+    console.log(`[LIGHTBOX PRELOAD] preloading ${preloadCount} images (${allMediaItems.length - 1} gallery + ${items.length > 1 ? '2 adjacent feed items' : '0 adjacent'})`);
+  }, [currentIndex, allMediaItems.length, items.length]);
 
   if (!currentItem) return null;
 
@@ -319,7 +345,7 @@ export default function Lightbox({ items, section }: LightboxProps) {
       {/* Top-left close button */}
       <button
         onClick={close}
-        className="absolute top-4 left-4 z-30 text-var text-md hover:opacity-60 transition-opacity focus:outline-none"
+        className="absolute top-4 left-4 z-40 text-var text-md hover:opacity-60 transition-opacity focus:outline-none"
         aria-label="Close lightbox"
       >
         (CLOSE)
@@ -338,7 +364,63 @@ export default function Lightbox({ items, section }: LightboxProps) {
         aria-modal="true"
         aria-label={`${currentItem.parentTitle}${allMediaItems.length > 1 ? ` - Image ${currentGalleryIndex + 1} of ${allMediaItems.length}` : ''}`}
         className="relative z-10 h-full flex flex-col"
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
       >
+        {/* Full-screen navigation areas – matching home page */}
+        {allMediaItems.length > 1 && (
+          <>
+            <div
+              className="absolute left-0 top-0 w-1/2 h-full z-20 md:cursor-none"
+              role="button"
+              tabIndex={0}
+              onClick={() => navigateGallery('prev')}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigateGallery('prev'); } }}
+              aria-label="Previous image"
+              onMouseEnter={() => {
+                if (!isFinePointer) return;
+                if (hideTimeoutRef.current) {
+                  clearTimeout(hideTimeoutRef.current);
+                  hideTimeoutRef.current = null;
+                }
+                setCursorText('PREV');
+                setShowCursor(true);
+              }}
+              onMouseLeave={() => {
+                if (!isFinePointer) return;
+                hideTimeoutRef.current = setTimeout(() => {
+                  setShowCursor(false);
+                  setCursorText('');
+                }, 100);
+              }}
+            />
+            <div
+              className="absolute right-0 top-0 w-1/2 h-full z-20 md:cursor-none"
+              role="button"
+              tabIndex={0}
+              onClick={() => navigateGallery('next')}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigateGallery('next'); } }}
+              aria-label="Next image"
+              onMouseEnter={() => {
+                if (!isFinePointer) return;
+                if (hideTimeoutRef.current) {
+                  clearTimeout(hideTimeoutRef.current);
+                  hideTimeoutRef.current = null;
+                }
+                setCursorText('NEXT');
+                setShowCursor(true);
+              }}
+              onMouseLeave={() => {
+                if (!isFinePointer) return;
+                hideTimeoutRef.current = setTimeout(() => {
+                  setShowCursor(false);
+                  setCursorText('');
+                }, 100);
+              }}
+            />
+          </>
+        )}
+
         {/* Work Tile - exactly matching Grid component home variant */}
         <div
           className="flex-1 flex items-center justify-center"
@@ -353,87 +435,54 @@ export default function Lightbox({ items, section }: LightboxProps) {
             
             {/* Work tile container - matching Grid component exactly */}
             <div className="relative overflow-hidden p-6 lg:max-w-[100dvh] mx-auto w-full">
-              {/* Media display */}
+              {/* Media display — pre-render all gallery items, toggle visibility */}
               <div className="relative">
-                {currentMediaItem.mediaType === 'video' && currentMediaItem.videoData ? (
-                  // Video rendering with consistent height
-                  <div className="relative w-full h-[70vh] overflow-hidden flex items-center justify-center">
-                    <VideoPlayer 
-                      video={currentMediaItem.videoData} 
-                      objectFit="contain" 
-                      isVertical={isVerticalMedia(currentMediaItem.videoData)}
-                      showMuteButton={false}
-                    />
-                  </div>
-                ) : (
-                  // Image rendering
-                  <div className="relative w-full h-[70vh] flex items-center justify-center">
-                    <div className="relative w-full h-full">
-                      <ImageWithBlur
-                        src={currentMediaItem.src}
-                        alt={currentMediaItem.alt || ''}
-                        lqip={currentMediaItem.lqip}
-                        sizes="50vw"
-                        className="object-contain object-center"
-                      />
-                    </div>
-                  </div>
-                )}
+                {allMediaItems.map((mediaItem, index) => {
+                  const isActive = index === currentGalleryIndex;
 
-                {/* Gallery navigation click areas - only show if there are multiple media items */}
-                {allMediaItems.length > 1 && (
-                  <>
-                    {/* Left click area - previous gallery item */}
-                    <button
-                      onClick={() => navigateGallery('prev')}
-                      className="absolute left-0 top-0 w-1/3 h-full z-10 focus:outline-none md:cursor-none"
-                      aria-label="Previous image"
-                      onMouseEnter={() => {
-                        if (!isFinePointer) return;
-                        // Clear any pending hide timeout
-                        if (hideTimeoutRef.current) {
-                          clearTimeout(hideTimeoutRef.current);
-                          hideTimeoutRef.current = null;
-                        }
-                        setCursorText('PREV');
-                        setShowCursor(true);
+                  if (mediaItem.mediaType === 'video' && mediaItem.videoData) {
+                    return (
+                      <div
+                        key={`lightbox-media-${index}`}
+                        className={`relative w-full h-[70vh] overflow-hidden flex items-center justify-center transition-opacity duration-300 ${isActive ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+                        style={{
+                          position: index === 0 ? 'relative' : 'absolute',
+                          inset: index === 0 ? undefined : 0,
+                        }}
+                      >
+                        <VideoPlayer
+                          video={mediaItem.videoData}
+                          objectFit="contain"
+                          isVertical={isVerticalMedia(mediaItem.videoData)}
+                          showMuteButton={false}
+                          onHasAudioDetected={(detected) => setHasAudio(detected)}
+                        />
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div
+                      key={`lightbox-media-${index}`}
+                      className={`relative w-full h-[70vh] flex items-center justify-center transition-opacity duration-300 ${isActive ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+                      style={{
+                        position: index === 0 ? 'relative' : 'absolute',
+                        inset: index === 0 ? undefined : 0,
                       }}
-                      onMouseLeave={() => {
-                        if (!isFinePointer) return;
-                        // Delay hiding to prevent flicker when moving between areas
-                        hideTimeoutRef.current = setTimeout(() => {
-                          setShowCursor(false);
-                          setCursorText('');
-                        }, 100);
-                      }}
-                    />
-                    
-                    {/* Right click area - next gallery item */}
-                    <button
-                      onClick={() => navigateGallery('next')}
-                      className="absolute right-0 top-0 w-1/3 h-full z-10 focus:outline-none md:cursor-none"
-                      aria-label="Next image"
-                      onMouseEnter={() => {
-                        if (!isFinePointer) return;
-                        // Clear any pending hide timeout
-                        if (hideTimeoutRef.current) {
-                          clearTimeout(hideTimeoutRef.current);
-                          hideTimeoutRef.current = null;
-                        }
-                        setCursorText('NEXT');
-                        setShowCursor(true);
-                      }}
-                      onMouseLeave={() => {
-                        if (!isFinePointer) return;
-                        // Delay hiding to prevent flicker when moving between areas
-                        hideTimeoutRef.current = setTimeout(() => {
-                          setShowCursor(false);
-                          setCursorText('');
-                        }, 100);
-                      }}
-                    />
-                  </>
-                )}
+                    >
+                      <div className="relative w-full h-full">
+                        <ImageWithBlur
+                          src={mediaItem.src}
+                          alt={mediaItem.alt || ''}
+                          lqip={mediaItem.lqip}
+                          sizes="50vw"
+                          className="object-contain object-center"
+                          priority={index === 0}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
 
               </div>
             </div>
@@ -452,9 +501,9 @@ export default function Lightbox({ items, section }: LightboxProps) {
               )}
             </div>
             
-            {/* Right: Mute button - desktop only */}
+            {/* Right: Mute button - desktop only, only if video has audio */}
             <div className="h-4 flex items-center hidden md:flex">
-              {currentMediaItem.mediaType === 'video' && currentMediaItem.videoData && (
+              {currentMediaItem.mediaType === 'video' && currentMediaItem.videoData && hasAudio && (
                 <button
                   onClick={toggleMute}
                   className="text-var font-light tracking-wider hover:opacity-60 transition-opacity"
@@ -469,8 +518,8 @@ export default function Lightbox({ items, section }: LightboxProps) {
         {/* Mobile controls - fixed position bottom right */}
         <div className="fixed bottom-4 right-4 z-30 md:hidden">
           <div className="flex flex-col items-end gap-0">
-            {/* Mute button - top */}
-            {currentMediaItem.mediaType === 'video' && currentMediaItem.videoData && (
+            {/* Mute button - top, only if video has audio */}
+            {currentMediaItem.mediaType === 'video' && currentMediaItem.videoData && hasAudio && (
               <button
                 onClick={toggleMute}
                 className="text-var font-light tracking-wider hover:opacity-60 transition-opacity"
@@ -488,9 +537,25 @@ export default function Lightbox({ items, section }: LightboxProps) {
           </div>
         </div>
 
+        {/* Navigation chevrons – mobile only, above bottom text */}
+        {allMediaItems.length > 1 && (
+          <div className="md:hidden pointer-events-none absolute inset-x-0 z-20 flex justify-center gap-6"
+            style={{ bottom: 'calc(5rem + env(safe-area-inset-bottom, 0px))' }}>
+            <svg aria-hidden className="w-2 h-4" viewBox="0 0 12 24" fill="none"
+              stroke="var(--fg)" strokeWidth="0.75" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="10,2 2,12 10,22" />
+            </svg>
+            <svg aria-hidden className="w-2 h-4" viewBox="0 0 12 24" fill="none"
+              stroke="var(--fg)" strokeWidth="0.75" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="2,2 10,12 2,22" />
+            </svg>
+          </div>
+        )}
+
         {/* Bottom text layout - restored to original */}
         <div className="absolute bottom-0 left-0 right-0 z-20">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 px-4 py-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 px-4 py-4"
+            style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom, 1rem))' }}>
             {/* Left side: Year and Title/Tags */}
             <div className="grid grid-cols-[auto_1fr] gap-4 sm:gap-8">
               {/* Year column - minimal width */}

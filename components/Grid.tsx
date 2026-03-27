@@ -108,6 +108,13 @@ export default function Grid({ items, section, variant = 'index' }: GridProps) {
     }));
   }, [maxEmptyTiles, mobileEmptyTiles, desktopEmptyTiles]);
 
+  // Debug: log how many images are being rendered
+  if (typeof window !== 'undefined') {
+    const imageCount = filteredItems.length;
+    const hoverCount = variant === 'work' ? filteredItems.filter(i => i.hoverMedia).length : 0;
+    console.log(`[GRID] variant=${variant} | ${imageCount} items rendering | ${hoverCount} with hover media (${imageCount + hoverCount} total images) | ${activeTags.length ? `tags: ${activeTags.join(', ')}` : 'no filter'}`);
+  }
+
   return (
     <div className="w-full">
       {/* Grid */}
@@ -222,10 +229,22 @@ export default function Grid({ items, section, variant = 'index' }: GridProps) {
                 style={{ height: '1px', transform: 'scaleY(0.333)', transformOrigin: '0 0' }}
                 />
                 {/* Empty tile with same padding as regular tiles to maintain grid alignment */}
-                <div className={`relative overflow-hidden ${variant === 'work' ? 'px-6 lg:px-8 pt-12 pb-4 lg:pb-12' : 'p-12 lg:p-20'} ${variant !== 'work' ? 'lg:max-w-[100dvh]' : ''} mx-auto w-full`}>
-                  <div className={`relative ${variant === 'work' ? 'aspect-[16/9]' : 'aspect-square'}`} />
+                <div className={`relative overflow-hidden ${variant === 'work' ? 'px-6 lg:px-8 py-4 lg:py-4' : 'p-6 lg:p-16'} ${variant !== 'work' ? 'lg:max-w-[100dvh]' : ''} mx-auto w-full`}>
+                  <div className={`relative ${variant === 'work' ? 'aspect-[16/9]' : 'aspect-square'}`}>
+                    <div className="w-full h-full" />
+                  </div>
                 </div>
               </div>
+              {/* Invisible text placeholder to match actual tile height */}
+              {variant === 'work' && (
+                <div className="px-6 lg:px-8 pb-4 mx-auto w-full">
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                      <div className="text-sm sm:text-base">&nbsp;</div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           );
         })}

@@ -16,15 +16,18 @@ interface SlideshowProps {
 
 export default function Slideshow({ items, section, autoPlayInterval = 5000 }: SlideshowProps) {
   const router = useRouter();
-  
+
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(true);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
-  
+
   // Custom cursor state
   const [cursorText, setCursorText] = useState<string>('');
   const [showCursor, setShowCursor] = useState(false);
   const hideTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Touch/swipe state
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
 
   // Reset to first image if items change
   useEffect(() => {
@@ -40,15 +43,6 @@ export default function Slideshow({ items, section, autoPlayInterval = 5000 }: S
     };
   }, []);
 
-  // Auto-advance functionality
-  const startAutoPlay = useCallback(() => {
-    if (items.length <= 1) return;
-    
-    intervalRef.current = setInterval(() => {
-      setCurrentIndex(prevIndex => (prevIndex + 1) % items.length);
-    }, autoPlayInterval);
-  }, [items.length, autoPlayInterval]);
-
   const stopAutoPlay = useCallback(() => {
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
@@ -59,31 +53,31 @@ export default function Slideshow({ items, section, autoPlayInterval = 5000 }: S
   // Start/stop auto-play based on isPlaying state
   useEffect(() => {
     if (isPlaying && items.length > 1) {
-      startAutoPlay();
+      stopAutoPlay();
+      intervalRef.current = setInterval(() => {
+        setCurrentIndex(prev => (prev + 1) % items.length);
+      }, autoPlayInterval);
     } else {
       stopAutoPlay();
     }
 
     return () => stopAutoPlay();
-  }, [isPlaying, startAutoPlay, stopAutoPlay, items.length]);
+  }, [isPlaying, stopAutoPlay, items.length, autoPlayInterval]);
 
   // Navigation functions
   const goToNext = useCallback(() => {
-    setCurrentIndex(prevIndex => (prevIndex + 1) % items.length);
-    // Reset auto-play timer
+    setCurrentIndex(prev => (prev + 1) % items.length);
     stopAutoPlay();
     setIsPlaying(true);
   }, [items.length, stopAutoPlay]);
 
   const goToPrevious = useCallback(() => {
-    setCurrentIndex(prevIndex => (prevIndex - 1 + items.length) % items.length);
-    // Reset auto-play timer  
+    setCurrentIndex(prev => (prev - 1 + items.length) % items.length);
     stopAutoPlay();
     setIsPlaying(true);
   }, [items.length, stopAutoPlay]);
 
   const handleItemClick = useCallback((item: FeedItem) => {
-    // Navigate directly to project page
     router.push(`/${section}/${item.parentSlug}`);
   }, [section, router]);
 
@@ -98,6 +92,23 @@ export default function Slideshow({ items, section, autoPlayInterval = 5000 }: S
     }
   }, [items.length]);
 
+  // Touch handlers for swipe
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    touchStartRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+  }, []);
+
+  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+    if (!touchStartRef.current) return;
+    const dx = e.changedTouches[0].clientX - touchStartRef.current.x;
+    const dy = e.changedTouches[0].clientY - touchStartRef.current.y;
+    touchStartRef.current = null;
+    // Only trigger if horizontal swipe is dominant and > 50px
+    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) {
+      if (dx < 0) goToNext();
+      else goToPrevious();
+    }
+  }, [goToNext, goToPrevious]);
+
   if (items.length === 0) {
     return (
       <div className="text-center py-12">
@@ -109,10 +120,12 @@ export default function Slideshow({ items, section, autoPlayInterval = 5000 }: S
   const currentItem = items[currentIndex];
 
   return (
-    <div 
+    <div
       className="relative w-full h-[100dvh] overflow-hidden"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
     >
       {/* Left navigation area (left half of screen) */}
       <div
@@ -197,7 +210,38 @@ export default function Slideshow({ items, section, autoPlayInterval = 5000 }: S
           </div>
         )}
 
-        {/* Image wrapper with padding */}
+        {/* Navigation chevrons – mobile only, just above footer nav */}
+        {items.length > 1 && (
+          <div className="md:hidden pointer-events-none absolute inset-x-0 z-30 flex justify-center gap-6"
+            style={{ bottom: 'calc(3.5rem + env(safe-area-inset-bottom, 0px))' }}>
+            <svg
+              aria-hidden
+              className="w-2 h-4"
+              viewBox="0 0 12 24"
+              fill="none"
+              stroke="var(--fg)"
+              strokeWidth="0.75"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <polyline points="10,2 2,12 10,22" />
+            </svg>
+            <svg
+              aria-hidden
+              className="w-2 h-4"
+              viewBox="0 0 12 24"
+              fill="none"
+              stroke="var(--fg)"
+              strokeWidth="0.75"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <polyline points="2,2 10,12 2,22" />
+            </svg>
+          </div>
+        )}
+
+        {/* Image wrapper with padding – all items stacked, crossfade via opacity */}
         <div className="relative overflow-hidden px-4 py-6 md:p-12 lg:p-20 lg:max-w-[100dvh] mx-auto w-full h-full flex items-center justify-center">
           <button
             onClick={() => handleItemClick(currentItem)}
@@ -205,31 +249,42 @@ export default function Slideshow({ items, section, autoPlayInterval = 5000 }: S
             aria-label={`Open ${currentItem.parentTitle} in lightbox`}
           >
             <div className="relative aspect-[3/4] md:aspect-square w-[85vw] md:w-[80vmin]">
-              {currentItem.mediaType === 'video' && currentItem.playbackId ? (
-                <SlideshowVideoItem item={currentItem} />
-              ) : currentItem.src && currentItem.src.trim() !== '' ? (
-                <ImageWithBlur
-                  src={currentItem.src}
-                  alt={currentItem.alt || ''}
-                  lqip={currentItem.lqip}
-                  sizes="80vmin"
-                  className="object-contain object-center shadow-none"
-                />
-              ) : (
-                <div className="absolute inset-0 flex items-center justify-center bg-gray-100 text-gray-500">
-                  <div className="text-center">
-                    <div className="w-16 h-16 mx-auto mb-2 bg-gray-300 rounded flex items-center justify-center">
-                      <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M2 6a2 2 0 012-2h6l2 2h6a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM10 12a2 2 0 100-4 2 2 0 000 4z" />
-                      </svg>
+              {items.map((item, index) => (
+                <div
+                  key={item.parentSlug || index}
+                  className={`transition-opacity duration-300 ${index === currentIndex ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+                  style={index === 0
+                    ? { position: 'relative', width: '100%', height: '100%' }
+                    : { position: 'absolute', inset: 0 }
+                  }
+                >
+                  {item.mediaType === 'video' && item.playbackId ? (
+                    <SlideshowVideoItem item={item} />
+                  ) : item.src && item.src.trim() !== '' ? (
+                    <ImageWithBlur
+                      src={item.src}
+                      alt={item.alt || ''}
+                      lqip={item.lqip}
+                      sizes="80vmin"
+                      className="object-contain object-center shadow-none"
+                      priority={index === 0}
+                    />
+                  ) : (
+                    <div className="absolute inset-0 flex items-center justify-center bg-gray-100 text-gray-500">
+                      <div className="text-center">
+                        <div className="w-16 h-16 mx-auto mb-2 bg-gray-300 rounded flex items-center justify-center">
+                          <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M2 6a2 2 0 012-2h6l2 2h6a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM10 12a2 2 0 100-4 2 2 0 000 4z" />
+                          </svg>
+                        </div>
+                        <p className="text-sm">Media unavailable</p>
+                      </div>
                     </div>
-                    <p className="text-sm">Media unavailable</p>
-                  </div>
+                  )}
                 </div>
-              )}
+              ))}
             </div>
           </button>
-
         </div>
       </div>
 

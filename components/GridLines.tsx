@@ -16,15 +16,15 @@ export default function GridLines({ type }: GridLinesProps) {
       case 'project':
         // Single line at 50% (center) for all screen sizes
         return { mobileLines: [50], desktopLines: [50] };
-      
+
       case 'work':
         // Mobile: Single line at 50% (center), Desktop: Two lines at 25% and 75%
         return { mobileLines: [50], desktopLines: [25, 75] };
-      
+
       case 'index':
         // Mobile: Two lines at 25% and 75%, Desktop: Three lines at ~16.67%, 50%, and ~83.33% (midpoints of 3 equal columns)
         return { mobileLines: [25, 75], desktopLines: [16.666667, 50, 83.333333] };
-      
+
       default:
         return { mobileLines: [], desktopLines: [] };
     }

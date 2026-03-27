@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { VideoPlayer } from '@/components/VideoPlayer';
 import ImageWithBlur from '@/components/ImageWithBlur';
 
@@ -39,8 +39,13 @@ export default function HoverMedia({
   const [isHovered, setIsHovered] = useState(false);
   const [showHoverMedia, setShowHoverMedia] = useState(false);
 
-  const hasHoverMedia = hoverMedia && 
+  const hasHoverMedia = hoverMedia &&
     !(staticMedia.mediaType === 'video' && hoverMedia.mediaType === 'video'); // No video->video
+
+  useEffect(() => {
+    const shortSrc = staticMedia.src.split('?')[0].split('/').slice(-2).join('/');
+    console.log(`[HOVER_MEDIA] ${shortSrc} | hasHover=${!!hasHoverMedia} | static=${staticMedia.mediaType} | hover=${hoverMedia?.mediaType || 'none'}`);
+  }, []);
 
   const handleMouseEnter = useCallback(() => {
     setIsHovered(true);
