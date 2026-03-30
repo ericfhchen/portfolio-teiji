@@ -1,13 +1,12 @@
 import { notFound } from 'next/navigation';
-import Link from 'next/link';
 import { client } from '@/lib/sanity.client';
 import { aboutQuery, siteSettingsQuery } from '@/lib/queries';
 import { About } from '@/lib/types';
 import { PortableText } from '@portabletext/react';
 import GridLines from '@/components/GridLines';
-import ImageWithBlur from '@/components/ImageWithBlur';
 import { getImageProps } from '@/lib/image';
 import FinalResearchCredit from '@/components/FinalResearchCredit';
+import AboutGallery from '@/components/AboutGallery';
 
 export async function generateStaticParams() {
   return [{ section: 'art' }, { section: 'design' }];
@@ -63,7 +62,7 @@ export async function generateMetadata({
   }
 
   const settings = await client.fetch(siteSettingsQuery, {}, { next: { revalidate: 60 } });
-  const siteTitle = settings?.title || 'Teiji';
+  const siteTitle = (settings?.title || 'Teiji').replace(/\s*Studio\s*/i, ' ').trim();
 
   return {
     title: `About — ${section.charAt(0).toUpperCase() + section.slice(1)} — ${siteTitle}`,
@@ -92,75 +91,68 @@ export default async function AboutPage({
     return (
       <>
         <GridLines type="about" />
-        <div className="pt-24 pb-20 relative lg:pt-0 lg:pb-0 lg:fixed lg:inset-0 lg:overflow-hidden">
-          <div className="mx-auto px-6 md:px-8 lg:h-full">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-12 lg:h-full">
-              {/* Left side - Bio and Services */}
-              <div className="space-y-12 lg:space-y-12 lg:pt-24 lg:pb-20 lg:overflow-y-auto">
-                {/* Bio */}
-                {about.bio && about.bio.length > 0 && (
-                  <div className="space-y-6">
-                    <div className="prose prose-sm max-w-none text-var">
+        <div className="pt-24 pb-20 lg:pb-0 relative">
+          <div className="relative flex flex-col lg:min-h-[calc(100vh-96px)]">
+            <div className="mx-auto px-6 md:px-8 flex-1">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-12">
+                {/* Left side - Bio and Services */}
+                <div className="space-y-12">
+                  {/* Bio */}
+                  {about.bio && about.bio.length > 0 && (
+                    <div className="prose prose-sm max-w-none text-var [&>*:first-child]:mt-0">
                       <PortableText value={about.bio} components={portableTextComponents} />
                     </div>
-                  </div>
-                )}
+                  )}
 
-                {/* Services */}
-                {about.services && about.services.length > 0 && (
-                  <div className="space-y-2">
-                    <div>
-                      {about.services.map((service) => (
-                        <div key={service}>
-                          <Link 
-                            href={`/design?tags=${encodeURIComponent(service)}`}
-                            className="text-var font-light hover:text-[var(--muted)] transition-colors block"
-                          >
+                  {/* Services */}
+                  {about.services && about.services.length > 0 && (
+                    <div className="space-y-2">
+                      <div>
+                        {about.services.map((service) => (
+                          <div key={service} className="text-var font-light text-sm">
                             {service}
-                          </Link>
-                        </div>
-                      ))}
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
 
-              </div>
-
-              {/* Right side - 2-column layout with Clients */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-                {/* First column - Clients */}
-                {about.clients && about.clients.length > 0 && (
-                  <div className="space-y-2">
-                    <div className="text-var font-normal">Selected Clients</div>
-                    <div>
-                      {about.clients.map((client) => (
-                        <div key={client._key}>
-                          {client.url ? (
-                            <a 
-                              href={client.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-var font-light hover:text-[var(--muted)] transition-colors block"
-                            >
-                              {client.name}
-                            </a>
-                          ) : (
-                            <div className="text-var font-light">
-                              {client.name}
-                            </div>
-                          )}
-                        </div>
-                      ))}
+                {/* Right side - 2-column layout with Clients */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+                  {/* First column - Clients */}
+                  {about.clients && about.clients.length > 0 && (
+                    <div className="space-y-2">
+                      <div className="text-var font-normal">Selected Clients</div>
+                      <div>
+                        {about.clients.map((client) => (
+                          <div key={client._key}>
+                            {client.url ? (
+                              <a
+                                href={client.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-var font-light hover:text-[var(--muted)] transition-colors block"
+                              >
+                                {client.name}
+                              </a>
+                            ) : (
+                              <div className="text-var font-light">
+                                {client.name}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                )}
-                {/* Second column left intentionally empty on desktop since Contact is bottom-fixed */}
+                  )}
+                </div>
               </div>
             </div>
 
-            {/* Mobile-only Contact - appears after all content */}
-            <div className="lg:hidden space-y-4 mt-12">
-              <div className="flex gap-4 sm:gap-6 flex-wrap">
+            {/* Contact - in page flow */}
+            <div className="px-6 md:px-8 mt-12 lg:mt-auto lg:pt-12 lg:pb-6">
+              <div className="relative flex gap-4 sm:gap-6 flex-wrap lg:flex-nowrap items-baseline">
                 <span className="text-var">Contact</span>
                 <div className="flex gap-4 sm:gap-6">
                   <a
@@ -180,34 +172,11 @@ export default async function AboutPage({
                     </a>
                   )}
                 </div>
+                <div className="hidden lg:block absolute right-[50%] pr-6">
+                  <FinalResearchCredit />
+                </div>
               </div>
-              <FinalResearchCredit />
-            </div>
-          </div>
-
-          {/* Contact - absolutely positioned at bottom for design section (desktop only, match Art) */}
-          <div className="hidden lg:block absolute bottom-6 left-0 w-full px-8">
-            <div className="relative flex gap-6 items-baseline">
-              <span className="text-var">Contact</span>
-              <div className="flex gap-6">
-                <a
-                  href={`mailto:${about.email}`}
-                  className="text-var font-light hover:text-[var(--muted)] transition-colors"
-                >
-                  {about.email}
-                </a>
-                {about.instagramHandle && (
-                  <a
-                    href={`https://instagram.com/${about.instagramHandle}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-var font-light hover:text-[var(--muted)] transition-colors"
-                  >
-                    @{about.instagramHandle}
-                  </a>
-                )}
-              </div>
-              <div className="absolute right-[50%] pr-6">
+              <div className="lg:hidden mt-4">
                 <FinalResearchCredit />
               </div>
             </div>
@@ -219,19 +188,36 @@ export default async function AboutPage({
 
   // Art section layout (existing layout)
   return (
-    <div className="pt-24 pb-20 relative lg:pt-0 lg:pb-0 lg:fixed lg:inset-0 lg:overflow-hidden">
+    <div className="pt-24 pb-20 lg:pb-0 relative">
       <GridLines type="about" />
-      <div className="lg:h-full relative">
-        <div className="mx-auto px-6 md:px-8 lg:h-full">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24 lg:h-full">
-            {/* Left side - Bio, CV, and Contact (mobile) */}
-            <div className="space-y-12 lg:pt-24 lg:pb-20 lg:overflow-y-auto">
+      <div className="relative flex flex-col lg:min-h-[calc(100vh-96px)]">
+        <div className="mx-auto px-6 md:px-8 flex-1">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24">
+            {/* Left side - Bio, CV */}
+            <div className="space-y-12">
+              {/* Mobile gallery - above bio, hidden on desktop */}
+              {about.gallery && about.gallery.length > 0 && (
+                <div className="lg:hidden">
+                  <AboutGallery
+                    images={about.gallery.map((image: any) => {
+                      const imageProps = getImageProps(image, 1200);
+                      const dims = image.dimensions;
+                      return {
+                        src: imageProps?.src || '',
+                        alt: image.alt ?? '',
+                        lqip: imageProps?.hasBlur ? imageProps.blurDataURL : undefined,
+                        width: Math.round(dims?.width || 1200),
+                        height: Math.round(dims?.height || 800),
+                      };
+                    }).filter((img: { src: string }) => img.src)}
+                  />
+                </div>
+              )}
+
               {/* Bio */}
               {about.bio && about.bio.length > 0 && (
-                <div className="space-y-6">
-                  <div className="prose prose-sm max-w-none text-var">
-                    <PortableText value={about.bio} components={portableTextComponents} />
-                  </div>
+                <div className="prose prose-sm max-w-none text-var [&>*:first-child]:mt-0 lg:!mt-0">
+                  <PortableText value={about.bio} components={portableTextComponents} />
                 </div>
               )}
 
@@ -252,71 +238,34 @@ export default async function AboutPage({
                   </div>
                 </div>
               )}
-
-              {/* Contact - visible on mobile, hidden on desktop */}
-              <div className="lg:hidden space-y-4">
-                <div className="flex gap-4 sm:gap-6 flex-wrap">
-                  <span className="text-var">Contact</span>
-                  <div className="flex gap-4 sm:gap-6">
-                    <a
-                      href={`mailto:${about.email}`}
-                      className="text-var font-light hover:text-[var(--muted)] transition-colors"
-                    >
-                      {about.email}
-                    </a>
-                    {about.instagramHandle && (
-                      <a
-                        href={`https://instagram.com/${about.instagramHandle}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-var font-light hover:text-[var(--muted)] transition-colors"
-                      >
-                        @{about.instagramHandle}
-                      </a>
-                    )}
-                  </div>
-                </div>
-                <FinalResearchCredit />
-              </div>
             </div>
 
             {/* Right side - Image gallery for art section */}
-            <div className="hidden lg:block pt-24 overflow-y-auto pb-20 min-h-0">
+            <div className="hidden lg:flex lg:items-start">
               {about.gallery && about.gallery.length > 0 && (
-                <div className="flex flex-col items-start gap-4">
-                  {about.gallery.map((image: any, index: number) => {
+                <AboutGallery
+                  images={about.gallery.map((image: any) => {
                     const imageProps = getImageProps(image, 1200);
-                    if (!imageProps) return null;
                     const dims = image.dimensions;
-                    const iw = Math.round(dims?.width || 1200);
-                    const ih = Math.round(dims?.height || 800);
-
-                    return (
-                      <div key={image._key || `gallery-${index}`} className="w-full">
-                        <ImageWithBlur
-                          src={imageProps.src}
-                          alt={image.alt || ''}
-                          lqip={imageProps.hasBlur ? imageProps.blurDataURL : undefined}
-                          sizes="(max-width: 1024px) 100vw, 50vw"
-                          className="w-full h-auto"
-                          fill={false}
-                          width={iw}
-                          height={ih}
-                        />
-                      </div>
-                    );
-                  })}
-                </div>
+                    return {
+                      src: imageProps?.src || '',
+                      alt: image.alt ?? '',
+                      lqip: imageProps?.hasBlur ? imageProps.blurDataURL : undefined,
+                      width: Math.round(dims?.width || 1200),
+                      height: Math.round(dims?.height || 800),
+                    };
+                  }).filter((img: { src: string }) => img.src)}
+                />
               )}
             </div>
           </div>
         </div>
 
-        {/* Contact - absolutely positioned at bottom for art section (desktop only) */}
-        <div className="hidden lg:block absolute bottom-6 left-0 w-full px-8">
-          <div className="relative flex gap-6 items-baseline">
+        {/* Contact - in page flow */}
+        <div className="px-6 md:px-8 mt-12 lg:mt-auto lg:pt-12 lg:pb-6">
+          <div className="relative flex gap-4 sm:gap-6 flex-wrap lg:flex-nowrap items-baseline">
             <span className="text-var">Contact</span>
-            <div className="flex gap-6">
+            <div className="flex gap-4 sm:gap-6">
               <a
                 href={`mailto:${about.email}`}
                 className="text-var font-light hover:text-[var(--muted)] transition-colors"
@@ -334,9 +283,12 @@ export default async function AboutPage({
                 </a>
               )}
             </div>
-            <div className="absolute right-[50%] pr-6">
+            <div className="hidden lg:block absolute right-[50%] pr-6">
               <FinalResearchCredit />
             </div>
+          </div>
+          <div className="lg:hidden mt-4">
+            <FinalResearchCredit />
           </div>
         </div>
       </div>

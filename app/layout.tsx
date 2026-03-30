@@ -23,7 +23,7 @@ export const viewport: Viewport = {
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await getSiteSettings();
   
-  const title = settings?.title || 'Teiji Portfolio';
+  const title = (settings?.title || 'Teiji Portfolio').replace(/\s*Studio\s*/i, ' ').trim();
   const description = settings?.description || 'Art and Design Portfolio';
   const keywords = settings?.keywords || [];
   const author = settings?.seo?.author;

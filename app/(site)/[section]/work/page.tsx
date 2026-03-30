@@ -12,7 +12,9 @@ export async function generateStaticParams() {
 }
 
 async function getWorkData(section: string) {
-  const featured = await client.fetch(workPageQuery, { section }, { next: { revalidate: 60 } });
+  const orderId = section === 'art' ? 'workOrderArt' : 'workOrderDesign';
+  const result = await client.fetch(workPageQuery, { orderId }, { next: { revalidate: 60 } });
+  const featured = result?.items || [];
 
   // Helper function to process media item
   const processMediaItem = (mediaItem: any) => {
@@ -108,7 +110,7 @@ export async function generateMetadata({
 }) {
   const { section } = await params;
   const siteSettings = await getSiteSettings();
-  const siteTitle = siteSettings?.title || 'Tei-ji';
+  const siteTitle = (siteSettings?.title || 'Teiji').replace(/\s*Studio\s*/i, ' ').trim();
   
   return {
     title: `${section.charAt(0).toUpperCase() + section.slice(1)} — Work — ${siteTitle}`,

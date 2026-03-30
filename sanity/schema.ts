@@ -5,6 +5,8 @@ import indexItem from './schemas/indexItem'
 import tag from './schemas/tag'
 import siteSettings from './schemas/siteSettings'
 import about from './schemas/about'
+import homeGallery from './schemas/homeGallery'
+import workOrder from './schemas/workOrder'
 import imageWithAlt from './schemas/objects/imageWithAlt'
 import imageDual from './schemas/objects/imageDual'
 import imageTriple from './schemas/objects/imageTriple'
@@ -65,6 +67,8 @@ export const schema: { types: SchemaTypeDefinition[] } = {
     tag,
     siteSettings,
     about,
+    homeGallery,
+    workOrder,
     // Objects
     imageWithAlt,
     imageDual,

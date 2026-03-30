@@ -426,111 +426,142 @@ export const siteSettingsQuery = groq`
 `;
 
 export const featuredWorksQuery = groq`
-  *[_type == "work" && discipline == $section && featuredHome == true] | order(homeOrder asc, year desc) {
-    _id,
-    title,
-    "slug": slug.current,
-    description,
-    featuredImage {
-      mediaType,
-      mediaType == "image" => {
-        image {
-          ...,
-          "lqip": asset->metadata.lqip
-        }
-      },
-      mediaType == "video" => {
-        video {
-          // Properly dereference the MUX asset
-          asset {
-            ...,
-            asset-> {
+  *[_type == "homeGallery" && _id == $galleryId][0] {
+    "items": items[] {
+      "work": work-> {
+        _id,
+        title,
+        "slug": slug.current,
+        description,
+        featuredImage {
+          mediaType,
+          mediaType == "image" => {
+            image {
               ...,
-              playbackId,
-              data,
-              status,
-              assetId
+              "lqip": asset->metadata.lqip
             }
           },
-          controls,
-          captions {
-            asset
-          }
-        }
+          mediaType == "video" => {
+            video {
+              asset {
+                ...,
+                asset-> {
+                  ...,
+                  playbackId,
+                  data,
+                  status,
+                  assetId
+                }
+              },
+              controls,
+              captions {
+                asset
+              }
+            }
+          },
+        },
+        hoverTextTop,
+        hoverTextBottom
       },
-    },
-    hoverTextTop,
-    hoverTextBottom
+      overrideHoverTextTop,
+      overrideHoverTextBottom,
+      overrideMedia {
+        mediaType,
+        mediaType == "image" => {
+          image {
+            ...,
+            "lqip": asset->metadata.lqip
+          }
+        },
+        mediaType == "video" => {
+          video {
+            asset {
+              ...,
+              asset-> {
+                ...,
+                playbackId,
+                data,
+                status,
+                assetId
+              }
+            },
+            controls,
+            captions {
+              asset
+            }
+          }
+        },
+      }
+    }
   }
 `;
 
 export const workPageQuery = groq`
-  *[_type == "work" && discipline == $section && featuredWork == true] | order(workOrder asc, year desc) {
-    _id,
-    title,
-    "slug": slug.current,
-    year,
-    medium,
-    description,
-    coverImage {
-      mediaType,
-      mediaType == "image" => {
-        image {
-          ...,
-          "lqip": asset->metadata.lqip
-        }
-      },
-      mediaType == "video" => {
-        video {
-          // Properly dereference the MUX asset
-          asset {
+  *[_type == "workOrder" && _id == $orderId][0] {
+    "items": items[]-> {
+      _id,
+      title,
+      "slug": slug.current,
+      year,
+      medium,
+      description,
+      coverImage {
+        mediaType,
+        mediaType == "image" => {
+          image {
             ...,
-            asset-> {
-              ...,
-              playbackId,
-              data,
-              status,
-              assetId
-            }
-          },
-          controls,
-          captions {
-            asset
+            "lqip": asset->metadata.lqip
           }
-        }
+        },
+        mediaType == "video" => {
+          video {
+            asset {
+              ...,
+              asset-> {
+                ...,
+                playbackId,
+                data,
+                status,
+                assetId
+              }
+            },
+            controls,
+            captions {
+              asset
+            }
+          }
+        },
       },
-    },
-    hoverMedia {
-      mediaType,
-      mediaType == "image" => {
-        image {
-          ...,
-          "lqip": asset->metadata.lqip
-        }
-      },
-      mediaType == "video" => {
-        video {
-          // Properly dereference the MUX asset
-          asset {
+      hoverMedia {
+        mediaType,
+        mediaType == "image" => {
+          image {
             ...,
-            asset-> {
-              ...,
-              playbackId,
-              data,
-              status,
-              assetId
-            }
-          },
-          controls,
-          captions {
-            asset
+            "lqip": asset->metadata.lqip
           }
-        }
+        },
+        mediaType == "video" => {
+          video {
+            asset {
+              ...,
+              asset-> {
+                ...,
+                playbackId,
+                data,
+                status,
+                assetId
+              }
+            },
+            controls,
+            captions {
+              asset
+            }
+          }
+        },
       },
+      hoverTextTop,
+      hoverTextBottom
     }
-    ,
-    hoverTextTop,
-    hoverTextBottom
   }
 `;
 

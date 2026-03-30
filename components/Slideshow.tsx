@@ -127,51 +127,39 @@ export default function Slideshow({ items, section, autoPlayInterval = 5000 }: S
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
-      {/* Left navigation area (left half of screen) */}
+      {/* Full-screen navigation area – single element to avoid compositing seam at center */}
       <div
-        className="absolute left-0 top-0 w-1/2 h-full z-20 cursor-none"
+        className="absolute inset-0 z-20 cursor-none"
         role="button"
         tabIndex={0}
-        onClick={goToPrevious}
-        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); goToPrevious(); } }}
-        aria-label="Previous image"
-        onMouseEnter={() => {
-          // Clear any pending hide timeout
-          if (hideTimeoutRef.current) {
-            clearTimeout(hideTimeoutRef.current);
-            hideTimeoutRef.current = null;
+        onClick={(e) => {
+          if (e.button !== 0) return;
+          const rect = e.currentTarget.getBoundingClientRect();
+          const clickX = e.clientX - rect.left;
+          if (clickX < rect.width / 2) {
+            goToPrevious();
+          } else {
+            goToNext();
           }
-          setCursorText('PREV');
-          setShowCursor(true);
         }}
-        onMouseLeave={() => {
-          // Delay hiding to prevent flicker when moving between areas
-          hideTimeoutRef.current = setTimeout(() => {
-            setShowCursor(false);
-            setCursorText('');
-          }, 100);
-        }}
-      />
-      
-      {/* Right navigation area (right half of screen) */}
-      <div
-        className="absolute right-0 top-0 w-1/2 h-full z-20 cursor-none"
-        role="button"
-        tabIndex={0}
-        onClick={goToNext}
         onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); goToNext(); } }}
-        aria-label="Next image"
-        onMouseEnter={() => {
-          // Clear any pending hide timeout
-          if (hideTimeoutRef.current) {
-            clearTimeout(hideTimeoutRef.current);
-            hideTimeoutRef.current = null;
+        aria-label="Navigate gallery"
+        onMouseMove={(e) => {
+          const rect = e.currentTarget.getBoundingClientRect();
+          const mouseX = e.clientX - rect.left;
+          const newText = mouseX < rect.width / 2 ? 'PREV' : 'NEXT';
+          if (newText !== cursorText) {
+            setCursorText(newText);
           }
-          setCursorText('NEXT');
-          setShowCursor(true);
+          if (!showCursor) {
+            if (hideTimeoutRef.current) {
+              clearTimeout(hideTimeoutRef.current);
+              hideTimeoutRef.current = null;
+            }
+            setShowCursor(true);
+          }
         }}
         onMouseLeave={() => {
-          // Delay hiding to prevent flicker when moving between areas
           hideTimeoutRef.current = setTimeout(() => {
             setShowCursor(false);
             setCursorText('');

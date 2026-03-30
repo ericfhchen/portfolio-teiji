@@ -97,10 +97,13 @@ html, body {
 html,
 body {
   max-width: 100vw;
-  overflow-x: hidden;
   overscroll-behavior: none;
   font-family: var(--font);
   letter-spacing: 0.03em;
+}
+
+body {
+  overflow-x: clip;
 }
 
 body {

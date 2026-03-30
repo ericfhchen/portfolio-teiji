@@ -11,7 +11,8 @@ export async function generateStaticParams() {
 }
 
 async function getFeaturedData(section: string) {
-  return client.fetch(featuredWorksQuery, { section }, { next: { revalidate: 60 } });
+  const galleryId = section === 'art' ? 'homeGalleryArt' : 'homeGalleryDesign';
+  return client.fetch(featuredWorksQuery, { galleryId }, { next: { revalidate: 60 } });
 }
 
 export async function generateMetadata({ 
@@ -21,7 +22,7 @@ export async function generateMetadata({
 }) {
   const { section } = await params;
   const settings = await client.fetch(siteSettingsQuery, {}, { next: { revalidate: 60 } });
-  const siteTitle = settings?.title || 'Teiji';
+  const siteTitle = (settings?.title || 'Teiji').replace(/\s*Studio\s*/i, ' ').trim();
   
   return {
     title: {
@@ -36,11 +37,11 @@ export default async function SectionPage({
   params: Promise<{ section: string }> 
 }) {
   const { section } = await params;
-  const featured = await getFeaturedData(section);
+  const gallery = await getFeaturedData(section);
+  const galleryItems = gallery?.items || [];
 
   // Add null checking for the featured data
-  if (!featured || !Array.isArray(featured)) {
-    console.error('No featured works found or invalid data:', featured);
+  if (!galleryItems.length) {
     return (
       <div className="-mb-16">
         <GridLines type="home" />
@@ -54,30 +55,33 @@ export default async function SectionPage({
     );
   }
 
-   // Transform featured works into FeedItem[] compatible with Grid
-   const feedItems: FeedItem[] = featured.flatMap((work: any, idx: number) => {
-    const featuredImage = work.featuredImage;
-    const isVideo = featuredImage?.mediaType === 'video';
-    
-    if (isVideo && featuredImage?.video) {
-      // Handle video media type
-      const video = featuredImage.video;
+   // Transform gallery items into FeedItem[] compatible with Slideshow
+   const feedItems: FeedItem[] = galleryItems.flatMap((item: any, idx: number) => {
+    const work = item.work;
+    if (!work) return [];
+
+    // Use override media if provided, otherwise fall back to work's featuredImage
+    const media = item.overrideMedia?.mediaType ? item.overrideMedia : work.featuredImage;
+    const hoverTop = item.overrideHoverTextTop || work.hoverTextTop;
+    const hoverBottom = item.overrideHoverTextBottom || work.hoverTextBottom;
+    const isVideo = media?.mediaType === 'video';
+
+    if (isVideo && media?.video) {
+      const video = media.video;
       const playbackId = getPlaybackId(video);
-      
-      // For videos, use MUX thumbnail as fallback if no poster
+
       let posterSrc = '';
       if (video.poster) {
         posterSrc = getImageUrl(video.poster, 2400);
       } else if (playbackId) {
-        // Use MUX thumbnail as fallback poster
         posterSrc = `https://image.mux.com/${playbackId}/thumbnail.jpg?width=2400&fit_mode=preserve`;
       }
-      
+
       const feedItem: FeedItem = {
-        _id: work._id,
+        _id: `${work._id}-${idx}`,
         mediaType: 'video' as const,
-        src: posterSrc, // Will be empty only if no poster and no playbackId
-        alt: video.poster?.alt || featuredImage.alt || '',
+        src: posterSrc,
+        alt: video.poster?.alt || '',
         lqip: video.poster?.lqip || '',
         parentSlug: work.slug,
         parentTitle: work.title,
@@ -86,29 +90,27 @@ export default async function SectionPage({
         index: idx,
         playbackId: playbackId || undefined,
         controls: video.controls,
-        hoverTextTop: work.hoverTextTop,
-        hoverTextBottom: work.hoverTextBottom,
+        hoverTextTop: hoverTop,
+        hoverTextBottom: hoverBottom,
       };
       return [feedItem];
-    } else if (featuredImage?.image) {
-      // Handle image media type
+    } else if (media?.image) {
       const feedItem: FeedItem = {
-        _id: work._id,
+        _id: `${work._id}-${idx}`,
         mediaType: 'image' as const,
-        src: getImageUrl(featuredImage.image, 2400),
-        alt: featuredImage.image.alt || featuredImage.alt || '',
-        lqip: featuredImage.image.lqip || '',
+        src: getImageUrl(media.image, 2400),
+        alt: media.image.alt || '',
+        lqip: media.image.lqip || '',
         parentSlug: work.slug,
         parentTitle: work.title,
         parentTags: work.tags || [],
         description: work.description,
         index: idx,
-        hoverTextTop: work.hoverTextTop,
-        hoverTextBottom: work.hoverTextBottom,
+        hoverTextTop: hoverTop,
+        hoverTextBottom: hoverBottom,
       };
       return [feedItem];
     } else {
-      // Fallback for missing media - return empty array to skip this item
       return [];
     }
   });

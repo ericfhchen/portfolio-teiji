@@ -41,7 +41,7 @@ export async function generateMetadata({
 
   // Get site settings for title
   const settings = await client.fetch(siteSettingsQuery, {}, { next: { revalidate: 60 } });
-  const siteTitle = settings?.title || 'Portfolio';
+  const siteTitle = (settings?.title || 'Portfolio').replace(/\s*Studio\s*/i, ' ').trim();
 
   // Handle both image and video media for metadata
   // Use first heroAsset if available, otherwise fall back to coverImage
@@ -121,7 +121,7 @@ export default async function WorkPage({
             <div className="space-y-4 md:col-start-2">
               {/* Client name positioned to the right of center line */}
               {work.client && (
-                <div className="text-right text-var font-normal">
+                <div className="text-var font-normal">
                   {work.client}
                 </div>
               )}

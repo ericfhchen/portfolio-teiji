@@ -159,48 +159,39 @@ export default function HeroGallery({ items, title }: HeroGalleryProps) {
             return null;
           })}
 
-          {/* Navigation areas - only show if multiple items */}
+          {/* Full-screen navigation area – single element to avoid compositing seam at center */}
           {items.length > 1 && (
-            <>
               <div
-                className="absolute left-0 top-16 bottom-16 w-1/2 z-20 md:cursor-none md:top-0 md:bottom-0"
+                className="absolute left-0 right-0 top-16 bottom-16 z-20 md:cursor-none md:top-0 md:bottom-0"
                 role="button"
                 tabIndex={0}
-                onClick={goToPrevious}
-                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); goToPrevious(); } }}
-                aria-label="Previous image"
-                onMouseEnter={() => {
-                  if (!isFinePointer) return;
-                  if (hideTimeoutRef.current) {
-                    clearTimeout(hideTimeoutRef.current);
-                    hideTimeoutRef.current = null;
+                onClick={(e) => {
+                  if (e.button !== 0) return;
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  const clickX = e.clientX - rect.left;
+                  if (clickX < rect.width / 2) {
+                    goToPrevious();
+                  } else {
+                    goToNext();
                   }
-                  setCursorText('PREV');
-                  setShowCursor(true);
                 }}
-                onMouseLeave={() => {
-                  if (!isFinePointer) return;
-                  hideTimeoutRef.current = setTimeout(() => {
-                    setShowCursor(false);
-                    setCursorText('');
-                  }, 100);
-                }}
-              />
-              <div
-                className="absolute right-0 top-16 bottom-16 w-1/2 z-20 md:cursor-none md:top-0 md:bottom-0"
-                role="button"
-                tabIndex={0}
-                onClick={goToNext}
                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); goToNext(); } }}
-                aria-label="Next image"
-                onMouseEnter={() => {
+                aria-label="Navigate gallery"
+                onMouseMove={(e) => {
                   if (!isFinePointer) return;
-                  if (hideTimeoutRef.current) {
-                    clearTimeout(hideTimeoutRef.current);
-                    hideTimeoutRef.current = null;
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  const mouseX = e.clientX - rect.left;
+                  const newText = mouseX < rect.width / 2 ? 'PREV' : 'NEXT';
+                  if (newText !== cursorText) {
+                    setCursorText(newText);
                   }
-                  setCursorText('NEXT');
-                  setShowCursor(true);
+                  if (!showCursor) {
+                    if (hideTimeoutRef.current) {
+                      clearTimeout(hideTimeoutRef.current);
+                      hideTimeoutRef.current = null;
+                    }
+                    setShowCursor(true);
+                  }
                 }}
                 onMouseLeave={() => {
                   if (!isFinePointer) return;
@@ -210,7 +201,6 @@ export default function HeroGallery({ items, title }: HeroGalleryProps) {
                   }, 100);
                 }}
               />
-            </>
           )}
         </div>
       </div>

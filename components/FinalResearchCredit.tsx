@@ -143,11 +143,22 @@ export default function FinalResearchCredit() {
     };
   }, [isHovering, createCornerLines]);
 
-  // Cleanup on unmount
+  // Cleanup on unmount and bfcache restore (browser back)
   useEffect(() => {
+    const cleanup = () => {
+      document.querySelectorAll('.final-research-corner-lines').forEach(el => el.remove());
+      setShowHover(false);
+      setSvg(null);
+    };
+
+    const handlePageShow = (e: PageTransitionEvent) => {
+      if (e.persisted) cleanup();
+    };
+
+    window.addEventListener('pageshow', handlePageShow);
     return () => {
-      const el = document.querySelector('.final-research-corner-lines');
-      if (el) el.remove();
+      window.removeEventListener('pageshow', handlePageShow);
+      cleanup();
     };
   }, []);
 

@@ -8,17 +8,33 @@ import ImageWithBlur from '@/components/ImageWithBlur';
 
 // --- Types ---
 
+interface SanityImageAsset {
+  _type?: string;
+  asset?: {
+    _ref?: string;
+    _type?: string;
+    metadata?: {
+      lqip?: string;
+      dimensions?: { width: number; height: number; aspectRatio: number };
+    };
+  };
+  hotspot?: { x: number; y: number; width: number; height: number };
+  crop?: { top: number; bottom: number; left: number; right: number };
+  alt?: string;
+  lqip?: string;
+}
+
 interface ImageItem {
   _key?: string;
   source?: 'upload' | 'reference';
-  uploadedImage?: any;
+  uploadedImage?: SanityImageAsset;
   indexItemRef?: {
     _id: string;
     title?: string;
     description?: string;
     featuredMedia?: {
       mediaType: string;
-      image?: any;
+      image?: SanityImageAsset;
     };
   };
   colSpan?: number;
@@ -62,8 +78,8 @@ function ResponsiveWidthWrapper({
   }
   return (
     <>
-      <div className={`${className || ''} md:hidden`} style={{ ...style, maxWidth: mobile, width: '100%' }}>{children}</div>
-      <div className={`${className || ''} hidden md:block`} style={{ ...style, maxWidth: desktop, width: '100%' }}>{children}</div>
+      <div className={`${className ?? ''} md:hidden`} style={{ ...style, maxWidth: mobile, width: '100%' }}>{children}</div>
+      <div className={`${className ?? ''} hidden md:block`} style={{ ...style, maxWidth: desktop, width: '100%' }}>{children}</div>
     </>
   );
 }
@@ -459,10 +475,10 @@ const RichComponents: PortableTextComponents = {
 
       if (source === 'upload' && uploadedImage) {
         imageToRender = uploadedImage;
-        altText = uploadedImage.alt || '';
+        altText = uploadedImage.alt ?? '';
       } else if (source === 'reference' && indexItemRef?.featuredMedia?.image) {
         imageToRender = indexItemRef.featuredMedia.image;
-        altText = indexItemRef.title || '';
+        altText = indexItemRef.title ?? '';
         if (!displayCaption && indexItemRef.description) {
           displayCaption = indexItemRef.description;
         }
@@ -570,14 +586,7 @@ const RichComponents: PortableTextComponents = {
     },
 
     spacer: ({ value }) => {
-      // #21: Support both number and legacy string values
-      let heightRem = 8;
-      if (typeof value.height === 'number') {
-        heightRem = value.height;
-      } else if (typeof value.height === 'string') {
-        const parsed = parseFloat(value.height);
-        if (!isNaN(parsed)) heightRem = parsed;
-      }
+      const heightRem = typeof value.height === 'number' ? value.height : 8;
 
       return (
         <div

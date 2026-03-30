@@ -143,7 +143,7 @@ async function getFeedData(section: string, tags?: string[]) {
 export async function generateMetadata({ params }: { params: Promise<{ section: string }> }) {
   const { section } = await params;
   const siteSettings = await getSiteSettings();
-  const siteTitle = siteSettings?.title || 'Tei-ji';
+  const siteTitle = (siteSettings?.title || 'Teiji').replace(/\s*Studio\s*/i, ' ').trim();
 
   return {
     title: `${section.charAt(0).toUpperCase() + section.slice(1)} — Index — ${siteTitle}`,
@@ -156,18 +156,22 @@ export default async function SectionIndexPage({ params, searchParams }: { param
   const tags = resolvedSearchParams.tags?.split(',').filter(Boolean) || [];
   const { feedItems, allTags } = await getFeedData(section, tags.length > 0 ? tags : undefined);
 
+  const isLightboxOpen = Boolean(resolvedSearchParams.item);
+
   return (
     <>
-      <GridLines type="index" />
-      <Suspense>
-        <Filters tags={allTags as string[]} section={section} />
-      </Suspense>
-      <div className="relative z-10 pt-20 sm:pt-10">
+      {!isLightboxOpen && <GridLines type="index" />}
+      {!isLightboxOpen && (
+        <Suspense>
+          <Filters tags={allTags as string[]} section={section} />
+        </Suspense>
+      )}
+      <div className={`relative z-10 pt-20 sm:pt-10 ${isLightboxOpen ? 'hidden' : ''}`}>
         <Suspense>
           <Grid items={feedItems} section={section} variant="index" />
         </Suspense>
       </div>
-      {resolvedSearchParams.item && (
+      {isLightboxOpen && (
         <Suspense>
           <Lightbox items={feedItems} section={section} />
         </Suspense>

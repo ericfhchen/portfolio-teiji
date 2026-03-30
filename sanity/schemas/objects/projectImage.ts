@@ -28,7 +28,14 @@ export default defineType({
       options: {
         hotspot: true,
       },
-      fields: [],
+      fields: [
+        {
+          name: 'alt',
+          title: 'Alt Text',
+          type: 'string',
+          description: 'Describe this image for accessibility',
+        },
+      ],
       hidden: ({ parent }) => parent?.source !== 'upload',
       validation: (Rule) => Rule.custom((value, context) => {
         const parent = context.parent as any;
