@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback, useEffect, useLayoutEffect } from 'react';
 
 interface ImageWithBlurProps {
   src: string;
@@ -34,16 +34,29 @@ export default function ImageWithBlur({
   priority,
   lazy,
 }: ImageWithBlurProps) {
-  const [imageLoaded, setImageLoaded] = useState(false);
   const loadStartRef = useRef(performance.now());
   const mountTimeRef = useRef(performance.now());
   const imgRef = useRef<HTMLImageElement>(null);
+
+  const [imageLoaded, setImageLoaded] = useState(false);
+
+  // Synchronously detect cached images before browser paints — avoids blur flash
+  // useLayoutEffect runs after hydration but before paint, so no mismatch
+  useLayoutEffect(() => {
+    if (src) {
+      const probe = new window.Image();
+      probe.src = src;
+      if (probe.complete && probe.naturalWidth > 0) {
+        setImageLoaded(true);
+      }
+    }
+  }, [src]);
 
   useEffect(() => {
     imageStats.total++;
     const id = imageStats.total;
     const shortSrc = src.split('?')[0].split('/').slice(-2).join('/');
-    console.log(`[IMG #${id} MOUNT] ${shortSrc} | priority=${!!priority} | lazy=${lazy ?? !priority} | sizes="${sizes}" | fill=${fill} | ${width ? `${width}x${height}` : 'fill'}`);
+    console.log(`[IMG #${id} MOUNT] ${shortSrc} | priority=${!!priority} | lazy=${lazy ?? !priority} | imageLoaded=${imageLoaded} | sizes="${sizes}" | fill=${fill} | ${width ? `${width}x${height}` : 'fill'}`);
     return () => {
       console.log(`[IMG #${id} UNMOUNT] ${shortSrc}`);
     };

@@ -93,9 +93,7 @@ export default function Lightbox({ items, section }: LightboxProps) {
   // Gallery navigation state
   const [currentGalleryIndex, setCurrentGalleryIndex] = useState(0);
   
-  // Video mute state
-  const [isMuted, setIsMuted] = useState(true);
-  const [hasAudio, setHasAudio] = useState(false);
+  // Videos are always muted
 
   // Get all media items for current feed item (main item + gallery)
   const allMediaItems = useMemo(() => {
@@ -138,7 +136,6 @@ export default function Lightbox({ items, section }: LightboxProps) {
   // Reset gallery index and audio state when feed item changes
   useEffect(() => {
     setCurrentGalleryIndex(0);
-    setHasAudio(false);
   }, [currentItem?._id]);
 
   const close = useCallback(() => {
@@ -219,14 +216,6 @@ export default function Lightbox({ items, section }: LightboxProps) {
     router.replace(`/${section}/${currentRoute}?${newParams}`, { scroll: false });
   }, [activeTags, currentIndex, items, router, section, currentRoute, currentItem]);
 
-  // Toggle mute for videos
-  const toggleMute = useCallback(() => {
-    const videos = document.querySelectorAll('video');
-    videos.forEach(video => {
-      video.muted = !isMuted;
-    });
-    setIsMuted(!isMuted);
-  }, [isMuted]);
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     switch (e.key) {
@@ -340,7 +329,7 @@ export default function Lightbox({ items, section }: LightboxProps) {
 
   return (
     <div
-      className="fixed inset-0 z-50 bg-[var(--bg)]"
+      className="fixed inset-0 z-50 bg-[var(--bg)] isolate"
     >
       {/* Top-left close button */}
       <button
@@ -351,7 +340,7 @@ export default function Lightbox({ items, section }: LightboxProps) {
         (CLOSE)
       </button>
       {/* Single vertical grid line in the center */}
-      <div className="fixed inset-0 pointer-events-none z-0">
+      <div className="absolute inset-0 pointer-events-none z-0">
         <div
           className="absolute top-0 bottom-0 bg-[var(--border)]"
           style={{ left: '50%', width: '1px', transform: 'scaleX(0.333)', transformOrigin: '0 0' }}
@@ -367,58 +356,53 @@ export default function Lightbox({ items, section }: LightboxProps) {
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
-        {/* Full-screen navigation areas – matching home page */}
+        {/* Full-screen navigation area – single element to avoid compositing seam at center */}
         {allMediaItems.length > 1 && (
-          <>
-            <div
-              className="absolute left-0 top-0 w-1/2 h-full z-20 md:cursor-none"
-              role="button"
-              tabIndex={0}
-              onClick={() => navigateGallery('prev')}
-              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigateGallery('prev'); } }}
-              aria-label="Previous image"
-              onMouseEnter={() => {
-                if (!isFinePointer) return;
+          <div
+            className="absolute inset-0 z-20 md:cursor-none"
+            role="button"
+            tabIndex={0}
+            onClick={(e) => {
+              if (e.button !== 0) return;
+              const rect = e.currentTarget.getBoundingClientRect();
+              const clickX = e.clientX - rect.left;
+              if (clickX < rect.width / 2) {
+                navigateGallery('prev');
+              } else {
+                navigateGallery('next');
+              }
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                navigateGallery('next');
+              }
+            }}
+            aria-label="Navigate gallery"
+            onMouseMove={(e) => {
+              if (!isFinePointer) return;
+              const rect = e.currentTarget.getBoundingClientRect();
+              const mouseX = e.clientX - rect.left;
+              const newText = mouseX < rect.width / 2 ? 'PREV' : 'NEXT';
+              if (newText !== cursorText) {
+                setCursorText(newText);
+              }
+              if (!showCursor) {
                 if (hideTimeoutRef.current) {
                   clearTimeout(hideTimeoutRef.current);
                   hideTimeoutRef.current = null;
                 }
-                setCursorText('PREV');
                 setShowCursor(true);
-              }}
-              onMouseLeave={() => {
-                if (!isFinePointer) return;
-                hideTimeoutRef.current = setTimeout(() => {
-                  setShowCursor(false);
-                  setCursorText('');
-                }, 100);
-              }}
-            />
-            <div
-              className="absolute right-0 top-0 w-1/2 h-full z-20 md:cursor-none"
-              role="button"
-              tabIndex={0}
-              onClick={() => navigateGallery('next')}
-              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigateGallery('next'); } }}
-              aria-label="Next image"
-              onMouseEnter={() => {
-                if (!isFinePointer) return;
-                if (hideTimeoutRef.current) {
-                  clearTimeout(hideTimeoutRef.current);
-                  hideTimeoutRef.current = null;
-                }
-                setCursorText('NEXT');
-                setShowCursor(true);
-              }}
-              onMouseLeave={() => {
-                if (!isFinePointer) return;
-                hideTimeoutRef.current = setTimeout(() => {
-                  setShowCursor(false);
-                  setCursorText('');
-                }, 100);
-              }}
-            />
-          </>
+              }
+            }}
+            onMouseLeave={() => {
+              if (!isFinePointer) return;
+              hideTimeoutRef.current = setTimeout(() => {
+                setShowCursor(false);
+                setCursorText('');
+              }, 100);
+            }}
+          />
         )}
 
         {/* Work Tile - exactly matching Grid component home variant */}
@@ -435,55 +419,37 @@ export default function Lightbox({ items, section }: LightboxProps) {
             
             {/* Work tile container - matching Grid component exactly */}
             <div className="relative overflow-hidden p-6 lg:max-w-[100dvh] mx-auto w-full">
-              {/* Media display — pre-render all gallery items, toggle visibility */}
+              {/* Media display — render only active item to avoid compositing artifacts */}
               <div className="relative">
-                {allMediaItems.map((mediaItem, index) => {
-                  const isActive = index === currentGalleryIndex;
-
-                  if (mediaItem.mediaType === 'video' && mediaItem.videoData) {
-                    return (
-                      <div
-                        key={`lightbox-media-${index}`}
-                        className={`relative w-full h-[70vh] overflow-hidden flex items-center justify-center transition-opacity duration-300 ${isActive ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
-                        style={{
-                          position: index === 0 ? 'relative' : 'absolute',
-                          inset: index === 0 ? undefined : 0,
-                        }}
-                      >
-                        <VideoPlayer
-                          video={mediaItem.videoData}
-                          objectFit="contain"
-                          isVertical={isVerticalMedia(mediaItem.videoData)}
-                          showMuteButton={false}
-                          onHasAudioDetected={(detected) => setHasAudio(detected)}
-                        />
-                      </div>
-                    );
-                  }
-
-                  return (
-                    <div
-                      key={`lightbox-media-${index}`}
-                      className={`relative w-full h-[70vh] flex items-center justify-center transition-opacity duration-300 ${isActive ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
-                      style={{
-                        position: index === 0 ? 'relative' : 'absolute',
-                        inset: index === 0 ? undefined : 0,
-                      }}
-                    >
-                      <div className="relative w-full h-full">
-                        <ImageWithBlur
-                          src={mediaItem.src}
-                          alt={mediaItem.alt || ''}
-                          lqip={mediaItem.lqip}
-                          sizes="50vw"
-                          className="object-contain object-center"
-                          priority={index === 0}
-                        />
-                      </div>
+                {currentMediaItem.mediaType === 'video' && currentMediaItem.videoData ? (
+                  <div
+                    key={`lightbox-media-${currentGalleryIndex}`}
+                    className="relative w-full h-[70vh] overflow-hidden flex items-center justify-center"
+                  >
+                    <VideoPlayer
+                      video={currentMediaItem.videoData}
+                      objectFit="contain"
+                      isVertical={isVerticalMedia(currentMediaItem.videoData)}
+                      showMuteButton={false}
+                    />
+                  </div>
+                ) : (
+                  <div
+                    key={`lightbox-media-${currentGalleryIndex}`}
+                    className="relative w-full h-[70vh] flex items-center justify-center"
+                  >
+                    <div className="relative w-full h-full">
+                      <ImageWithBlur
+                        src={currentMediaItem.src}
+                        alt={currentMediaItem.alt || ''}
+                        lqip={currentMediaItem.lqip}
+                        sizes="50vw"
+                        className="object-contain object-center"
+                        priority={currentGalleryIndex === 0}
+                      />
                     </div>
-                  );
-                })}
-
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -501,17 +467,7 @@ export default function Lightbox({ items, section }: LightboxProps) {
               )}
             </div>
             
-            {/* Right: Mute button - desktop only, only if video has audio */}
-            <div className="h-4 flex items-center hidden md:flex">
-              {currentMediaItem.mediaType === 'video' && currentMediaItem.videoData && hasAudio && (
-                <button
-                  onClick={toggleMute}
-                  className="text-var font-light tracking-wider hover:opacity-60 transition-opacity"
-                >
-                  {isMuted ? 'UNMUTE' : 'MUTE'}
-                </button>
-              )}
-            </div>
+            <div className="h-4 flex items-center hidden md:flex" />
           </div>
         </div>
 
@@ -522,16 +478,6 @@ export default function Lightbox({ items, section }: LightboxProps) {
             {/* Mobile controls - top-right aligned with year/title */}
             <div className="absolute top-[1.5rem] right-4 z-30 md:hidden">
               <div className="flex flex-col items-end gap-1">
-                {/* Mute button */}
-                {currentMediaItem.mediaType === 'video' && currentMediaItem.videoData && hasAudio && (
-                  <button
-                    onClick={toggleMute}
-                    className="text-var font-light tracking-wider hover:opacity-60 transition-opacity"
-                  >
-                    {isMuted ? 'UNMUTE' : 'MUTE'}
-                  </button>
-                )}
-
                 {/* Navigation chevrons – above counter */}
                 {allMediaItems.length > 1 && (
                   <div className="flex justify-center gap-3">

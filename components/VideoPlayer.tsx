@@ -363,7 +363,7 @@ export function VideoPlayer({ video, objectFit = 'contain', isVertical = false, 
         className={`w-full h-full object-${objectFit}`}
         autoPlay={autoPlay}
         loop={true}
-        muted={isMuted}
+        muted
         playsInline
         preload="metadata"
         onPlay={() => setIsPlaying(true)}

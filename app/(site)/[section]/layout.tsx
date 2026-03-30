@@ -52,7 +52,7 @@ export async function generateMetadata({
   }
 
   const settings = await getSiteSettings();
-  const siteTitle = settings?.title || 'Teiji Portfolio';
+  const siteTitle = (settings?.title || 'Teiji Portfolio').replace(/\s*Studio\s*/i, ' ').trim();
 
   return {
     title: `${section.charAt(0).toUpperCase() + section.slice(1)} - ${siteTitle}`,
@@ -73,12 +73,8 @@ export default async function SectionLayout({
     notFound();
   }
 
-  const htmlBg = validatedSection === 'design' ? '#000' : '#fff';
-
   return (
     <div data-theme={validatedSection} className="bg-var text-var min-h-screen">
-      {/* Set html/body background before hydration so iOS Safari safe area matches theme */}
-      <script dangerouslySetInnerHTML={{ __html: `document.documentElement.setAttribute('data-theme','${validatedSection}');document.documentElement.style.setProperty('background-color','${htmlBg}','important');document.body.style.setProperty('background-color','${htmlBg}','important')` }} />
       <ThemeSync theme={validatedSection} />
       <Suspense fallback={<div className="h-16" />}>
         <Header currentSection={validatedSection} />
