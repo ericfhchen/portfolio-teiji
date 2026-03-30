@@ -118,14 +118,14 @@ export default function FinalResearchCredit() {
       createCornerLines();
 
       setTimeout(() => {
-        removeCornerLines();
-        setShowHover(false);
+        // Navigate without resetting state — keep lines and text visible
+        // until the page unloads. Cleanup happens on back-navigation via pageshow.
         if (linkRef.current) {
           window.location.href = linkRef.current.href;
         }
       }, 1500);
     }
-  }, [isMobile, createCornerLines, removeCornerLines]);
+  }, [isMobile, createCornerLines]);
 
   // Update lines on resize/scroll while hovering
   useEffect(() => {
@@ -143,21 +143,30 @@ export default function FinalResearchCredit() {
     };
   }, [isHovering, createCornerLines]);
 
-  // Cleanup on unmount and bfcache restore (browser back)
+  // Cleanup on unmount, bfcache restore (browser back), and tab re-focus
   useEffect(() => {
     const cleanup = () => {
       document.querySelectorAll('.final-research-corner-lines').forEach(el => el.remove());
       setShowHover(false);
+      setIsHovering(false);
       setSvg(null);
     };
 
+    // Fires on bfcache restore (Safari swipe-back)
     const handlePageShow = (e: PageTransitionEvent) => {
       if (e.persisted) cleanup();
     };
 
+    // Fires when returning to the tab/page via visibility change
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') cleanup();
+    };
+
     window.addEventListener('pageshow', handlePageShow);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => {
       window.removeEventListener('pageshow', handlePageShow);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
       cleanup();
     };
   }, []);

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback, useEffect, useLayoutEffect } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 
 interface ImageWithBlurProps {
   src: string;
@@ -22,6 +22,9 @@ const imageStats = {
   times: [] as number[],
 };
 
+// Track URLs that have been successfully loaded — survives component remounts
+export const loadedUrls = new Set<string>();
+
 export default function ImageWithBlur({
   src,
   alt,
@@ -38,19 +41,8 @@ export default function ImageWithBlur({
   const mountTimeRef = useRef(performance.now());
   const imgRef = useRef<HTMLImageElement>(null);
 
-  const [imageLoaded, setImageLoaded] = useState(false);
-
-  // Synchronously detect cached images before browser paints — avoids blur flash
-  // useLayoutEffect runs after hydration but before paint, so no mismatch
-  useLayoutEffect(() => {
-    if (src) {
-      const probe = new window.Image();
-      probe.src = src;
-      if (probe.complete && probe.naturalWidth > 0) {
-        setImageLoaded(true);
-      }
-    }
-  }, [src]);
+  // Check if this URL was already loaded in this session (survives remounts)
+  const [imageLoaded, setImageLoaded] = useState(() => loadedUrls.has(src));
 
   useEffect(() => {
     imageStats.total++;
@@ -65,6 +57,7 @@ export default function ImageWithBlur({
   // Check if already cached on mount
   useEffect(() => {
     if (imgRef.current?.complete && imgRef.current.naturalWidth > 0) {
+      loadedUrls.add(src);
       setImageLoaded(true);
     }
   }, []);
@@ -79,6 +72,7 @@ export default function ImageWithBlur({
     console.log(
       `[IMG LOADED] ${shortSrc} | ${Math.round(elapsed)}ms (${Math.round(sinceMount)}ms since mount) | ${imageStats.loaded}/${imageStats.total} loaded | avg ${avg}ms`
     );
+    loadedUrls.add(src);
     setImageLoaded(true);
   }, [src]);
 

@@ -8,7 +8,7 @@ import { parseSearchParams, createSearchParams, parseItemParam, createItemParam,
 import { VideoPlayer } from '@/components/VideoPlayer';
 import CustomCursor from './CustomCursor';
 import { isVerticalMedia } from '@/lib/image';
-import ImageWithBlur from '@/components/ImageWithBlur';
+import ImageWithBlur, { loadedUrls } from '@/components/ImageWithBlur';
 
 interface LightboxProps {
   items: FeedItem[];
@@ -241,12 +241,14 @@ export default function Lightbox({ items, section }: LightboxProps) {
       if (mediaItem.mediaType === 'image') {
         const img = new window.Image();
         img.decoding = 'async';
+        img.onload = () => loadedUrls.add(mediaItem.src);
         img.src = mediaItem.src;
       }
       // For videos, preload the poster image if available
       else if (mediaItem.mediaType === 'video' && mediaItem.poster) {
         const img = new window.Image();
         img.decoding = 'async';
+        img.onload = () => loadedUrls.add(mediaItem.poster);
         img.src = mediaItem.poster;
       }
     };
@@ -423,7 +425,7 @@ export default function Lightbox({ items, section }: LightboxProps) {
               <div className="relative">
                 {currentMediaItem.mediaType === 'video' && currentMediaItem.videoData ? (
                   <div
-                    key={`lightbox-media-${currentGalleryIndex}`}
+                    key={`lightbox-media-video-${currentGalleryIndex}`}
                     className="relative w-full h-[70vh] overflow-hidden flex items-center justify-center"
                   >
                     <VideoPlayer
@@ -435,7 +437,6 @@ export default function Lightbox({ items, section }: LightboxProps) {
                   </div>
                 ) : (
                   <div
-                    key={`lightbox-media-${currentGalleryIndex}`}
                     className="relative w-full h-[70vh] flex items-center justify-center"
                   >
                     <div className="relative w-full h-full">
